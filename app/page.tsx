@@ -57,7 +57,7 @@ export default function VisualsPage() {
   }, [mouseX, mouseY]);
 
   return (
-    <main className="relative w-full h-screen bg-[#080C16] overflow-hidden flex items-center justify-center font-sans">
+    <main className="relative w-full h-[100dvh] bg-[#080C16] overflow-hidden flex items-center justify-center font-sans">
       {/* Language Toggle */}
       <div className="absolute top-6 right-6 md:top-8 md:right-8 z-50 flex gap-2">
         <button 
@@ -77,7 +77,7 @@ export default function VisualsPage() {
       {/* Enter Site Button */}
       <Link 
         href="/main" 
-        className="absolute bottom-12 md:bottom-16 left-1/2 -translate-x-1/2 z-50 text-amber-400 hover:text-[#080C16] hover:bg-amber-400 transition-all flex items-center gap-2 font-display text-[10px] md:text-sm uppercase tracking-[0.1em] md:tracking-[0.2em] border border-amber-400/50 px-6 py-2.5 md:px-8 md:py-3 rounded-full backdrop-blur-md shadow-[0_0_20px_rgba(251,191,36,0.2)] hover:shadow-[0_0_30px_rgba(251,191,36,0.5)] whitespace-nowrap"
+        className="absolute bottom-24 md:bottom-16 left-1/2 -translate-x-1/2 z-50 text-amber-400 hover:text-[#080C16] hover:bg-amber-400 transition-all flex items-center gap-2 font-display text-[10px] md:text-sm uppercase tracking-[0.1em] md:tracking-[0.2em] border border-amber-400/50 px-6 py-2.5 md:px-8 md:py-3 rounded-full backdrop-blur-md shadow-[0_0_20px_rgba(251,191,36,0.2)] hover:shadow-[0_0_30px_rgba(251,191,36,0.5)] whitespace-nowrap"
       >
         {t.enter}
       </Link>

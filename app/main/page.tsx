@@ -674,6 +674,7 @@ export default function HomePage() {
           <motion.div 
             animate={{ y: [0, -10, 0] }}
             transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            style={{ transform: 'translateZ(0)' }}
             className="relative w-full h-full bg-[#080C16] rounded-3xl overflow-hidden border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)] flex items-center justify-center"
           >
             {/* Thematic Background: Graphene Hex Grid */}
@@ -699,6 +700,7 @@ export default function HomePage() {
                 src="https://sixshoes.github.io/Ma-Research-Portal/profile.jpg" 
                 alt="馬遠榮副校長個人照 (Prof. Y.R. Ma)"
                 fill
+                priority
                 className="object-cover object-top transition-all duration-1000 hover:scale-105"
                 referrerPolicy="no-referrer"
               />
@@ -716,7 +718,7 @@ export default function HomePage() {
               <motion.div 
                 animate={{ top: ['0%', '100%', '0%'] }}
                 transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                className="absolute left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-teal-400/50 to-transparent"
+                className="hidden md:block absolute left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-teal-400/50 to-transparent"
               />
             </div>
           </motion.div>
