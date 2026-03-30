@@ -370,7 +370,7 @@ export default function HomePage() {
   };
 
   const profileParticles = useMemo(() => {
-    return Array.from({ length: 20 }).map((_, i) => ({
+    return Array.from({ length: 8 }).map((_, i) => ({
       id: i,
       // Deterministic pseudo-random values based on index
       size: ((i * 13) % 4) + 2,
@@ -491,7 +491,7 @@ export default function HomePage() {
             y: [0, -50, 0]
           }}
           transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-[40%] -right-[20%] w-[60vw] h-[60vw] rounded-full bg-gradient-to-tl from-amber-900/20 to-transparent blur-[120px]"
+          className="hidden md:block absolute top-[40%] -right-[20%] w-[60vw] h-[60vw] rounded-full bg-gradient-to-tl from-amber-900/20 to-transparent blur-[120px]"
         />
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
       </div>
@@ -501,7 +501,7 @@ export default function HomePage() {
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-        className="fixed top-0 left-0 w-full z-50 bg-[#080C16]/70 backdrop-blur-xl border-b border-white/[0.05]"
+        className="fixed top-0 left-0 w-full z-50 bg-[#080C16]/70 backdrop-blur-md border-b border-white/[0.05]"
       >
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <div className="font-display text-xl font-bold tracking-widest text-white flex items-center gap-2 hover:scale-105 transition-transform cursor-pointer">
@@ -767,7 +767,7 @@ export default function HomePage() {
       {/* Research Interests */}
       <section id="research" className="py-20 md:py-32 px-6 max-w-7xl mx-auto relative">
         {/* Background glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[800px] h-[300px] md:h-[800px] bg-teal-500/5 rounded-full blur-[80px] md:blur-[120px] pointer-events-none" />
+        <div className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[800px] h-[300px] md:h-[800px] bg-teal-500/5 rounded-full blur-[80px] md:blur-[120px] pointer-events-none" />
 
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 md:mb-20 relative z-10">
           <h2 className="text-4xl md:text-7xl text-white">
@@ -788,7 +788,7 @@ export default function HomePage() {
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
               whileHover={{ y: -10, scale: 1.02 }}
-              className="bg-[#0B101E]/80 backdrop-blur-xl border border-white/[0.05] p-10 rounded-2xl hover:border-amber-500/30 hover:bg-[#0F1629] transition-all duration-500 group relative overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.2)] hover:shadow-[0_15px_40px_rgba(251,191,36,0.1)]"
+              className="bg-[#0B101E]/80 backdrop-blur-md border border-white/[0.05] p-10 rounded-2xl hover:border-amber-500/30 hover:bg-[#0F1629] transition-all duration-500 group relative overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.2)] hover:shadow-[0_15px_40px_rgba(251,191,36,0.1)]"
             >
               {/* Hover gradient background */}
               <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -873,7 +873,7 @@ export default function HomePage() {
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.05 }}
                   whileHover={{ y: -5, scale: 1.01 }}
-                  className="flex flex-col lg:flex-row gap-8 p-6 md:p-8 bg-[#0B101E]/80 backdrop-blur-xl border border-white/[0.05] rounded-3xl hover:border-amber-500/30 transition-all duration-500 group shadow-[0_8px_32px_rgba(0,0,0,0.2)] hover:shadow-[0_15px_40px_rgba(251,191,36,0.1)]"
+                  className="flex flex-col lg:flex-row gap-8 p-6 md:p-8 bg-[#0B101E]/80 backdrop-blur-md border border-white/[0.05] rounded-3xl hover:border-amber-500/30 transition-all duration-500 group shadow-[0_8px_32px_rgba(0,0,0,0.2)] hover:shadow-[0_15px_40px_rgba(251,191,36,0.1)]"
                 >
                   {/* Visuals Column */}
                   <div className="w-full lg:w-1/3 flex flex-col gap-4 shrink-0">
@@ -995,7 +995,7 @@ export default function HomePage() {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#080C16] via-transparent to-transparent" />
             </div>
-            <div className="absolute -bottom-12 -right-6 md:-right-12 bg-[#0B101E]/90 backdrop-blur-xl p-8 md:p-10 border border-amber-500/20 rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.5)] max-w-xs">
+            <div className="absolute -bottom-12 -right-6 md:-right-12 bg-[#0B101E]/90 backdrop-blur-md p-8 md:p-10 border border-amber-500/20 rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.5)] max-w-xs">
               <GraduationCap className="w-8 h-8 mb-4 text-amber-400 stroke-1" />
               <h4 className="font-display font-light text-xl text-white mb-3 tracking-wide">{t.about.leadership}</h4>
               <p className="text-sm leading-relaxed text-slate-400 font-light">
@@ -1102,7 +1102,7 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="bg-[#0B101E]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-8 md:p-10 hover:border-amber-500/30 transition-colors shadow-[0_8px_32px_rgba(0,0,0,0.2)]"
+              className="bg-[#0B101E]/80 backdrop-blur-md border border-white/10 rounded-3xl p-8 md:p-10 hover:border-amber-500/30 transition-colors shadow-[0_8px_32px_rgba(0,0,0,0.2)]"
             >
               <div className="flex items-center gap-4 mb-8 pb-8 border-b border-white/10">
                 <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center shrink-0">
@@ -1163,7 +1163,7 @@ export default function HomePage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
-              className="bg-[#0B101E]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-8 md:p-10 hover:border-purple-500/30 transition-colors shadow-[0_8px_32px_rgba(0,0,0,0.2)]"
+              className="bg-[#0B101E]/80 backdrop-blur-md border border-white/10 rounded-3xl p-8 md:p-10 hover:border-purple-500/30 transition-colors shadow-[0_8px_32px_rgba(0,0,0,0.2)]"
             >
               <div className="flex items-center gap-4 mb-8 pb-8 border-b border-white/10">
                 <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center shrink-0">
