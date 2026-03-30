@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
 import { Publication, publications as fallbackPublications } from '@/lib/publications';
 import { useLanguage } from '../LanguageContext';
@@ -65,7 +66,7 @@ const dict = {
       desc: 'A curated list of recent high-impact research',
       citations: 'Citations',
       journal: 'Journal',
-      doi: 'DOI',
+      doi: 'Link / DOI',
       scholar: 'Google Scholar',
       link: 'Link',
       year: 'Year',
@@ -211,7 +212,7 @@ const dict = {
       desc: '近期高影響力之學術研究發表',
       citations: '引用次數',
       journal: '發表期刊',
-      doi: '數位物件識別碼 (DOI)',
+      doi: '文獻連結 (Link / DOI)',
       scholar: 'Google Scholar',
       link: '相關連結',
       year: '發表年份',
@@ -341,6 +342,32 @@ export default function HomePage() {
   const [isExpandedAdmin, setIsExpandedAdmin] = useState(false);
   const [isExpandedService, setIsExpandedService] = useState(false);
   const t = dict[lang];
+
+  const getLinkDisplay = (url: string) => {
+    if (!url) return '';
+    
+    // 1. 如果是 DOI，自動切掉前面，只留乾淨的號碼 (例如 10.1016/...)
+    if (url.includes('doi.org/')) {
+      return url.split('doi.org/')[1];
+    }
+    
+    // 2. 如果是 Google Scholar，直接顯示品牌名稱
+    if (url.includes('scholar.google')) {
+      return 'Google Scholar';
+    }
+
+    // 3. 如果是 ResearchGate，也顯示品牌名稱
+    if (url.includes('researchgate.net')) {
+      return 'ResearchGate';
+    }
+
+    // 4. 其他未知網址的備用方案：只擷取主網域名稱 (例如 fgu.edu.tw)
+    try {
+      return new URL(url).hostname.replace('www.', '');
+    } catch {
+      return 'View Article'; // 萬一網址格式壞掉的最後防線
+    }
+  };
 
   const profileParticles = useMemo(() => {
     return Array.from({ length: 20 }).map((_, i) => ({
@@ -534,13 +561,13 @@ export default function HomePage() {
               className="md:hidden bg-[#0B101E] border-b border-white/[0.05] overflow-hidden"
             >
               <div className="flex flex-col p-6 space-y-4 text-xs uppercase tracking-[0.2em] font-display text-slate-400">
-                <a 
+                <Link 
                   href="/" 
                   onClick={() => setIsMenuOpen(false)}
                   className="hover:text-teal-400 transition-colors py-2"
                 >
                   {t.nav.home}
-                </a>
+                </Link>
                 {['about', 'research', 'publications', 'contact'].map((item) => (
                   <a 
                     key={item}
@@ -920,18 +947,14 @@ export default function HomePage() {
                           </div>
                         </div>
                         <div className="md:col-span-2">
-                          <div className="text-[10px] font-mono uppercase tracking-widest text-slate-500 mb-1.5">
-                            {pub.doi.includes('doi.org') ? t.pubs.doi : 
-                             pub.doi.includes('scholar.google.com') ? t.pubs.scholar : 
-                             t.pubs.link}
-                          </div>
+                          <div className="text-[10px] font-mono uppercase tracking-widest text-slate-500 mb-1.5">{t.pubs.doi}</div>
                           <a 
                             href={pub.doi} 
                             target="_blank" 
                             rel="noopener noreferrer" 
                             className="text-sm text-amber-400/80 hover:text-amber-400 flex items-center gap-2 break-all transition-colors"
                           >
-                            {pub.doi} <ExternalLink className="w-3 h-3 shrink-0" />
+                            {getLinkDisplay(pub.doi)} <ExternalLink className="w-3 h-3 shrink-0" />
                           </a>
                         </div>
                       </div>
