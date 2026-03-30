@@ -4,6 +4,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import { motion } from 'motion/react';
 import { Publication, publications as fallbackPublications } from '@/lib/publications';
+import { useLanguage } from '../LanguageContext';
 import { 
   ExternalLink, 
   Magnet, 
@@ -299,7 +300,7 @@ const dict = {
 };
 
 export default function HomePage() {
-  const [lang, setLang] = useState<'zh' | 'en'>('zh');
+  const { lang, setLang } = useLanguage();
   const [pubFilter, setPubFilter] = useState<string>('All');
   const [visibleCount, setVisibleCount] = useState<number>(10);
   const [publications, setPublications] = useState<Publication[]>(fallbackPublications);

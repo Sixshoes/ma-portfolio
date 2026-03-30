@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { motion } from 'motion/react';
+import { motion, useMotionValue, useSpring } from 'motion/react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import { useLanguage } from './LanguageContext';
 
 const dict = {
   en: {
@@ -21,44 +22,40 @@ const dict = {
 };
 
 export default function VisualsPage() {
-  const [lang, setLang] = useState<'en' | 'zh'>('en');
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [windowSize, setWindowSize] = useState({ width: 1000, height: 1000 });
+  const { lang, setLang } = useLanguage();
   const [particles, setParticles] = useState<Array<{id: number, size: number, x: number, y: number, duration: number, delay: number, color: string}>>([]);
 
   const t = dict[lang];
 
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const springX = useSpring(mouseX, { damping: 40, stiffness: 50, mass: 1 });
+  const springY = useSpring(mouseY, { damping: 40, stiffness: 50, mass: 1 });
+
   useEffect(() => {
-    setWindowSize({ width: window.innerWidth, height: window.innerHeight });
-    
     // Generate random particles only on client to avoid hydration mismatch
-    const generatedParticles = Array.from({ length: 80 }).map((_, i) => ({
+    const generatedParticles = Array.from({ length: 60 }).map((_, i) => ({
       id: i,
       size: Math.random() * 6 + 1,
       x: Math.random() * 100,
       y: Math.random() * 100,
-      duration: Math.random() * 20 + 15,
-      delay: Math.random() * 10,
+      duration: Math.random() * 15 + 10,
+      delay: Math.random() * 2,
       color: Math.random() > 0.5 ? 'bg-teal-400' : 'bg-amber-400',
     }));
     setParticles(generatedParticles);
     
     const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
-    };
-    
-    const handleResize = () => {
-      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+      mouseX.set(e.clientX - window.innerWidth / 2);
+      mouseY.set(e.clientY - window.innerHeight / 2);
     };
 
     window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('resize', handleResize);
     
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('resize', handleResize);
     };
-  }, []);
+  }, [mouseX, mouseY]);
 
   return (
     <main className="relative w-full h-screen bg-[#080C16] overflow-hidden flex items-center justify-center font-sans">
@@ -89,11 +86,10 @@ export default function VisualsPage() {
       {/* Mouse Follower Glow */}
       <motion.div
         className="absolute w-[40vw] h-[40vw] rounded-full bg-teal-500/10 blur-[100px] pointer-events-none z-0"
-        animate={{
-          x: mousePosition.x - windowSize.width / 2,
-          y: mousePosition.y - windowSize.height / 2,
+        style={{
+          x: springX,
+          y: springY,
         }}
-        transition={{ type: 'spring', damping: 40, stiffness: 50, mass: 1 }}
       />
 
       {/* Central Quantum Core */}
@@ -155,15 +151,16 @@ export default function VisualsPage() {
           }}
           animate={{
             y: [0, -800],
-            opacity: [0, 0.8, 0],
+            opacity: [0, 0.8, 0.8, 0],
             x: [0, Math.sin(p.id) * 150, 0],
-            scale: [0, 1.5, 0]
+            scale: [0, 1.5, 1.5, 0]
           }}
           transition={{
             duration: p.duration,
             repeat: Infinity,
             delay: p.delay,
             ease: "linear",
+            times: [0, 0.1, 0.9, 1]
           }}
         />
       ))}
