@@ -324,19 +324,24 @@ export default function HomePage() {
     let result = [...publications];
     
     if (pubFilter === 'Selected') {
-      result = result.filter(p => p.is_star === '是' || Number(p.citations) >= 50);
-    } else if (pubFilter === 'Corresponding') {
-      result = result.filter(p => p.is_star === '是');
+      result = result.filter(p => Number(p.citations) >= 50);
     } else if (pubFilter !== 'All') {
       result = result.filter(p => p.year === pubFilter);
     }
 
-    // Sort by year descending. Prioritize corresponding author (is_star === '是') to the top for all filters.
+    // Sort by corresponding author (is_star === '是') first, then year descending, then citations
     result.sort((a, b) => {
+      // 1. Global priority: Corresponding author
       if (a.is_star === '是' && b.is_star !== '是') return -1;
       if (a.is_star !== '是' && b.is_star === '是') return 1;
       
-      return Number(b.year) - Number(a.year);
+      // 2. Secondary priority: Year descending
+      if (Number(b.year) !== Number(a.year)) {
+        return Number(b.year) - Number(a.year);
+      }
+      
+      // 3. Tertiary priority: Citations descending
+      return Number(b.citations) - Number(a.citations);
     });
 
     return result;
@@ -474,22 +479,20 @@ END:VCARD`;
             <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-amber-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-blue-500/20 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '2s' }} />
 
-            {/* Profile Image with Soft Masking */}
-            <div 
-              className="absolute inset-0 z-10" 
-              style={{ 
-                maskImage: 'radial-gradient(ellipse at 50% 45%, black 35%, transparent 70%)', 
-                WebkitMaskImage: 'radial-gradient(ellipse at 50% 45%, black 35%, transparent 70%)' 
-              }}
-            >
-              <Image 
+            {/* Profile Image with Soft Gradient Blending */}
+            <div className="absolute inset-0 z-10 overflow-hidden rounded-3xl">
+              <img 
                 src="https://sixshoes.github.io/Ma-Research-Portal/profile.jpg" 
                 alt="Prof. Y.R. Ma"
-                fill
-                className="object-cover object-top transition-all duration-1000 hover:scale-105"
-                referrerPolicy="no-referrer"
-                unoptimized
+                className="w-full h-full object-cover object-top transition-all duration-1000 hover:scale-105"
+                onError={(e) => {
+                  // Fallback to a placeholder if the image fails to load
+                  e.currentTarget.src = "https://picsum.photos/seed/profma/800/1000";
+                }}
               />
+              {/* Gradient overlays to blend the image into the dark background */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#080C16] via-[#080C16]/20 to-transparent pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-r from-[#080C16] via-transparent to-[#080C16] opacity-50 pointer-events-none" />
             </div>
 
             {/* High-Tech HUD Elements */}
@@ -612,7 +615,6 @@ END:VCARD`;
                   className="appearance-none bg-[#0B101E]/80 border border-white/[0.1] text-slate-300 px-6 py-3 pr-12 rounded-full text-sm font-mono focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 transition-all cursor-pointer backdrop-blur-md"
                 >
                   <option value="All">All Publications</option>
-                  <option value="Corresponding">Corresponding Author</option>
                   <option value="Selected">Selected / Highlighted</option>
                   <optgroup label="By Year">
                     {uniqueYears.map(year => (
@@ -646,7 +648,7 @@ END:VCARD`;
                 mainImg = journalImg;
                 mainLabel = t.pubs.cover;
               } else if (!hasAbstract && !hasJournal) {
-                mainImg = `https://picsum.photos/seed/quantum-physics-${i}/800/600`;
+                mainImg = "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?q=80&w=800&auto=format&fit=crop";
                 mainLabel = t.pubs.quantum;
               }
 
@@ -669,7 +671,8 @@ END:VCARD`;
                         referrerPolicy="no-referrer"
                         loading="lazy"
                         onError={(e) => {
-                          e.currentTarget.src = `https://picsum.photos/seed/science-${i}/800/600`;
+                          // Fallback to a fixed quantum mechanics related image
+                          e.currentTarget.src = "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?q=80&w=800&auto=format&fit=crop";
                           e.currentTarget.onerror = null; // Prevent infinite loop if fallback also fails
                         }}
                       />
@@ -686,7 +689,8 @@ END:VCARD`;
                           referrerPolicy="no-referrer"
                           loading="lazy"
                           onError={(e) => {
-                            e.currentTarget.style.display = 'none'; // Hide secondary image if it fails to load
+                            const parent = e.currentTarget.parentElement;
+                            if (parent) parent.style.display = 'none';
                           }}
                         />
                         <div className="absolute top-1 left-1 text-[8px] font-mono uppercase tracking-widest text-slate-800 bg-white/90 px-1.5 py-0.5 rounded border border-slate-200 backdrop-blur-md">
