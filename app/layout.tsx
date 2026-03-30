@@ -3,6 +3,7 @@ import { Inter, Outfit, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { LanguageProvider } from './LanguageContext';
 import SmoothScroll from './SmoothScroll';
+import ScrollToTop from './ScrollToTop';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -36,6 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SmoothScroll>
           <LanguageProvider>
             {children}
+            <ScrollToTop />
           </LanguageProvider>
         </SmoothScroll>
       </body>

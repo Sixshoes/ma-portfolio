@@ -22,7 +22,7 @@ import {
   Download,
   UserPlus,
   X,
-  ArrowUp
+  Menu
 } from 'lucide-react';
 
 const dict = {
@@ -327,16 +327,8 @@ export default function HomePage() {
   const [pubFilter, setPubFilter] = useState<string>('All');
   const [visibleCount, setVisibleCount] = useState<number>(10);
   const [publications, setPublications] = useState<Publication[]>(fallbackPublications);
-  const [showScrollTop, setShowScrollTop] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const t = dict[lang];
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 400);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   useEffect(() => {
     fetch('https://sixshoes.github.io/Ma-Research-Portal/papers.json')
@@ -463,7 +455,7 @@ export default function HomePage() {
           <div className="font-display text-xl font-bold tracking-widest text-white flex items-center gap-2 hover:scale-105 transition-transform cursor-pointer">
             <span className="text-amber-400">Y.R.</span> MA
           </div>
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-4 md:gap-8">
             <div className="hidden md:flex space-x-8 text-xs uppercase tracking-[0.2em] font-display text-slate-400">
               <motion.a 
                 href="/" 
@@ -485,17 +477,59 @@ export default function HomePage() {
                 </motion.a>
               ))}
             </div>
-            <motion.button 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setLang(lang === 'en' ? 'zh' : 'en')}
-              className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-mono text-slate-300 hover:text-amber-400 transition-colors border border-white/10 px-3 py-1.5 rounded-full bg-white/[0.02]"
-            >
-              <Globe className="w-3 h-3" />
-              {lang === 'en' ? '中文' : 'EN'}
-            </motion.button>
+            
+            <div className="flex items-center gap-3">
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setLang(lang === 'en' ? 'zh' : 'en')}
+                className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-mono text-slate-300 hover:text-amber-400 transition-colors border border-white/10 px-3 py-1.5 rounded-full bg-white/[0.02]"
+              >
+                <Globe className="w-3 h-3" />
+                {lang === 'en' ? '中文' : 'EN'}
+              </motion.button>
+
+              <button 
+                className="md:hidden p-2 text-slate-300 hover:text-amber-400 transition-colors"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+              >
+                {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
+            </div>
           </div>
         </div>
+
+        {/* Mobile Menu */}
+        <AnimatePresence>
+          {isMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="md:hidden bg-[#0B101E] border-b border-white/[0.05] overflow-hidden"
+            >
+              <div className="flex flex-col p-6 space-y-4 text-xs uppercase tracking-[0.2em] font-display text-slate-400">
+                <a 
+                  href="/" 
+                  onClick={() => setIsMenuOpen(false)}
+                  className="hover:text-teal-400 transition-colors py-2"
+                >
+                  {t.nav.home}
+                </a>
+                {['about', 'research', 'publications', 'contact'].map((item) => (
+                  <a 
+                    key={item}
+                    href={`#${item}`} 
+                    onClick={() => setIsMenuOpen(false)}
+                    className="hover:text-amber-400 transition-colors py-2"
+                  >
+                    {t.nav[item as keyof typeof t.nav]}
+                  </a>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.nav>
 
       {/* Hero Section */}
@@ -518,7 +552,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="text-5xl md:text-7xl lg:text-8xl leading-[1.1] mb-8 text-white"
+            className="text-4xl md:text-7xl lg:text-8xl leading-[1.1] mb-8 text-white"
           >
             <span className="font-display font-light text-amber-500/90 tracking-wide inline-block hover:scale-105 transition-transform origin-left">{t.hero.title1}</span> <br />
             <span className="font-display font-bold tracking-tight inline-block hover:scale-105 transition-transform origin-left">{t.hero.title2}</span> {t.hero.title3} <br />
@@ -697,23 +731,23 @@ export default function HomePage() {
       <section id="publications" className="py-32 bg-[#0B101E]/30 border-y border-white/[0.05] relative">
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="mb-20">
-            <h2 className="text-5xl md:text-7xl text-white mb-4">
+            <h2 className="text-4xl md:text-7xl text-white mb-4">
               <span className="font-display font-light text-amber-500/90 tracking-wide">{t.pubs.title}</span> <br />
               <span className="font-display font-bold tracking-tight">{t.pubs.subtitle}</span>
             </h2>
             <p className="text-teal-400/80 font-mono uppercase text-[10px] tracking-[0.2em] mb-12">{t.pubs.desc}</p>
             
             {/* Filter UI */}
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
               <span className="text-xs font-mono uppercase tracking-widest text-slate-500">Filter by:</span>
-              <div className="relative">
+              <div className="relative w-full sm:w-auto">
                 <select 
                   value={pubFilter}
                   onChange={(e) => {
                     setPubFilter(e.target.value);
                     setVisibleCount(10);
                   }}
-                  className="appearance-none bg-[#0B101E]/80 border border-white/[0.1] text-slate-300 px-6 py-3 pr-12 rounded-full text-sm font-mono focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 transition-all cursor-pointer backdrop-blur-md"
+                  className="w-full sm:w-auto appearance-none bg-[#0B101E]/80 border border-white/[0.1] text-slate-300 px-6 py-3 pr-12 rounded-full text-sm font-mono focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 transition-all cursor-pointer backdrop-blur-md"
                 >
                   <option value="All">All Publications</option>
                   <option value="Selected">Selected / Highlighted</option>
@@ -1177,24 +1211,6 @@ export default function HomePage() {
           </div>
         </motion.div>
       </section>
-
-      {/* Scroll to Top Button */}
-      <AnimatePresence>
-        {showScrollTop && (
-          <motion.button
-            initial={{ opacity: 0, y: 20, scale: 0.8 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.8 }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="fixed bottom-8 right-8 z-50 p-4 rounded-full bg-[#0B101E]/80 border border-white/10 text-slate-300 backdrop-blur-md shadow-[0_0_20px_rgba(0,0,0,0.3)] hover:bg-amber-500/10 hover:border-amber-500/30 hover:text-amber-400 hover:shadow-[0_0_30px_rgba(251,191,36,0.2)] transition-colors duration-300"
-            aria-label="Scroll to top"
-          >
-            <ArrowUp className="w-5 h-5" />
-          </motion.button>
-        )}
-      </AnimatePresence>
     </main>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { motion, useMotionValue, useSpring } from 'motion/react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
@@ -23,8 +23,6 @@ const dict = {
 
 export default function VisualsPage() {
   const { lang, setLang } = useLanguage();
-  const [particles, setParticles] = useState<Array<{id: number, size: number, x: number, y: number, duration: number, delay: number, color: string}>>([]);
-
   const t = dict[lang];
 
   const mouseX = useMotionValue(0);
@@ -32,19 +30,21 @@ export default function VisualsPage() {
   const springX = useSpring(mouseX, { damping: 40, stiffness: 50, mass: 1 });
   const springY = useSpring(mouseY, { damping: 40, stiffness: 50, mass: 1 });
 
-  useEffect(() => {
-    // Generate random particles only on client to avoid hydration mismatch
-    const generatedParticles = Array.from({ length: 60 }).map((_, i) => ({
+  const [mounted, setMounted] = useState(false);
+  const particles = useMemo(() => {
+    return Array.from({ length: 60 }).map((_, i) => ({
       id: i,
-      size: Math.random() * 6 + 1,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      duration: Math.random() * 15 + 10,
-      delay: Math.random() * 2,
-      color: Math.random() > 0.5 ? 'bg-teal-400' : 'bg-amber-400',
+      size: ((i * 7) % 6) + 1,
+      x: (i * 13) % 100,
+      y: (i * 17) % 100,
+      duration: ((i * 3) % 15) + 10,
+      delay: (i * 0.5) % 2,
+      color: i % 2 === 0 ? 'bg-teal-400' : 'bg-amber-400',
     }));
-    setParticles(generatedParticles);
-    
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setMounted(true), 0);
     const handleMouseMove = (e: MouseEvent) => {
       mouseX.set(e.clientX - window.innerWidth / 2);
       mouseY.set(e.clientY - window.innerHeight / 2);
@@ -53,6 +53,7 @@ export default function VisualsPage() {
     window.addEventListener('mousemove', handleMouseMove);
     
     return () => {
+      clearTimeout(timer);
       window.removeEventListener('mousemove', handleMouseMove);
     };
   }, [mouseX, mouseY]);
@@ -139,7 +140,7 @@ export default function VisualsPage() {
       </div>
 
       {/* Floating Particles */}
-      {particles.map((p) => (
+      {mounted && particles.map((p) => (
         <motion.div
           key={p.id}
           className={`absolute rounded-full ${p.color} opacity-30`}
