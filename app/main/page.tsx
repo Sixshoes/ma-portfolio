@@ -338,6 +338,8 @@ export default function HomePage() {
   const [pubFilter, setPubFilter] = useState<string>('All');
   const [visibleCount, setVisibleCount] = useState<number>(10);
   const [publications, setPublications] = useState<Publication[]>(fallbackPublications);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isImgLoaded, setIsImgLoaded] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isExpandedAdmin, setIsExpandedAdmin] = useState(false);
   const [isExpandedService, setIsExpandedService] = useState(false);
@@ -394,9 +396,11 @@ export default function HomePage() {
         if (Array.isArray(data) && data.length > 0) {
           setPublications(data);
         }
+        setIsLoading(false);
       })
       .catch(err => {
         console.warn('Using fallback publications. Failed to fetch from GitHub:', err);
+        setIsLoading(false);
       });
   }, []);
 
@@ -701,7 +705,8 @@ export default function HomePage() {
                 alt="馬遠榮副校長個人照 (Prof. Y.R. Ma)"
                 fill
                 priority
-                className="object-cover object-top transition-all duration-1000 hover:scale-105"
+                onLoad={() => setIsImgLoaded(true)}
+                className={`object-cover object-top transition-all duration-1000 hover:scale-105 ${isImgLoaded ? 'opacity-100' : 'opacity-0'}`}
                 referrerPolicy="no-referrer"
               />
               {/* Gradient overlays to blend the image into the dark background */}
@@ -846,10 +851,28 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-8">
-            {visiblePublications.map((pub, i) => {
-              // Fix: cover_url is actually the Graphical Abstract (ga1), file_img is the Journal Cover (X...)
-              const abstractImg = pub.cover_url;
+          <AnimatePresence mode="wait">
+            {isLoading ? (
+              <motion.div 
+                key="loader"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="h-96 flex items-center justify-center"
+              >
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-amber-500"></div>
+              </motion.div>
+            ) : (
+              <motion.div 
+                key="content"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="flex flex-col gap-8"
+              >
+                {visiblePublications.map((pub, i) => {
+                  // Fix: cover_url is actually the Graphical Abstract (ga1), file_img is the Journal Cover (X...)
+                  const abstractImg = pub.cover_url;
               const journalImg = pub.file_img;
               const hasAbstract = !!abstractImg;
               const hasJournal = !!journalImg;
@@ -965,7 +988,9 @@ export default function HomePage() {
                 </motion.div>
               );
             })}
-          </div>
+          </motion.div>
+          )}
+          </AnimatePresence>
 
           {visibleCount < filteredPublications.length && (
             <div className="mt-16 flex justify-center">
