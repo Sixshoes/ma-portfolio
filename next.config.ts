@@ -53,7 +53,7 @@ const nextConfig: NextConfig = {
   // Use 'export' and set basePath ONLY when running in GitHub Actions.
   // This keeps the AI Studio preview working ('standalone') while deploying correctly to GitHub Pages.
   output: process.env.GITHUB_ACTIONS ? 'export' : 'standalone',
-  basePath: process.env.GITHUB_ACTIONS ? '/Ma-Research-Portal' : '',
+  basePath: process.env.GITHUB_ACTIONS ? '/ma-portfolio' : '',
   transpilePackages: ['motion'],
   webpack: (config, {dev}) => {
     // HMR is disabled in AI Studio via DISABLE_HMR env var.
