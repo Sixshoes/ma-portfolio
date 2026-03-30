@@ -21,8 +21,21 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Y.R. Ma | Advanced Materials & Quantum Devices',
-  description: 'Personal website of Prof. Y.R. Ma, Vice President of Fo Guang University, specializing in Advanced Materials and Quantum Devices.',
+  title: '馬遠榮副校長 | 佛光大學 個人學術網站',
+  description: '展示馬遠榮副校長的學術履歷、研究成果、發行著作以及相關專業經歷。',
+  openGraph: {
+    title: '馬遠榮副校長 | 佛光大學 個人學術網站',
+    description: '展示馬遠榮副校長的學術履歷、研究成果、發行著作以及相關專業經歷。',
+    type: 'website',
+    locale: 'zh_TW',
+    url: 'https://ais-dev-2vkfnzcdenqunkr3e52tml-76665202037.asia-northeast1.run.app',
+    siteName: '馬遠榮副校長學術網站',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: '馬遠榮副校長 | 佛光大學 個人學術網站',
+    description: '展示馬遠榮副校長的學術履歷、研究成果、發行著作以及相關專業經歷。',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
