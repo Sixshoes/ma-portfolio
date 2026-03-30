@@ -559,10 +559,12 @@ END:VCARD`;
 
             {/* Profile Image with Soft Gradient Blending */}
             <div className="absolute inset-0 z-10 overflow-hidden rounded-3xl">
-              <img 
+              <Image 
                 src="https://sixshoes.github.io/Ma-Research-Portal/profile.jpg" 
                 alt="Prof. Y.R. Ma"
-                className="w-full h-full object-cover object-top transition-all duration-1000 hover:scale-105"
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover object-top transition-all duration-1000 hover:scale-105"
                 onError={(e) => {
                   // Fallback to a placeholder if the image fails to load
                   e.currentTarget.src = "https://picsum.photos/seed/profma/800/1000";
@@ -744,12 +746,13 @@ END:VCARD`;
                   {/* Visuals Column */}
                   <div className="w-full lg:w-1/3 flex flex-col gap-4 shrink-0">
                     <div className="relative w-full aspect-video bg-white rounded-xl border border-white/[0.05] p-2 flex items-center justify-center group/img overflow-hidden shadow-inner">
-                      <img 
+                      <Image 
                         src={mainImg} 
-                        alt={mainLabel} 
-                        className="w-full h-full object-contain p-2 transition-transform duration-500 group-hover/img:scale-105" 
+                        alt={mainLabel}
+                        fill
+                        sizes="(max-width: 1024px) 100vw, 33vw"
+                        className="object-contain p-2 transition-transform duration-500 group-hover/img:scale-105" 
                         referrerPolicy="no-referrer"
-                        loading="lazy"
                         onError={(e) => {
                           // Fallback to a fixed quantum mechanics related image
                           e.currentTarget.src = "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?q=80&w=800&auto=format&fit=crop";
@@ -762,12 +765,13 @@ END:VCARD`;
                     </div>
                     {secondaryImg && (
                       <div className="relative w-1/3 max-w-[120px] aspect-[3/4] bg-white rounded-xl border border-white/[0.05] p-1 flex items-center justify-center group/img overflow-hidden shadow-md">
-                        <img 
+                        <Image 
                           src={secondaryImg} 
-                          alt={t.pubs.cover} 
-                          className="w-full h-full object-contain p-1 transition-transform duration-500 group-hover/img:scale-105" 
+                          alt={t.pubs.cover}
+                          fill
+                          sizes="120px"
+                          className="object-contain p-1 transition-transform duration-500 group-hover/img:scale-105" 
                           referrerPolicy="no-referrer"
-                          loading="lazy"
                           onError={(e) => {
                             const parent = e.currentTarget.parentElement;
                             if (parent) parent.style.display = 'none';

@@ -11,28 +11,30 @@ export default function VisualsPage() {
   const [particles, setParticles] = useState<Array<{id: number, size: number, x: number, y: number, duration: number, delay: number, color: string}>>([]);
 
   useEffect(() => {
-    setWindowSize({ width: window.innerWidth, height: window.innerHeight });
-    
-    // Generate random particles only on client to avoid hydration mismatch
-    const generatedParticles = Array.from({ length: 80 }).map((_, i) => ({
-      id: i,
-      size: Math.random() * 6 + 1,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      duration: Math.random() * 20 + 15,
-      delay: Math.random() * 10,
-      color: Math.random() > 0.5 ? 'bg-teal-400' : 'bg-amber-400',
-    }));
-    setParticles(generatedParticles);
-    
     const handleMouseMove = (e: MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY });
     };
-    
+
     const handleResize = () => {
       setWindowSize({ width: window.innerWidth, height: window.innerHeight });
     };
 
+    const initializeParticles = () => {
+      // Generate random particles only on client to avoid hydration mismatch
+      const generatedParticles = Array.from({ length: 80 }).map((_, i) => ({
+        id: i,
+        size: Math.random() * 6 + 1,
+        x: Math.random() * 100,
+        y: Math.random() * 100,
+        duration: Math.random() * 20 + 15,
+        delay: Math.random() * 10,
+        color: Math.random() > 0.5 ? 'bg-teal-400' : 'bg-amber-400',
+      }));
+      setParticles(generatedParticles);
+    };
+
+    initializeParticles();
+    handleResize();
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('resize', handleResize);
     
