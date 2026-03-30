@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import { motion } from 'motion/react';
-import { publications } from '@/lib/publications';
+import { Publication, publications as fallbackPublications } from '@/lib/publications';
 import { 
   ExternalLink, 
   Magnet, 
@@ -37,7 +37,10 @@ const dict = {
       pubs: 'Publications',
       citations: 'Citations',
       exp: 'Years Experience',
-      patents: 'Patents'
+      patents: 'Patents',
+      scopusNote: '* Citation data sourced from Scopus',
+      expValue: '30+',
+      patentsValue: '15+'
     },
     research: {
       title: 'Research',
@@ -63,6 +66,9 @@ const dict = {
       coauthor: 'Co-author',
       abstract: 'Graphical Abstract',
       cover: 'Journal Cover',
+      benchmark: '🔥 International Benchmark',
+      keyFocus: '⭐ Key Focus',
+      general: '📄 General Paper',
       quantum: 'Quantum Mechanics'
     },
     about: {
@@ -141,7 +147,8 @@ const dict = {
       hIndex: 'H-Index Metrics',
       total: 'Total',
       last5: 'Last 5 Years',
-      ratio: 'Last 5 Years / Total'
+      ratio: 'Last 5 Years / Total',
+      source: '* Data sourced from AD Scientific Index'
     },
     contact: {
       title: 'Get in',
@@ -167,7 +174,10 @@ const dict = {
       pubs: '發表論文',
       citations: '引用次數',
       exp: '年研究經驗',
-      patents: '項專利'
+      patents: '項專利',
+      scopusNote: '* 引用數據來源為 Scopus',
+      expValue: '30+',
+      patentsValue: '15+'
     },
     research: {
       title: '專業',
@@ -193,6 +203,9 @@ const dict = {
       coauthor: '共同作者',
       abstract: '圖文摘要',
       cover: '期刊封面',
+      benchmark: '🔥 國際標竿',
+      keyFocus: '⭐ 重點關注',
+      general: '📄 一般論文',
       quantum: '量子力學'
     },
     about: {
@@ -271,7 +284,8 @@ const dict = {
       hIndex: 'H-Index 指標',
       total: '總計',
       last5: '近五年',
-      ratio: '近五年 / 總計'
+      ratio: '近五年 / 總計',
+      source: '* 資料來源：AD Scientific Index'
     },
     contact: {
       title: '聯絡',
@@ -287,17 +301,60 @@ const dict = {
 export default function HomePage() {
   const [lang, setLang] = useState<'zh' | 'en'>('zh');
   const [pubFilter, setPubFilter] = useState<string>('All');
+  const [visibleCount, setVisibleCount] = useState<number>(10);
+  const [publications, setPublications] = useState<Publication[]>(fallbackPublications);
   const t = dict[lang];
+
+  useEffect(() => {
+    fetch('https://sixshoes.github.io/Ma-Research-Portal/papers.json')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setPublications(data);
+        }
+      })
+      .catch(err => console.error('Failed to fetch publications:', err));
+  }, []);
 
   const uniqueYears = useMemo(() => {
     return Array.from(new Set(publications.map(p => p.year))).sort((a, b) => Number(b) - Number(a));
-  }, []);
+  }, [publications]);
 
   const filteredPublications = useMemo(() => {
-    if (pubFilter === 'All') return publications;
-    if (pubFilter === 'Selected') return publications.filter(p => p.is_star === '是' || p.highlight?.includes('國際標竿'));
-    return publications.filter(p => p.year === pubFilter);
-  }, [pubFilter]);
+    let result = [...publications];
+    
+    if (pubFilter === 'Selected') {
+      result = result.filter(p => p.is_star === '是' || Number(p.citations) >= 50);
+    } else if (pubFilter === 'Corresponding') {
+      result = result.filter(p => p.is_star === '是');
+    } else if (pubFilter !== 'All') {
+      result = result.filter(p => p.year === pubFilter);
+    }
+
+    // Sort by year descending. Prioritize corresponding author (is_star === '是') to the top for all filters.
+    result.sort((a, b) => {
+      if (a.is_star === '是' && b.is_star !== '是') return -1;
+      if (a.is_star !== '是' && b.is_star === '是') return 1;
+      
+      return Number(b.year) - Number(a.year);
+    });
+
+    return result;
+  }, [pubFilter, publications]);
+
+  // Remove the useEffect that resets visibleCount
+  const visiblePublications = useMemo(() => {
+    return filteredPublications.slice(0, visibleCount);
+  }, [filteredPublications, visibleCount]);
+
+  const totalPubs = publications.length > 0 ? publications.length : '200+';
+  const totalCitations = publications.length > 0 ? publications.reduce((sum, p) => sum + (p.citations || 0), 0) : '5000+';
+
+  const getHighlightText = (citations: number) => {
+    if (citations >= 100) return t.pubs.benchmark;
+    if (citations >= 50) return t.pubs.keyFocus;
+    return t.pubs.general;
+  };
 
   const handleDownloadVCard = () => {
     const vcard = `BEGIN:VCARD
@@ -398,18 +455,55 @@ END:VCARD`;
           <motion.div 
             animate={{ y: [0, -10, 0] }}
             transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-            className="relative w-full h-full bg-[#0B101E] rounded-3xl overflow-hidden border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)]"
+            className="relative w-full h-full bg-[#080C16] rounded-3xl overflow-hidden border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)] flex items-center justify-center"
           >
-            <Image 
-              src="/profile.jpg" 
-              alt="Prof. Y.R. Ma"
-              fill
-              className="object-cover object-top transition-all duration-1000 hover:scale-105"
-              referrerPolicy="no-referrer"
-            />
-            {/* Overlay grid pattern */}
-            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+CjxyZWN0IHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDMpIiBzdHJva2Utd2lkdGg9IjEiLz4KPC9zdmc+')] opacity-30 pointer-events-none" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#080C16] via-transparent to-transparent opacity-60 pointer-events-none" />
+            {/* Thematic Background: Graphene Hex Grid */}
+            <div className="absolute inset-0 opacity-40">
+              <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <pattern id="hex" width="40" height="69.282" patternUnits="userSpaceOnUse" patternTransform="scale(1.5)">
+                    <path d="M40 17.32l-20 11.547L0 17.32V-5.774l20-11.547L40-5.774V17.32zm0 46.188l-20 11.548-20-11.548V40.414L20 28.867l20 11.547v23.094z" fill="none" stroke="rgba(20, 184, 166, 0.3)" strokeWidth="1" />
+                  </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#hex)" />
+              </svg>
+            </div>
+            
+            {/* Abstract Quantum Nodes (Glowing Orbs) */}
+            <div className="absolute top-1/4 left-1/4 w-40 h-40 bg-teal-500/30 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-amber-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-blue-500/20 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '2s' }} />
+
+            {/* Profile Image with Soft Masking */}
+            <div 
+              className="absolute inset-0 z-10" 
+              style={{ 
+                maskImage: 'radial-gradient(ellipse at 50% 45%, black 35%, transparent 70%)', 
+                WebkitMaskImage: 'radial-gradient(ellipse at 50% 45%, black 35%, transparent 70%)' 
+              }}
+            >
+              <Image 
+                src="https://sixshoes.github.io/Ma-Research-Portal/profile.jpg" 
+                alt="Prof. Y.R. Ma"
+                fill
+                className="object-cover object-top transition-all duration-1000 hover:scale-105"
+                referrerPolicy="no-referrer"
+                unoptimized
+              />
+            </div>
+
+            {/* High-Tech HUD Elements */}
+            <div className="absolute inset-0 z-20 pointer-events-none">
+              <div className="absolute top-4 left-4 w-8 h-8 border-t-2 border-l-2 border-teal-500/50 rounded-tl-lg" />
+              <div className="absolute top-4 right-4 w-8 h-8 border-t-2 border-r-2 border-teal-500/50 rounded-tr-lg" />
+              <div className="absolute bottom-4 left-4 w-8 h-8 border-b-2 border-l-2 border-teal-500/50 rounded-bl-lg" />
+              <div className="absolute bottom-4 right-4 w-8 h-8 border-b-2 border-r-2 border-teal-500/50 rounded-br-lg" />
+              <motion.div 
+                animate={{ top: ['0%', '100%', '0%'] }}
+                transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                className="absolute left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-teal-400/50 to-transparent"
+              />
+            </div>
           </motion.div>
           
           {/* Decorative Elements */}
@@ -434,21 +528,24 @@ END:VCARD`;
       <section className="border-y border-white/[0.05] bg-white/[0.01] py-16 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-12 text-center">
           <div>
-            <div className="font-display font-light text-4xl md:text-5xl text-white mb-2">200+</div>
+            <div className="font-display font-light text-4xl md:text-5xl text-white mb-2">{totalPubs}</div>
             <div className="text-[10px] uppercase tracking-[0.2em] font-mono text-amber-400/80">{t.stats.pubs}</div>
           </div>
           <div>
-            <div className="font-display font-light text-4xl md:text-5xl text-white mb-2">5000+</div>
+            <div className="font-display font-light text-4xl md:text-5xl text-white mb-2">{totalCitations}</div>
             <div className="text-[10px] uppercase tracking-[0.2em] font-mono text-amber-400/80">{t.stats.citations}</div>
           </div>
           <div>
-            <div className="font-display font-light text-4xl md:text-5xl text-white mb-2">30+</div>
+            <div className="font-display font-light text-4xl md:text-5xl text-white mb-2">{t.stats.expValue}</div>
             <div className="text-[10px] uppercase tracking-[0.2em] font-mono text-amber-400/80">{t.stats.exp}</div>
           </div>
           <div>
-            <div className="font-display font-light text-4xl md:text-5xl text-white mb-2">15+</div>
+            <div className="font-display font-light text-4xl md:text-5xl text-white mb-2">{t.stats.patentsValue}</div>
             <div className="text-[10px] uppercase tracking-[0.2em] font-mono text-amber-400/80">{t.stats.patents}</div>
           </div>
+        </div>
+        <div className="mt-8 text-center">
+          <p className="text-xs font-mono text-slate-500/80">{t.stats.scopusNote}</p>
         </div>
       </section>
 
@@ -503,33 +600,37 @@ END:VCARD`;
             <p className="text-teal-400/80 font-mono uppercase text-[10px] tracking-[0.2em] mb-12">{t.pubs.desc}</p>
             
             {/* Filter UI */}
-            <div className="flex flex-wrap gap-3">
-              <button 
-                onClick={() => setPubFilter('All')}
-                className={`px-5 py-2 rounded-full text-xs font-mono uppercase tracking-wider transition-all duration-300 ${pubFilter === 'All' ? 'bg-amber-500 text-[#080C16] font-bold shadow-[0_0_15px_rgba(251,191,36,0.3)]' : 'bg-white/[0.03] text-slate-400 hover:bg-white/[0.08] hover:text-white border border-white/[0.05]'}`}
-              >
-                All
-              </button>
-              <button 
-                onClick={() => setPubFilter('Selected')}
-                className={`px-5 py-2 rounded-full text-xs font-mono uppercase tracking-wider transition-all duration-300 ${pubFilter === 'Selected' ? 'bg-amber-500 text-[#080C16] font-bold shadow-[0_0_15px_rgba(251,191,36,0.3)]' : 'bg-white/[0.03] text-slate-400 hover:bg-white/[0.08] hover:text-white border border-white/[0.05]'}`}
-              >
-                Selected
-              </button>
-              {uniqueYears.map(year => (
-                <button 
-                  key={year}
-                  onClick={() => setPubFilter(year)}
-                  className={`px-5 py-2 rounded-full text-xs font-mono uppercase tracking-wider transition-all duration-300 ${pubFilter === year ? 'bg-teal-500 text-[#080C16] font-bold shadow-[0_0_15px_rgba(20,184,166,0.3)]' : 'bg-white/[0.03] text-slate-400 hover:bg-white/[0.08] hover:text-white border border-white/[0.05]'}`}
+            <div className="flex items-center gap-4">
+              <span className="text-xs font-mono uppercase tracking-widest text-slate-500">Filter by:</span>
+              <div className="relative">
+                <select 
+                  value={pubFilter}
+                  onChange={(e) => {
+                    setPubFilter(e.target.value);
+                    setVisibleCount(10);
+                  }}
+                  className="appearance-none bg-[#0B101E]/80 border border-white/[0.1] text-slate-300 px-6 py-3 pr-12 rounded-full text-sm font-mono focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 transition-all cursor-pointer backdrop-blur-md"
                 >
-                  {year}
-                </button>
-              ))}
+                  <option value="All">All Publications</option>
+                  <option value="Corresponding">Corresponding Author</option>
+                  <option value="Selected">Selected / Highlighted</option>
+                  <optgroup label="By Year">
+                    {uniqueYears.map(year => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </optgroup>
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </div>
+              </div>
             </div>
           </div>
 
           <div className="flex flex-col gap-8">
-            {filteredPublications.map((pub, i) => {
+            {visiblePublications.map((pub, i) => {
               // Fix: cover_url is actually the Graphical Abstract (ga1), file_img is the Journal Cover (X...)
               const abstractImg = pub.cover_url;
               const journalImg = pub.file_img;
@@ -567,6 +668,10 @@ END:VCARD`;
                         className="w-full h-full object-contain p-2 transition-transform duration-500 group-hover/img:scale-105" 
                         referrerPolicy="no-referrer"
                         loading="lazy"
+                        onError={(e) => {
+                          e.currentTarget.src = `https://picsum.photos/seed/science-${i}/800/600`;
+                          e.currentTarget.onerror = null; // Prevent infinite loop if fallback also fails
+                        }}
                       />
                       <div className="absolute top-2 left-2 text-[10px] font-mono uppercase tracking-widest text-slate-800 bg-white/90 px-2 py-1 rounded border border-slate-200 backdrop-blur-md shadow-sm">
                         {mainLabel}
@@ -580,6 +685,9 @@ END:VCARD`;
                           className="w-full h-full object-contain p-1 transition-transform duration-500 group-hover/img:scale-105" 
                           referrerPolicy="no-referrer"
                           loading="lazy"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none'; // Hide secondary image if it fails to load
+                          }}
                         />
                         <div className="absolute top-1 left-1 text-[8px] font-mono uppercase tracking-widest text-slate-800 bg-white/90 px-1.5 py-0.5 rounded border border-slate-200 backdrop-blur-md">
                           {t.pubs.cover}
@@ -592,11 +700,9 @@ END:VCARD`;
                   <div className="w-full lg:w-2/3 flex flex-col">
                     <div className="flex flex-wrap items-center gap-3 mb-6">
                       {/* Highlight Badge */}
-                      {pub.highlight && (
-                        <span className="bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full text-xs font-mono text-amber-300">
-                          {pub.highlight}
-                        </span>
-                      )}
+                      <span className="bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full text-xs font-mono text-amber-300">
+                        {getHighlightText(pub.citations)}
+                      </span>
                       
                       {/* Star Badge */}
                       {pub.is_star === '是' ? (
@@ -649,6 +755,20 @@ END:VCARD`;
               );
             })}
           </div>
+
+          {visibleCount < filteredPublications.length && (
+            <div className="mt-16 flex justify-center">
+              <button
+                onClick={() => setVisibleCount(prev => prev + 10)}
+                className="px-8 py-3 rounded-full border border-amber-500/30 text-amber-500 font-mono text-sm hover:bg-amber-500/10 hover:border-amber-500/50 transition-all duration-300 flex items-center gap-2"
+              >
+                {lang === 'zh' ? '載入更多' : 'Load More'}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
@@ -748,6 +868,7 @@ END:VCARD`;
               <span className="font-display font-light text-amber-500/90 tracking-wide">{t.impact.title}</span> <br />
               <span className="font-display font-bold tracking-tight">{t.impact.subtitle}</span>
             </h2>
+            <p className="text-xs font-mono text-slate-500/80 mt-4">{t.impact.source}</p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
