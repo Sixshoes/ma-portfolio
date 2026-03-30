@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Publication, publications as fallbackPublications } from '@/lib/publications';
 import { useLanguage } from '../LanguageContext';
 import { 
@@ -19,7 +19,10 @@ import {
   Quote,
   Star,
   Phone,
-  Download
+  Download,
+  UserPlus,
+  X,
+  ArrowUp
 } from 'lucide-react';
 
 const dict = {
@@ -157,6 +160,11 @@ const dict = {
       email: 'yrma@mail.fgu.edu.tw',
       phone: '+886-3-9871000 ext. 11010',
       vcard: 'Save Contact Info',
+      vcardModal: {
+        title: 'Save Contact',
+        add: 'Add to Contacts',
+        click: 'Click to download'
+      },
       footer: '© 2026 Yuan-Ron Ma (Y.R. Ma) • Advanced Materials & Quantum Devices'
     }
   },
@@ -294,17 +302,41 @@ const dict = {
       email: 'yrma@mail.fgu.edu.tw',
       phone: '(03)9871000 分機 11010',
       vcard: '儲存聯絡資訊',
+      vcardModal: {
+        title: '儲存聯絡資訊',
+        add: '加入通訊錄',
+        click: '點擊下載'
+      },
       footer: '© 2026 馬遠榮 (Yuan-Ron Ma) • 先進材料與量子元件實驗室'
     }
   }
 };
+
+const vcardData = `BEGIN:VCARD
+VERSION:3.0
+N:Ma;Yuan-Ron;;;
+FN:Yuan-Ron Ma (馬遠榮)
+TITLE:Vice President, Chair Professor
+ORG:Fo Guang University
+TEL;TYPE=WORK,VOICE:+886-3-9871000;ext=11010
+EMAIL;TYPE=PREF,INTERNET:yrma@mail.fgu.edu.tw
+END:VCARD`;
 
 export default function HomePage() {
   const { lang, setLang } = useLanguage();
   const [pubFilter, setPubFilter] = useState<string>('All');
   const [visibleCount, setVisibleCount] = useState<number>(10);
   const [publications, setPublications] = useState<Publication[]>(fallbackPublications);
+  const [showScrollTop, setShowScrollTop] = useState(false);
   const t = dict[lang];
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 400);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     fetch('https://sixshoes.github.io/Ma-Research-Portal/papers.json')
@@ -370,18 +402,7 @@ export default function HomePage() {
   };
 
   const handleDownloadVCard = () => {
-    const vcard = `BEGIN:VCARD
-VERSION:3.0
-N:Ma;Yuan-Ron;;;
-FN:Yuan-Ron Ma (馬遠榮)
-TITLE:Vice President, Chair Professor
-ORG:Fo Guang University
-TEL;TYPE=WORK,VOICE:+886-3-9871000;ext=11010
-EMAIL;TYPE=PREF,INTERNET:yrma@mail.fgu.edu.tw
-URL:${window.location.origin}
-END:VCARD`;
-
-    const blob = new Blob([vcard], { type: 'text/vcard' });
+    const blob = new Blob([vcardData], { type: 'text/vcard' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -1128,21 +1149,23 @@ END:VCARD`;
               </div>
 
               <div className="flex flex-col items-center justify-center p-8 border-t md:border-t-0 md:border-l border-white/[0.05]">
-                <div className="w-16 h-16 mb-6 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 flex items-center justify-center border border-white/10 shadow-inner">
-                  <Download className="w-6 h-6 text-slate-300" />
-                </div>
                 <button 
                   onClick={handleDownloadVCard}
-                  className="w-full relative group overflow-hidden rounded-full bg-white/5 border border-white/10 px-8 py-4 text-sm font-display tracking-widest uppercase text-white hover:border-amber-500/50 transition-all duration-500"
+                  className="group relative w-32 h-32 mb-6 rounded-full bg-gradient-to-br from-amber-500/10 to-teal-500/10 flex items-center justify-center border border-white/10 shadow-[0_0_30px_rgba(255,255,255,0.05)] hover:shadow-[0_0_40px_rgba(251,191,36,0.2)] hover:scale-105 hover:border-amber-500/30 transition-all duration-500"
+                  title={lang === 'en' ? 'Tap to download' : '點擊下載'}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 to-teal-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  <span className="relative z-10 flex items-center justify-center gap-2">
-                    {t.contact.vcard}
-                  </span>
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-amber-500/20 to-teal-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl" />
+                  <UserPlus className="w-12 h-12 text-slate-300 group-hover:text-amber-400 transition-colors relative z-10" />
                 </button>
-                <p className="text-xs text-slate-500 mt-4 text-center max-w-[200px]">
-                  {lang === 'en' ? 'Add directly to your address book' : '一鍵加入通訊錄'}
-                </p>
+                <div className="text-center">
+                  <div className="text-sm font-display tracking-widest uppercase text-white mb-2">
+                    {t.contact.vcardModal.add}
+                  </div>
+                  <div className="text-xs text-slate-500 flex items-center justify-center gap-1 mx-auto">
+                    <Download className="w-3 h-3" />
+                    {t.contact.vcardModal.click}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1154,6 +1177,24 @@ END:VCARD`;
           </div>
         </motion.div>
       </section>
+
+      {/* Scroll to Top Button */}
+      <AnimatePresence>
+        {showScrollTop && (
+          <motion.button
+            initial={{ opacity: 0, y: 20, scale: 0.8 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.8 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="fixed bottom-8 right-8 z-50 p-4 rounded-full bg-[#0B101E]/80 border border-white/10 text-slate-300 backdrop-blur-md shadow-[0_0_20px_rgba(0,0,0,0.3)] hover:bg-amber-500/10 hover:border-amber-500/30 hover:text-amber-400 hover:shadow-[0_0_30px_rgba(251,191,36,0.2)] transition-colors duration-300"
+            aria-label="Scroll to top"
+          >
+            <ArrowUp className="w-5 h-5" />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </main>
   );
 }

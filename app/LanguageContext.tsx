@@ -35,7 +35,7 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
       setLangState(newLang);
       localStorage.setItem('preferred_lang', newLang);
       setIsTransitioning(false);
-    }, 300); // 300ms fade out
+    }, 400); // 400ms for quantum effect
   };
 
   return (
@@ -43,8 +43,9 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
       <div 
         style={{ 
           opacity: isTransitioning ? 0 : 1, 
-          filter: isTransitioning ? 'blur(8px)' : 'blur(0px)',
-          transition: 'opacity 0.3s ease-in-out, filter 0.3s ease-in-out' 
+          filter: isTransitioning ? 'blur(10px) drop-shadow(15px 0 0 rgba(20, 184, 166, 0.7)) drop-shadow(-15px 0 0 rgba(245, 158, 11, 0.7))' : 'blur(0px) drop-shadow(0 0 0 rgba(0,0,0,0))',
+          transform: isTransitioning ? 'scale(0.95)' : 'scale(1)',
+          transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)' 
         }}
       >
         {children}
