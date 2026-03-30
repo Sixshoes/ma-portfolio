@@ -156,7 +156,7 @@ const dict = {
       subtitle: 'Touch',
       email: 'yrma@mail.fgu.edu.tw',
       phone: '+886-3-9871000 ext. 11010',
-      vcard: 'Download vCard',
+      vcard: 'Save Contact Info',
       footer: '© 2026 Yuan-Ron Ma (Y.R. Ma) • Advanced Materials & Quantum Devices'
     }
   },
@@ -293,7 +293,7 @@ const dict = {
       subtitle: '方式',
       email: 'yrma@mail.fgu.edu.tw',
       phone: '(03)9871000 分機 11010',
-      vcard: '下載 vCard',
+      vcard: '儲存聯絡資訊',
       footer: '© 2026 馬遠榮 (Yuan-Ron Ma) • 先進材料與量子元件實驗室'
     }
   }
@@ -1089,43 +1089,71 @@ END:VCARD`;
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="max-w-7xl mx-auto px-6 text-center relative z-10"
+          className="max-w-4xl mx-auto px-6 relative z-10"
         >
-          <h2 className="text-5xl md:text-7xl text-white mb-16">
-            <span className="font-display font-light text-amber-500/90 tracking-wide">{t.contact.title}</span> <br />
-            <span className="font-display font-bold tracking-tight">{t.contact.subtitle}</span>
-          </h2>
-          <div className="flex flex-col md:flex-row justify-center items-center gap-6 md:gap-8 mb-16">
-            <a href={`mailto:${t.contact.email}`} className="flex items-center gap-4 bg-white/[0.02] px-8 py-5 rounded-full border border-white/[0.05] hover:border-amber-500/30 hover:bg-white/[0.04] transition-all backdrop-blur-sm group">
-              <Mail className="w-5 h-5 text-amber-400 stroke-1 group-hover:scale-110 transition-transform" />
-              <span className="text-sm font-display tracking-[0.1em] text-white">{t.contact.email}</span>
-            </a>
-            <a href={`tel:${t.contact.phone.replace(/[^0-9+]/g, '')}`} className="flex items-center gap-4 bg-white/[0.02] px-8 py-5 rounded-full border border-white/[0.05] hover:border-teal-500/30 hover:bg-white/[0.04] transition-all backdrop-blur-sm group">
-              <Phone className="w-5 h-5 text-teal-400 stroke-1 group-hover:scale-110 transition-transform" />
-              <span className="text-sm font-display tracking-[0.1em] text-white">{t.contact.phone}</span>
-            </a>
+          <div className="text-center mb-16">
+            <h2 className="text-5xl md:text-7xl text-white mb-6">
+              <span className="font-display font-light text-amber-500/90 tracking-wide">{t.contact.title}</span> <br />
+              <span className="font-display font-bold tracking-tight">{t.contact.subtitle}</span>
+            </h2>
+            <div className="w-24 h-1 bg-gradient-to-r from-amber-500 to-teal-500 mx-auto rounded-full opacity-50"></div>
           </div>
-          <div className="flex justify-center mb-24">
-            <button 
-              onClick={handleDownloadVCard}
-              className="group relative flex items-center gap-3 bg-[#0B101E]/80 text-white px-8 py-4 rounded-full font-display tracking-widest text-sm uppercase border border-white/10 hover:border-amber-500/50 hover:bg-amber-500/10 transition-all duration-500 overflow-hidden shadow-[0_0_20px_rgba(0,0,0,0.3)] hover:shadow-[0_0_30px_rgba(251,191,36,0.2)]"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-amber-500/0 via-amber-500/10 to-amber-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-              <Download className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
-              <span className="relative z-10">{t.contact.vcard}</span>
-            </button>
+
+          <div className="bg-white/[0.02] border border-white/[0.05] rounded-3xl p-8 md:p-12 backdrop-blur-md shadow-2xl relative overflow-hidden">
+            {/* Decorative elements inside card */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-teal-500/5 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none"></div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center relative z-10">
+              <div className="space-y-8">
+                <a href={`mailto:${t.contact.email}`} className="flex items-start gap-5 group">
+                  <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0 border border-amber-500/20 group-hover:scale-110 group-hover:bg-amber-500/20 transition-all duration-300">
+                    <Mail className="w-5 h-5 text-amber-400 stroke-1" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-mono uppercase tracking-widest text-slate-500 mb-1">Email</div>
+                    <div className="text-lg text-slate-200 group-hover:text-amber-400 transition-colors">{t.contact.email}</div>
+                  </div>
+                </a>
+
+                <a href={`tel:${t.contact.phone.replace(/[^0-9+]/g, '')}`} className="flex items-start gap-5 group">
+                  <div className="w-12 h-12 rounded-full bg-teal-500/10 flex items-center justify-center shrink-0 border border-teal-500/20 group-hover:scale-110 group-hover:bg-teal-500/20 transition-all duration-300">
+                    <Phone className="w-5 h-5 text-teal-400 stroke-1" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-mono uppercase tracking-widest text-slate-500 mb-1">Phone</div>
+                    <div className="text-lg text-slate-200 group-hover:text-teal-400 transition-colors">{t.contact.phone}</div>
+                  </div>
+                </a>
+              </div>
+
+              <div className="flex flex-col items-center justify-center p-8 border-t md:border-t-0 md:border-l border-white/[0.05]">
+                <div className="w-16 h-16 mb-6 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 flex items-center justify-center border border-white/10 shadow-inner">
+                  <Download className="w-6 h-6 text-slate-300" />
+                </div>
+                <button 
+                  onClick={handleDownloadVCard}
+                  className="w-full relative group overflow-hidden rounded-full bg-white/5 border border-white/10 px-8 py-4 text-sm font-display tracking-widest uppercase text-white hover:border-amber-500/50 transition-all duration-500"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 to-teal-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <span className="relative z-10 flex items-center justify-center gap-2">
+                    {t.contact.vcard}
+                  </span>
+                </button>
+                <p className="text-xs text-slate-500 mt-4 text-center max-w-[200px]">
+                  {lang === 'en' ? 'Add directly to your address book' : '一鍵加入通訊錄'}
+                </p>
+              </div>
+            </div>
           </div>
-          <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-slate-500">
-            {t.contact.footer}
+
+          <div className="text-center mt-24">
+            <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-slate-500">
+              {t.contact.footer}
+            </div>
           </div>
         </motion.div>
       </section>
-
-      <style jsx global>{`
-        html {
-          scroll-behavior: smooth;
-        }
-      `}</style>
     </main>
   );
 }

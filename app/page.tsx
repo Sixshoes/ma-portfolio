@@ -8,16 +8,16 @@ import { useLanguage } from './LanguageContext';
 
 const dict = {
   en: {
-    name: 'Yuan-Ron Ma',
-    title: 'Personal Website',
+    name: 'Prof. Yuan-Ron Ma',
+    title: 'Academic Portfolio',
     subtitle: 'Advanced Materials & Quantum Devices',
-    enter: 'Enter Website'
+    enter: 'Enter Portfolio'
   },
   zh: {
-    name: '馬遠榮',
-    title: '個人網站',
+    name: '馬遠榮 教授',
+    title: '學術研究專頁',
     subtitle: '先進材料與量子元件',
-    enter: '進入網站'
+    enter: '進入專頁'
   }
 };
 
