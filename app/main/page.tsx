@@ -13,12 +13,13 @@ import {
   Contrast, 
   Network,
   Mail, 
+  Phone,
+  Printer,
   MapPin, 
   GraduationCap,
   Globe,
   Quote,
   Star,
-  Phone,
   Download,
   UserPlus,
   X,
@@ -159,6 +160,7 @@ const dict = {
       subtitle: 'Touch',
       email: 'yrma@mail.fgu.edu.tw',
       phone: '+886-3-9871000 ext. 11010',
+      fax: '+886-3-9874815',
       vcard: 'Save Contact Info',
       vcardModal: {
         title: 'Save Contact',
@@ -301,6 +303,7 @@ const dict = {
       subtitle: '方式',
       email: 'yrma@mail.fgu.edu.tw',
       phone: '(03)9871000 分機 11010',
+      fax: '(03)9874815',
       vcard: '儲存聯絡資訊',
       vcardModal: {
         title: '儲存聯絡資訊',
@@ -319,6 +322,7 @@ FN:Yuan-Ron Ma (馬遠榮)
 TITLE:Vice President, Chair Professor
 ORG:Fo Guang University
 TEL;TYPE=WORK,VOICE:+886-3-9871000;ext=11010
+TEL;TYPE=WORK,FAX:+886-3-9874815
 EMAIL;TYPE=PREF,INTERNET:yrma@mail.fgu.edu.tw
 END:VCARD`;
 
@@ -328,6 +332,8 @@ export default function HomePage() {
   const [visibleCount, setVisibleCount] = useState<number>(10);
   const [publications, setPublications] = useState<Publication[]>(fallbackPublications);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isExpandedAdmin, setIsExpandedAdmin] = useState(false);
+  const [isExpandedService, setIsExpandedService] = useState(false);
   const t = dict[lang];
 
   useEffect(() => {
@@ -663,21 +669,21 @@ export default function HomePage() {
 
       {/* Stats Section */}
       <section className="border-y border-white/[0.05] bg-white/[0.01] py-16 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-12 text-center">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 text-center">
           <div>
-            <div className="font-display font-light text-4xl md:text-5xl text-white mb-2">{totalPubs}</div>
+            <div className="font-display font-light text-3xl md:text-5xl text-white mb-2">{totalPubs}</div>
             <div className="text-[10px] uppercase tracking-[0.2em] font-mono text-amber-400/80">{t.stats.pubs}</div>
           </div>
           <div>
-            <div className="font-display font-light text-4xl md:text-5xl text-white mb-2">{totalCitations}</div>
+            <div className="font-display font-light text-3xl md:text-5xl text-white mb-2">{totalCitations}</div>
             <div className="text-[10px] uppercase tracking-[0.2em] font-mono text-amber-400/80">{t.stats.citations}</div>
           </div>
           <div>
-            <div className="font-display font-light text-4xl md:text-5xl text-white mb-2">{t.stats.expValue}</div>
+            <div className="font-display font-light text-3xl md:text-5xl text-white mb-2">{t.stats.expValue}</div>
             <div className="text-[10px] uppercase tracking-[0.2em] font-mono text-amber-400/80">{t.stats.exp}</div>
           </div>
           <div>
-            <div className="font-display font-light text-4xl md:text-5xl text-white mb-2">{t.stats.patentsValue}</div>
+            <div className="font-display font-light text-3xl md:text-5xl text-white mb-2">{t.stats.patentsValue}</div>
             <div className="text-[10px] uppercase tracking-[0.2em] font-mono text-amber-400/80">{t.stats.patents}</div>
           </div>
         </div>
@@ -687,16 +693,16 @@ export default function HomePage() {
       </section>
 
       {/* Research Interests */}
-      <section id="research" className="py-32 px-6 max-w-7xl mx-auto relative">
+      <section id="research" className="py-20 md:py-32 px-6 max-w-7xl mx-auto relative">
         {/* Background glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-teal-500/5 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[800px] h-[300px] md:h-[800px] bg-teal-500/5 rounded-full blur-[80px] md:blur-[120px] pointer-events-none" />
 
-        <div className="flex flex-col md:flex-row justify-between items-end mb-20 relative z-10">
-          <h2 className="text-5xl md:text-7xl text-white">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 md:mb-20 relative z-10">
+          <h2 className="text-4xl md:text-7xl text-white">
             <span className="font-display font-light text-amber-500/90 tracking-wide">{t.research.title}</span> <br />
             <span className="font-display font-bold tracking-tight">{t.research.subtitle}</span>
           </h2>
-          <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-teal-400/80 mt-4 md:mt-0 border border-teal-500/20 px-4 py-2 rounded-full bg-teal-500/5">
+          <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-teal-400/80 mt-6 md:mt-0 border border-teal-500/20 px-4 py-2 rounded-full bg-teal-500/5">
             {t.research.desc}
           </div>
         </div>
@@ -967,10 +973,18 @@ export default function HomePage() {
                 <div className="flex-1">
                   <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-purple-400/80 mb-4">{t.about.adminLabel}</div>
                   <div className="space-y-1">
-                    {t.about.admin.map((item, idx) => (
+                    {(isExpandedAdmin ? t.about.admin : t.about.admin.slice(0, 5)).map((item, idx) => (
                       <div key={idx}>{renderListItem(item)}</div>
                     ))}
                   </div>
+                  {t.about.admin.length > 5 && (
+                    <button 
+                      onClick={() => setIsExpandedAdmin(!isExpandedAdmin)}
+                      className="mt-4 text-[10px] font-mono text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-1"
+                    >
+                      {isExpandedAdmin ? (lang === 'zh' ? '收起' : 'Show Less') : (lang === 'zh' ? `顯示更多 (${t.about.admin.length - 5})` : `Show More (${t.about.admin.length - 5})`)}
+                    </button>
+                  )}
                 </div>
               </div>
               <div className="flex gap-6 group">
@@ -978,10 +992,18 @@ export default function HomePage() {
                 <div className="flex-1">
                   <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-emerald-400/80 mb-4">{t.about.serviceLabel}</div>
                   <div className="space-y-1">
-                    {t.about.service.map((item, idx) => (
+                    {(isExpandedService ? t.about.service : t.about.service.slice(0, 5)).map((item, idx) => (
                       <div key={idx}>{renderListItem(item)}</div>
                     ))}
                   </div>
+                  {t.about.service.length > 5 && (
+                    <button 
+                      onClick={() => setIsExpandedService(!isExpandedService)}
+                      className="mt-4 text-[10px] font-mono text-emerald-400 hover:text-emerald-300 transition-colors flex items-center gap-1"
+                    >
+                      {isExpandedService ? (lang === 'zh' ? '收起' : 'Show Less') : (lang === 'zh' ? `顯示更多 (${t.about.service.length - 5})` : `Show More (${t.about.service.length - 5})`)}
+                    </button>
+                  )}
                 </div>
               </div>
               <div className="flex gap-6 group">
@@ -1029,44 +1051,44 @@ export default function HomePage() {
                 </div>
               </div>
               
-              <div className="grid grid-cols-3 gap-4 mb-10">
+              <div className="grid grid-cols-3 gap-2 md:gap-4 mb-10">
                 <div className="text-center">
-                  <div className="w-10 h-10 mx-auto rounded-full bg-blue-500/10 flex items-center justify-center mb-3">
-                    <Globe className="w-5 h-5 text-blue-400 stroke-1" />
+                  <div className="w-8 h-8 md:w-10 md:h-10 mx-auto rounded-full bg-blue-500/10 flex items-center justify-center mb-3">
+                    <Globe className="w-4 h-4 md:w-5 md:h-5 text-blue-400 stroke-1" />
                   </div>
-                  <div className="text-2xl font-display font-bold text-white">49,442</div>
-                  <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-1">{t.impact.worldRank}</div>
+                  <div className="text-lg md:text-2xl font-display font-bold text-white">49,442</div>
+                  <div className="text-[8px] md:text-[10px] uppercase tracking-wider text-slate-500 mt-1">{t.impact.worldRank}</div>
                 </div>
                 <div className="text-center">
-                  <div className="w-10 h-10 mx-auto rounded-full bg-red-500/10 flex items-center justify-center mb-3">
-                    <MapPin className="w-5 h-5 text-red-400 stroke-1" />
+                  <div className="w-8 h-8 md:w-10 md:h-10 mx-auto rounded-full bg-red-500/10 flex items-center justify-center mb-3">
+                    <MapPin className="w-4 h-4 md:w-5 md:h-5 text-red-400 stroke-1" />
                   </div>
-                  <div className="text-2xl font-display font-bold text-white">225</div>
-                  <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-1">{t.impact.countryRank}</div>
+                  <div className="text-lg md:text-2xl font-display font-bold text-white">225</div>
+                  <div className="text-[8px] md:text-[10px] uppercase tracking-wider text-slate-500 mt-1">{t.impact.countryRank}</div>
                 </div>
                 <div className="text-center">
-                  <div className="w-10 h-10 mx-auto rounded-full bg-emerald-500/10 flex items-center justify-center mb-3">
-                    <GraduationCap className="w-5 h-5 text-emerald-400 stroke-1" />
+                  <div className="w-8 h-8 md:w-10 md:h-10 mx-auto rounded-full bg-emerald-500/10 flex items-center justify-center mb-3">
+                    <GraduationCap className="w-4 h-4 md:w-5 md:h-5 text-emerald-400 stroke-1" />
                   </div>
-                  <div className="text-2xl font-display font-bold text-white">1</div>
-                  <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-1">{t.impact.uniRank}</div>
+                  <div className="text-lg md:text-2xl font-display font-bold text-white">1</div>
+                  <div className="text-[8px] md:text-[10px] uppercase tracking-wider text-slate-500 mt-1">{t.impact.uniRank}</div>
                 </div>
               </div>
 
-              <div className="bg-white/5 rounded-2xl p-6">
-                <h4 className="text-sm font-mono uppercase tracking-widest text-slate-400 mb-6 text-center">{t.impact.hIndex}</h4>
-                <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="bg-white/5 rounded-2xl p-4 md:p-6">
+                <h4 className="text-xs md:text-sm font-mono uppercase tracking-widest text-slate-400 mb-6 text-center">{t.impact.hIndex}</h4>
+                <div className="grid grid-cols-3 gap-2 md:gap-4 text-center">
                   <div>
-                    <div className="text-3xl font-display font-bold text-amber-400">62</div>
-                    <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-2">{t.impact.total}</div>
+                    <div className="text-xl md:text-3xl font-display font-bold text-amber-400">62</div>
+                    <div className="text-[8px] md:text-[10px] uppercase tracking-wider text-slate-500 mt-2">{t.impact.total}</div>
                   </div>
                   <div>
-                    <div className="text-3xl font-display font-bold text-white">47</div>
-                    <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-2">{t.impact.last5}</div>
+                    <div className="text-xl md:text-3xl font-display font-bold text-white">47</div>
+                    <div className="text-[8px] md:text-[10px] uppercase tracking-wider text-slate-500 mt-2">{t.impact.last5}</div>
                   </div>
                   <div>
-                    <div className="text-3xl font-display font-bold text-white">0.758</div>
-                    <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-2">{t.impact.ratio}</div>
+                    <div className="text-xl md:text-3xl font-display font-bold text-white">0.758</div>
+                    <div className="text-[8px] md:text-[10px] uppercase tracking-wider text-slate-500 mt-2">{t.impact.ratio}</div>
                   </div>
                 </div>
               </div>
@@ -1090,44 +1112,44 @@ export default function HomePage() {
                 </div>
               </div>
               
-              <div className="grid grid-cols-3 gap-4 mb-10">
+              <div className="grid grid-cols-3 gap-2 md:gap-4 mb-10">
                 <div className="text-center">
-                  <div className="w-10 h-10 mx-auto rounded-full bg-blue-500/10 flex items-center justify-center mb-3">
-                    <Globe className="w-5 h-5 text-blue-400 stroke-1" />
+                  <div className="w-8 h-8 md:w-10 md:h-10 mx-auto rounded-full bg-blue-500/10 flex items-center justify-center mb-3">
+                    <Globe className="w-4 h-4 md:w-5 md:h-5 text-blue-400 stroke-1" />
                   </div>
-                  <div className="text-2xl font-display font-bold text-white">80,658</div>
-                  <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-1">{t.impact.worldRank}</div>
+                  <div className="text-lg md:text-2xl font-display font-bold text-white">80,658</div>
+                  <div className="text-[8px] md:text-[10px] uppercase tracking-wider text-slate-500 mt-1">{t.impact.worldRank}</div>
                 </div>
                 <div className="text-center">
-                  <div className="w-10 h-10 mx-auto rounded-full bg-red-500/10 flex items-center justify-center mb-3">
-                    <MapPin className="w-5 h-5 text-red-400 stroke-1" />
+                  <div className="w-8 h-8 md:w-10 md:h-10 mx-auto rounded-full bg-red-500/10 flex items-center justify-center mb-3">
+                    <MapPin className="w-4 h-4 md:w-5 md:h-5 text-red-400 stroke-1" />
                   </div>
-                  <div className="text-2xl font-display font-bold text-white">423</div>
-                  <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-1">{t.impact.countryRank}</div>
+                  <div className="text-lg md:text-2xl font-display font-bold text-white">423</div>
+                  <div className="text-[8px] md:text-[10px] uppercase tracking-wider text-slate-500 mt-1">{t.impact.countryRank}</div>
                 </div>
                 <div className="text-center">
-                  <div className="w-10 h-10 mx-auto rounded-full bg-purple-500/10 flex items-center justify-center mb-3">
-                    <GraduationCap className="w-5 h-5 text-purple-400 stroke-1" />
+                  <div className="w-8 h-8 md:w-10 md:h-10 mx-auto rounded-full bg-purple-500/10 flex items-center justify-center mb-3">
+                    <GraduationCap className="w-4 h-4 md:w-5 md:h-5 text-purple-400 stroke-1" />
                   </div>
-                  <div className="text-2xl font-display font-bold text-white">2</div>
-                  <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-1">{t.impact.uniRank}</div>
+                  <div className="text-lg md:text-2xl font-display font-bold text-white">2</div>
+                  <div className="text-[8px] md:text-[10px] uppercase tracking-wider text-slate-500 mt-1">{t.impact.uniRank}</div>
                 </div>
               </div>
 
-              <div className="bg-white/5 rounded-2xl p-6">
-                <h4 className="text-sm font-mono uppercase tracking-widest text-slate-400 mb-6 text-center">{t.impact.hIndex}</h4>
-                <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="bg-white/5 rounded-2xl p-4 md:p-6">
+                <h4 className="text-xs md:text-sm font-mono uppercase tracking-widest text-slate-400 mb-6 text-center">{t.impact.hIndex}</h4>
+                <div className="grid grid-cols-3 gap-2 md:gap-4 text-center">
                   <div>
-                    <div className="text-3xl font-display font-bold text-purple-400">52</div>
-                    <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-2">{t.impact.total}</div>
+                    <div className="text-xl md:text-3xl font-display font-bold text-purple-400">52</div>
+                    <div className="text-[8px] md:text-[10px] uppercase tracking-wider text-slate-500 mt-2">{t.impact.total}</div>
                   </div>
                   <div>
-                    <div className="text-3xl font-display font-bold text-white">38</div>
-                    <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-2">{t.impact.last5}</div>
+                    <div className="text-xl md:text-3xl font-display font-bold text-white">38</div>
+                    <div className="text-[8px] md:text-[10px] uppercase tracking-wider text-slate-500 mt-2">{t.impact.last5}</div>
                   </div>
                   <div>
-                    <div className="text-3xl font-display font-bold text-white">0.731</div>
-                    <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-2">{t.impact.ratio}</div>
+                    <div className="text-xl md:text-3xl font-display font-bold text-white">0.731</div>
+                    <div className="text-[8px] md:text-[10px] uppercase tracking-wider text-slate-500 mt-2">{t.impact.ratio}</div>
                   </div>
                 </div>
               </div>
@@ -1146,8 +1168,8 @@ export default function HomePage() {
           viewport={{ once: true }}
           className="max-w-4xl mx-auto px-6 relative z-10"
         >
-          <div className="text-center mb-16">
-            <h2 className="text-5xl md:text-7xl text-white mb-6">
+          <div className="text-center mb-12 md:mb-16">
+            <h2 className="text-4xl md:text-7xl text-white mb-6">
               <span className="font-display font-light text-amber-500/90 tracking-wide">{t.contact.title}</span> <br />
               <span className="font-display font-bold tracking-tight">{t.contact.subtitle}</span>
             </h2>
@@ -1180,6 +1202,16 @@ export default function HomePage() {
                     <div className="text-lg text-slate-200 group-hover:text-teal-400 transition-colors">{t.contact.phone}</div>
                   </div>
                 </a>
+
+                <div className="flex items-start gap-5 group">
+                  <div className="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center shrink-0 border border-purple-500/20 group-hover:scale-110 group-hover:bg-purple-500/20 transition-all duration-300">
+                    <Printer className="w-5 h-5 text-purple-400 stroke-1" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-mono uppercase tracking-widest text-slate-500 mb-1">Fax</div>
+                    <div className="text-lg text-slate-200 group-hover:text-purple-400 transition-colors">{t.contact.fax}</div>
+                  </div>
+                </div>
               </div>
 
               <div className="flex flex-col items-center justify-center p-8 border-t md:border-t-0 md:border-l border-white/[0.05]">

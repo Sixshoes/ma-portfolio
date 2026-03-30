@@ -37,8 +37,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SmoothScroll>
           <LanguageProvider>
             {children}
-            <ScrollToTop />
           </LanguageProvider>
+          <ScrollToTop />
         </SmoothScroll>
       </body>
     </html>
