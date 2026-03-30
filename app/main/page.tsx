@@ -66,6 +66,8 @@ const dict = {
       citations: 'Citations',
       journal: 'Journal',
       doi: 'DOI',
+      scholar: 'Google Scholar',
+      link: 'Link',
       year: 'Year',
       corresponding: 'Corresponding Author (*)',
       coauthor: 'Co-author',
@@ -210,6 +212,8 @@ const dict = {
       citations: '引用次數',
       journal: '發表期刊',
       doi: '數位物件識別碼 (DOI)',
+      scholar: 'Google Scholar',
+      link: '相關連結',
       year: '發表年份',
       corresponding: '通訊作者 (*)',
       coauthor: '共同作者',
@@ -916,7 +920,11 @@ export default function HomePage() {
                           </div>
                         </div>
                         <div className="md:col-span-2">
-                          <div className="text-[10px] font-mono uppercase tracking-widest text-slate-500 mb-1.5">{t.pubs.doi}</div>
+                          <div className="text-[10px] font-mono uppercase tracking-widest text-slate-500 mb-1.5">
+                            {pub.doi.includes('doi.org') ? t.pubs.doi : 
+                             pub.doi.includes('scholar.google.com') ? t.pubs.scholar : 
+                             t.pubs.link}
+                          </div>
                           <a 
                             href={pub.doi} 
                             target="_blank" 
