@@ -5,10 +5,28 @@ import { motion } from 'motion/react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
+const dict = {
+  en: {
+    name: 'Yuan-Ron Ma',
+    title: 'Personal Website',
+    subtitle: 'Advanced Materials & Quantum Devices',
+    enter: 'Enter Website'
+  },
+  zh: {
+    name: '馬遠榮',
+    title: '個人網站',
+    subtitle: '先進材料與量子元件',
+    enter: '進入網站'
+  }
+};
+
 export default function VisualsPage() {
+  const [lang, setLang] = useState<'en' | 'zh'>('en');
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [windowSize, setWindowSize] = useState({ width: 1000, height: 1000 });
   const [particles, setParticles] = useState<Array<{id: number, size: number, x: number, y: number, duration: number, delay: number, color: string}>>([]);
+
+  const t = dict[lang];
 
   useEffect(() => {
     setWindowSize({ width: window.innerWidth, height: window.innerHeight });
@@ -44,12 +62,28 @@ export default function VisualsPage() {
 
   return (
     <main className="relative w-full h-screen bg-[#080C16] overflow-hidden flex items-center justify-center font-sans">
+      {/* Language Toggle */}
+      <div className="absolute top-8 right-8 z-50 flex gap-2">
+        <button 
+          onClick={() => setLang('en')}
+          className={`text-xs font-mono px-3 py-1 rounded-full transition-colors ${lang === 'en' ? 'bg-amber-400 text-[#080C16]' : 'text-slate-400 hover:text-white border border-white/10'}`}
+        >
+          EN
+        </button>
+        <button 
+          onClick={() => setLang('zh')}
+          className={`text-xs font-mono px-3 py-1 rounded-full transition-colors ${lang === 'zh' ? 'bg-amber-400 text-[#080C16]' : 'text-slate-400 hover:text-white border border-white/10'}`}
+        >
+          中文
+        </button>
+      </div>
+
       {/* Enter Site Button */}
       <Link 
         href="/main" 
         className="absolute bottom-16 left-1/2 -translate-x-1/2 z-50 text-amber-400 hover:text-[#080C16] hover:bg-amber-400 transition-all flex items-center gap-2 font-display text-sm uppercase tracking-[0.2em] border border-amber-400/50 px-8 py-3 rounded-full backdrop-blur-md shadow-[0_0_20px_rgba(251,191,36,0.2)] hover:shadow-[0_0_30px_rgba(251,191,36,0.5)]"
       >
-        Enter Website
+        {t.enter}
       </Link>
 
       {/* Mouse Follower Glow */}
@@ -102,9 +136,9 @@ export default function VisualsPage() {
         
         {/* Core Text */}
         <div className="absolute text-white font-display text-xl tracking-[0.5em] font-light uppercase text-center pointer-events-none flex flex-col items-center gap-4 w-[600px]">
-          <span className="block text-teal-300/80 text-sm tracking-[0.3em]">Yuan-Ron Ma</span>
-          <span className="block text-3xl font-bold tracking-[0.2em] text-amber-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]">Personal Website</span>
-          <span className="block text-slate-400 text-xs tracking-[0.2em] mt-2">Advanced Materials & Quantum Devices</span>
+          <span className="block text-teal-300/80 text-sm tracking-[0.3em]">{t.name}</span>
+          <span className="block text-3xl font-bold tracking-[0.2em] text-amber-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]">{t.title}</span>
+          <span className="block text-slate-400 text-xs tracking-[0.2em] mt-2">{t.subtitle}</span>
         </div>
       </div>
 
