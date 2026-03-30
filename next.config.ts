@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
   },
   // Allow access to remote image placeholder.
   images: {
+    unoptimized: true, // Required for GitHub Pages static export
     remotePatterns: [
       {
         protocol: 'https',
@@ -49,7 +50,10 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  output: 'standalone',
+  // Use 'export' and set basePath ONLY when running in GitHub Actions.
+  // This keeps the AI Studio preview working ('standalone') while deploying correctly to GitHub Pages.
+  output: process.env.GITHUB_ACTIONS ? 'export' : 'standalone',
+  basePath: process.env.GITHUB_ACTIONS ? '/Ma-Research-Portal' : '',
   transpilePackages: ['motion'],
   webpack: (config, {dev}) => {
     // HMR is disabled in AI Studio via DISABLE_HMR env var.

@@ -2,8 +2,8 @@ name: Deploy Next.js site to Pages
 
 on:
   push:
-    branches: ["main"] # 如果您的預設分支是 master，請改成 master
-  workflow_dispatch:
+    branches: ["main", "master"] # Trigger on push to main or master
+  workflow_dispatch: # Allow manual trigger
 
 permissions:
   contents: read
@@ -20,19 +20,24 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "npm"
+          
       - name: Setup Pages
         uses: actions/configure-pages@v5
         with:
           static_site_generator: next
+          
       - name: Install dependencies
         run: npm ci
+        
       - name: Build with Next.js
         run: npx next build
+        
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
