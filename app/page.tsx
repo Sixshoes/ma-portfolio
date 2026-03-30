@@ -33,6 +33,7 @@ export default function VisualsPage() {
   const particles = useMemo(() => {
     return Array.from({ length: 60 }).map((_, i) => ({
       id: i,
+      // Deterministic pseudo-random values based on index
       size: ((i * 7) % 6) + 1,
       x: (i * 13) % 100,
       y: (i * 17) % 100,
@@ -147,6 +148,7 @@ export default function VisualsPage() {
               height: p.size,
               left: `${p.x}%`,
               top: `${p.y}%`,
+              willChange: 'transform, opacity',
             }}
             animate={{
               y: [0, -800],

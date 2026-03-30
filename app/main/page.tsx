@@ -43,9 +43,9 @@ const dict = {
       citations: 'Citations',
       exp: 'Years Experience',
       patents: 'Patents',
-      scopusNote: '* Citation data sourced from Scopus',
+      scopusNote: '* Citation and publication data sourced from Scopus & ORCID',
       expValue: '30+',
-      patentsValue: '15+'
+      patentsValue: '5+'
     },
     research: {
       title: 'Research',
@@ -167,7 +167,7 @@ const dict = {
         add: 'Add to Contacts',
         click: 'Click to download'
       },
-      footer: '© 2026 Yuan-Ron Ma (Y.R. Ma) • Advanced Materials & Quantum Devices'
+      footer: '© 2026 Yuan-Ron Ma (Y.R. Ma). All Rights Reserved. • Developed by Allen. • Advanced Materials & Quantum Devices'
     }
   },
   zh: {
@@ -186,9 +186,9 @@ const dict = {
       citations: '引用次數',
       exp: '年研究經驗',
       patents: '項專利',
-      scopusNote: '* 引用數據來源為 Scopus',
+      scopusNote: '* 引用與發表數據來源為 Scopus & ORCID',
       expValue: '30+',
-      patentsValue: '15+'
+      patentsValue: '5+'
     },
     research: {
       title: '專業',
@@ -310,7 +310,7 @@ const dict = {
         add: '加入通訊錄',
         click: '點擊下載'
       },
-      footer: '© 2026 馬遠榮 (Yuan-Ron Ma) • 先進材料與量子元件實驗室'
+      footer: '© 2026 馬遠榮 (Yuan-Ron Ma) 版權所有 • 陳奕廷 開發 • 先進材料與量子元件實驗室'
     }
   }
 };
@@ -335,6 +335,19 @@ export default function HomePage() {
   const [isExpandedAdmin, setIsExpandedAdmin] = useState(false);
   const [isExpandedService, setIsExpandedService] = useState(false);
   const t = dict[lang];
+
+  const profileParticles = useMemo(() => {
+    return Array.from({ length: 20 }).map((_, i) => ({
+      id: i,
+      // Deterministic pseudo-random values based on index
+      size: ((i * 13) % 4) + 2,
+      x: ((i * 17) % 120) - 10, // Slightly wider than container
+      y: ((i * 23) % 120) - 10,
+      duration: ((i * 7) % 10) + 10,
+      delay: (i * 0.25) % 5,
+      color: i % 2 === 0 ? 'bg-teal-400' : 'bg-amber-400',
+    }));
+  }, []);
 
   useEffect(() => {
     fetch('https://sixshoes.github.io/Ma-Research-Portal/papers.json')
@@ -597,6 +610,34 @@ export default function HomePage() {
         >
           {/* High-tech Image Container */}
           <div className="absolute inset-0 bg-gradient-to-tr from-teal-500/20 to-amber-500/20 rounded-3xl blur-3xl animate-pulse" />
+          
+          {/* Floating Particles around Avatar */}
+          {profileParticles.map((p) => (
+            <motion.div
+              key={`avatar-p-${p.id}`}
+              className={`absolute rounded-full ${p.color} opacity-40 blur-[1px] z-20`}
+              style={{
+                width: p.size,
+                height: p.size,
+                left: `${p.x}%`,
+                top: `${p.y}%`,
+                willChange: 'transform, opacity',
+              }}
+              animate={{
+                y: [0, -40, 0],
+                x: [0, Math.sin(p.id) * 30, 0],
+                opacity: [0.2, 0.5, 0.2],
+                scale: [1, 1.2, 1],
+              }}
+              transition={{
+                duration: p.duration,
+                repeat: Infinity,
+                delay: p.delay,
+                ease: "easeInOut",
+              }}
+            />
+          ))}
+
           <motion.div 
             animate={{ y: [0, -10, 0] }}
             transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}

@@ -23,11 +23,13 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    const savedLang = localStorage.getItem('preferred_lang') as Lang;
-    if (savedLang === 'en' || savedLang === 'zh') {
-      setLangState(savedLang);
-    }
+    setTimeout(() => {
+      setMounted(true);
+      const savedLang = localStorage.getItem('preferred_lang') as Lang;
+      if (savedLang === 'en' || savedLang === 'zh') {
+        setLangState(savedLang);
+      }
+    }, 0);
   }, []);
 
   const setLang = (newLang: Lang) => {
@@ -46,6 +48,16 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
     }, 600);
   };
 
+  const particles = useMemo(() => {
+    return Array.from({ length: 12 }).map((_, i) => {
+      const angle = (i / 12) * Math.PI * 2;
+      // Deterministic pseudo-random values based on index
+      const distance = 100 + ((i * 137) % 50);
+      const duration = 0.5 + ((i * 7) % 3) * 0.1;
+      return { angle, distance, duration };
+    });
+  }, []);
+
   if (!mounted) return <>{children}</>;
 
   return (
@@ -60,22 +72,19 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
             className="fixed inset-0 z-[9999999] pointer-events-none flex items-center justify-center bg-white/10"
           >
             {/* Minimalist Particles */}
-            {Array.from({ length: 12 }).map((_, i) => {
-              const angle = (i / 12) * Math.PI * 2;
-              const distance = 100 + Math.random() * 50;
-              
+            {particles.map((p, i) => {
               return (
                 <motion.div
                   key={`p-${i}`}
                   initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
                   animate={{ 
-                    x: Math.cos(angle) * distance,
-                    y: Math.sin(angle) * distance,
+                    x: Math.cos(p.angle) * p.distance,
+                    y: Math.sin(p.angle) * p.distance,
                     scale: [0, 1, 0],
                     opacity: [0, 0.8, 0],
                   }}
                   transition={{ 
-                    duration: 0.6, 
+                    duration: p.duration, 
                     ease: "easeOut",
                   }}
                   className="absolute w-2 h-2 rounded-full bg-teal-500/60"
@@ -84,6 +93,7 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
                     top: '50%',
                     marginLeft: '-4px',
                     marginTop: '-4px',
+                    willChange: 'transform, opacity',
                   }}
                 />
               );

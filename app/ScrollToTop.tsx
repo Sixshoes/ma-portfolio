@@ -12,7 +12,7 @@ export default function ScrollToTop() {
   const pathname = usePathname();
 
   useEffect(() => {
-    setMounted(true);
+    setTimeout(() => setMounted(true), 0);
   }, []);
 
   useLenis(({ scroll }) => {
