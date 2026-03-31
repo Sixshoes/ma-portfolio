@@ -30,8 +30,20 @@ export default function VisualsPage() {
   const springX = useSpring(mouseX, { damping: 40, stiffness: 50, mass: 1 });
   const springY = useSpring(mouseY, { damping: 40, stiffness: 50, mass: 1 });
 
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const particles = useMemo(() => {
-    return Array.from({ length: 60 }).map((_, i) => ({
+    const count = isMobile ? 30 : 60; // Reduce particle count on mobile
+    return Array.from({ length: count }).map((_, i) => ({
       id: i,
       // Deterministic pseudo-random values based on index
       size: ((i * 7) % 6) + 1,
@@ -41,7 +53,7 @@ export default function VisualsPage() {
       delay: (i * 0.5) % 2,
       color: i % 2 === 0 ? 'bg-teal-400' : 'bg-amber-400',
     }));
-  }, []);
+  }, [isMobile]);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -82,14 +94,16 @@ export default function VisualsPage() {
         {t.enter}
       </Link>
 
-      {/* Mouse Follower Glow */}
-      <motion.div
-        className="absolute w-[40vw] h-[40vw] rounded-full bg-teal-500/10 blur-[100px] pointer-events-none z-0"
-        style={{
-          x: springX,
-          y: springY,
-        }}
-      />
+      {/* Mouse Follower Glow - Hide on mobile to save GPU */}
+      {!isMobile && (
+        <motion.div
+          className="absolute w-[40vw] h-[40vw] rounded-full bg-teal-500/10 blur-[100px] pointer-events-none z-0"
+          style={{
+            x: springX,
+            y: springY,
+          }}
+        />
+      )}
 
       {/* Central Quantum Core */}
       <div className="relative z-10 flex items-center justify-center">

@@ -345,6 +345,17 @@ export default function HomePage() {
   const [isExpandedService, setIsExpandedService] = useState(false);
   const t = dict[lang];
 
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const getLinkDisplay = (url: string) => {
     if (!url) return '';
     
@@ -372,7 +383,8 @@ export default function HomePage() {
   };
 
   const profileParticles = useMemo(() => {
-    return Array.from({ length: 8 }).map((_, i) => ({
+    const count = isMobile ? 4 : 8;
+    return Array.from({ length: count }).map((_, i) => ({
       id: i,
       // Deterministic pseudo-random values based on index
       size: ((i * 13) % 4) + 2,
@@ -382,7 +394,7 @@ export default function HomePage() {
       delay: (i * 0.25) % 5,
       color: i % 2 === 0 ? 'bg-teal-400' : 'bg-amber-400',
     }));
-  }, []);
+  }, [isMobile]);
 
   useEffect(() => {
     fetch('https://sixshoes.github.io/Ma-Research-Portal/papers.json')
@@ -479,24 +491,26 @@ export default function HomePage() {
       {/* Dynamic Animated Background */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
         <motion.div 
-          animate={{ 
+          animate={isMobile ? { opacity: 0.1 } : { 
             scale: [1, 1.2, 1],
             opacity: [0.1, 0.15, 0.1],
             rotate: [0, 90, 0]
           }}
           transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full bg-gradient-to-br from-teal-900/20 to-transparent blur-[100px]"
+          className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full bg-gradient-to-br from-teal-900/20 to-transparent blur-[80px] md:blur-[100px]"
         />
-        <motion.div 
-          animate={{ 
-            scale: [1, 1.5, 1],
-            opacity: [0.05, 0.1, 0.05],
-            x: [0, 100, 0],
-            y: [0, -50, 0]
-          }}
-          transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
-          className="hidden md:block absolute top-[40%] -right-[20%] w-[60vw] h-[60vw] rounded-full bg-gradient-to-tl from-amber-900/20 to-transparent blur-[120px]"
-        />
+        {!isMobile && (
+          <motion.div 
+            animate={{ 
+              scale: [1, 1.5, 1],
+              opacity: [0.05, 0.1, 0.05],
+              x: [0, 100, 0],
+              y: [0, -50, 0]
+            }}
+            transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute top-[40%] -right-[20%] w-[60vw] h-[60vw] rounded-full bg-gradient-to-tl from-amber-900/20 to-transparent blur-[120px]"
+          />
+        )}
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
       </div>
 
@@ -676,9 +690,9 @@ export default function HomePage() {
           ))}
 
           <motion.div 
-            animate={{ y: [0, -10, 0] }}
+            animate={isMobile ? {} : { y: [0, -10, 0] }}
             transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-            style={{ transform: 'translateZ(0)' }}
+            style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}
             className="relative w-full h-full bg-[#080C16] rounded-3xl overflow-hidden border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)] flex items-center justify-center"
           >
             {/* Thematic Background: Graphene Hex Grid */}
@@ -873,43 +887,45 @@ export default function HomePage() {
                 {visiblePublications.map((pub, i) => {
                   // Fix: cover_url is actually the Graphical Abstract (ga1), file_img is the Journal Cover (X...)
                   const abstractImg = pub.cover_url;
-              const journalImg = pub.file_img;
-              const hasAbstract = !!abstractImg;
-              const hasJournal = !!journalImg;
-              const isSameImg = abstractImg === journalImg;
+                  const journalImg = pub.file_img;
+                  const hasAbstract = !!abstractImg;
+                  const hasJournal = !!journalImg;
+                  const isSameImg = abstractImg === journalImg;
 
-              let mainImg = abstractImg;
-              let mainLabel = t.pubs.abstract;
-              let secondaryImg = (!isSameImg && hasJournal) ? journalImg : null;
+                  let mainImg = abstractImg;
+                  let mainLabel = t.pubs.abstract;
+                  let secondaryImg = (!isSameImg && hasJournal) ? journalImg : null;
 
-              if (!hasAbstract && hasJournal) {
-                mainImg = journalImg;
-                mainLabel = t.pubs.cover;
-              } else if (!hasAbstract && !hasJournal) {
-                mainImg = "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?q=80&w=800&auto=format&fit=crop";
-                mainLabel = t.pubs.quantum;
-              }
+                  if (!hasAbstract && hasJournal) {
+                    mainImg = journalImg;
+                    mainLabel = t.pubs.cover;
+                  } else if (!hasAbstract && !hasJournal) {
+                    mainImg = "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?q=80&w=800&auto=format&fit=crop";
+                    mainLabel = t.pubs.quantum;
+                  }
 
-              return (
-                <motion.div 
-                  key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.05 }}
-                  whileHover={{ y: -5, scale: 1.01 }}
-                  className="flex flex-col lg:flex-row gap-8 p-6 md:p-8 bg-[#0B101E]/80 backdrop-blur-md border border-white/[0.05] rounded-3xl hover:border-amber-500/30 transition-all duration-500 group shadow-[0_8px_32px_rgba(0,0,0,0.2)] hover:shadow-[0_15px_40px_rgba(251,191,36,0.1)]"
-                >
-                  {/* Visuals Column */}
-                  <div className="w-full lg:w-1/3 flex flex-col gap-4 shrink-0">
-                    <div className="relative w-full aspect-video bg-white rounded-xl border border-white/[0.05] p-2 flex items-center justify-center group/img overflow-hidden shadow-inner">
-                      <Image 
-                        src={mainImg} 
-                        alt={mainLabel || "Publication Image"} 
-                        fill
-                        className="object-contain p-2 transition-transform duration-500 group-hover/img:scale-105" 
-                        referrerPolicy="no-referrer"
-                      />
+                  return (
+                    <motion.div 
+                      key={i}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: "-50px" }}
+                      transition={{ delay: i * 0.05 }}
+                      whileHover={isMobile ? {} : { y: -5, scale: 1.01 }}
+                      style={{ transform: 'translateZ(0)' }}
+                      className="flex flex-col lg:flex-row gap-8 p-6 md:p-8 bg-[#0B101E]/80 backdrop-blur-md border border-white/[0.05] rounded-3xl hover:border-amber-500/30 transition-all duration-500 group shadow-[0_8px_32px_rgba(0,0,0,0.2)] hover:shadow-[0_15px_40px_rgba(251,191,36,0.1)]"
+                    >
+                      {/* Visuals Column */}
+                      <div className="w-full lg:w-1/3 flex flex-col gap-4 shrink-0">
+                        <div className="relative w-full aspect-video bg-white rounded-xl border border-white/[0.05] p-2 flex items-center justify-center group/img overflow-hidden shadow-inner">
+                          <Image 
+                            src={mainImg} 
+                            alt={mainLabel || "Publication Image"} 
+                            fill
+                            priority={i < 2}
+                            className="object-contain p-2 transition-transform duration-500 group-hover/img:scale-105" 
+                            referrerPolicy="no-referrer"
+                          />
                       <div className="absolute top-2 left-2 text-[10px] font-mono uppercase tracking-widest text-slate-800 bg-white/90 px-2 py-1 rounded border border-slate-200 backdrop-blur-md shadow-sm">
                         {mainLabel}
                       </div>
