@@ -43,10 +43,8 @@ const dict = {
       pubs: 'Publications',
       citations: 'Citations',
       exp: 'Years Experience',
-      patents: 'Patents',
       scopusNote: '* Citation and publication data sourced from Scopus & ORCID',
-      expValue: '30+',
-      patentsValue: '5+'
+      expValue: '30+'
     },
     research: {
       title: 'Research',
@@ -189,10 +187,8 @@ const dict = {
       pubs: '發表論文',
       citations: '引用次數',
       exp: '年研究經驗',
-      patents: '項專利',
       scopusNote: '* 引用與發表數據來源為 Scopus & ORCID',
-      expValue: '30+',
-      patentsValue: '5+'
+      expValue: '30+'
     },
     research: {
       title: '專業',
@@ -491,7 +487,7 @@ export default function HomePage() {
       {/* Dynamic Animated Background */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
         <motion.div 
-          animate={isMobile ? { opacity: 0.1 } : { 
+          animate={{ 
             scale: [1, 1.2, 1],
             opacity: [0.1, 0.15, 0.1],
             rotate: [0, 90, 0]
@@ -499,18 +495,16 @@ export default function HomePage() {
           transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
           className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full bg-gradient-to-br from-teal-900/20 to-transparent blur-[80px] md:blur-[100px]"
         />
-        {!isMobile && (
-          <motion.div 
-            animate={{ 
-              scale: [1, 1.5, 1],
-              opacity: [0.05, 0.1, 0.05],
-              x: [0, 100, 0],
-              y: [0, -50, 0]
-            }}
-            transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-[40%] -right-[20%] w-[60vw] h-[60vw] rounded-full bg-gradient-to-tl from-amber-900/20 to-transparent blur-[120px]"
-          />
-        )}
+        <motion.div 
+          animate={{ 
+            scale: [1, 1.5, 1],
+            opacity: [0.05, 0.1, 0.05],
+            x: [0, 100, 0],
+            y: [0, -50, 0]
+          }}
+          transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-[40%] -right-[20%] w-[60vw] h-[60vw] rounded-full bg-gradient-to-tl from-amber-900/20 to-transparent blur-[120px]"
+        />
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
       </div>
 
@@ -690,8 +684,8 @@ export default function HomePage() {
           ))}
 
           <motion.div 
-            animate={isMobile ? {} : { y: [0, -10, 0] }}
-            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            animate={{ y: [0, -10, 0] }}
+            transition={{ duration: isMobile ? 8 : 6, repeat: Infinity, ease: "easeInOut" }}
             style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}
             className="relative w-full h-full bg-[#080C16] rounded-3xl overflow-hidden border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)] flex items-center justify-center"
           >
@@ -762,23 +756,23 @@ export default function HomePage() {
 
       {/* Stats Section */}
       <section className="border-y border-white/[0.05] bg-white/[0.01] py-16 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 text-center">
-          <div>
-            <div className="font-display font-light text-3xl md:text-5xl text-white mb-2">{totalPubs}</div>
-            <div className="text-[10px] uppercase tracking-[0.2em] font-mono text-amber-400/80">{t.stats.pubs}</div>
-          </div>
-          <div>
-            <div className="font-display font-light text-3xl md:text-5xl text-white mb-2">{totalCitations}</div>
-            <div className="text-[10px] uppercase tracking-[0.2em] font-mono text-amber-400/80">{t.stats.citations}</div>
-          </div>
-          <div>
-            <div className="font-display font-light text-3xl md:text-5xl text-white mb-2">{t.stats.expValue}</div>
-            <div className="text-[10px] uppercase tracking-[0.2em] font-mono text-amber-400/80">{t.stats.exp}</div>
-          </div>
-          <div>
-            <div className="font-display font-light text-3xl md:text-5xl text-white mb-2">{t.stats.patentsValue}</div>
-            <div className="text-[10px] uppercase tracking-[0.2em] font-mono text-amber-400/80">{t.stats.patents}</div>
-          </div>
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-3 gap-8 md:gap-12 text-center">
+          {[
+            { label: t.stats.pubs, value: totalPubs },
+            { label: t.stats.citations, value: totalCitations },
+            { label: t.stats.exp, value: t.stats.expValue }
+          ].map((stat, i) => (
+            <motion.div 
+              key={i}
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1, duration: 0.5 }}
+            >
+              <div className="font-display font-light text-3xl md:text-5xl text-white mb-2">{stat.value}</div>
+              <div className="text-[10px] uppercase tracking-[0.2em] font-mono text-amber-400/80">{stat.label}</div>
+            </motion.div>
+          ))}
         </div>
         <div className="mt-8 text-center">
           <p className="text-xs font-mono text-slate-500/80">{t.stats.scopusNote}</p>
@@ -804,10 +798,14 @@ export default function HomePage() {
           {t.research.items.map((item, i) => (
             <motion.div 
               key={i} 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
+              initial={{ opacity: 0, y: 30, scale: 0.95 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ 
+                duration: 0.6, 
+                delay: i * 0.1,
+                ease: [0.215, 0.61, 0.355, 1]
+              }}
               whileHover={{ y: -10, scale: 1.02 }}
               className="bg-[#0B101E]/80 backdrop-blur-md border border-white/[0.05] p-10 rounded-2xl hover:border-amber-500/30 hover:bg-[#0F1629] transition-all duration-500 group relative overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.2)] hover:shadow-[0_15px_40px_rgba(251,191,36,0.1)]"
             >

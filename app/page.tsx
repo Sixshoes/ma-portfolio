@@ -42,7 +42,7 @@ export default function VisualsPage() {
   }, []);
 
   const particles = useMemo(() => {
-    const count = isMobile ? 30 : 60; // Reduce particle count on mobile
+    const count = isMobile ? 45 : 60; // Increased from 30 to 45 for better visual on mobile
     return Array.from({ length: count }).map((_, i) => ({
       id: i,
       // Deterministic pseudo-random values based on index
@@ -94,16 +94,22 @@ export default function VisualsPage() {
         {t.enter}
       </Link>
 
-      {/* Mouse Follower Glow - Hide on mobile to save GPU */}
-      {!isMobile && (
-        <motion.div
-          className="absolute w-[40vw] h-[40vw] rounded-full bg-teal-500/10 blur-[100px] pointer-events-none z-0"
-          style={{
-            x: springX,
-            y: springY,
-          }}
-        />
-      )}
+      {/* Mouse Follower Glow - Optimized for mobile */}
+      <motion.div
+        className="absolute w-[60vw] h-[60vw] md:w-[40vw] md:h-[40vw] rounded-full bg-teal-500/5 md:bg-teal-500/10 blur-[80px] md:blur-[100px] pointer-events-none z-0"
+        animate={isMobile ? {
+          x: [0, 20, -20, 0],
+          y: [0, -20, 20, 0],
+        } : {
+          x: springX,
+          y: springY,
+        }}
+        transition={isMobile ? {
+          duration: 10,
+          repeat: Infinity,
+          ease: "easeInOut"
+        } : undefined}
+      />
 
       {/* Central Quantum Core */}
       <div className="relative z-10 flex items-center justify-center">
@@ -145,8 +151,26 @@ export default function VisualsPage() {
         
         {/* Core Text */}
         <div className="absolute text-white font-display text-base md:text-xl tracking-[0.3em] md:tracking-[0.5em] font-light uppercase text-center pointer-events-none flex flex-col items-center gap-2 md:gap-4 w-[90vw] md:w-[600px]">
-          <span className="block text-teal-300/80 text-[10px] md:text-sm tracking-[0.2em] md:tracking-[0.3em]">{t.name}</span>
-          <span className="block text-xl md:text-3xl font-bold tracking-[0.1em] md:tracking-[0.2em] text-amber-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]">{t.title}</span>
+          <motion.span 
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            className="block text-teal-300/80 text-[10px] md:text-sm tracking-[0.2em] md:tracking-[0.3em]"
+          >
+            {t.name}
+          </motion.span>
+          <motion.span 
+            animate={{ 
+              textShadow: [
+                "0 0 10px rgba(251,191,36,0.3)",
+                "0 0 20px rgba(251,191,36,0.6)",
+                "0 0 10px rgba(251,191,36,0.3)"
+              ]
+            }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            className="block text-xl md:text-3xl font-bold tracking-[0.1em] md:tracking-[0.2em] text-amber-400"
+          >
+            {t.title}
+          </motion.span>
           <span className="block text-slate-400 text-[9px] md:text-xs tracking-[0.1em] md:tracking-[0.2em] mt-1 md:mt-2">{t.subtitle}</span>
         </div>
       </div>
