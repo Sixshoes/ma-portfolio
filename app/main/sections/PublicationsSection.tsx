@@ -75,16 +75,16 @@ function PublicationsSectionComponent({
 }: PublicationsSectionProps) {
   useRenderProfiler('PublicationsSection');
   return (
-    <section id="publications" className="py-32 bg-gradient-to-b from-[#0B101E]/40 to-[#0A0F1C]/40 border-y border-white/[0.06] relative">
+    <section id="publications" className="py-24 md:py-28 bg-gradient-to-b from-[#0B101E]/40 to-[#0A0F1C]/40 border-y border-white/[0.06] relative">
       <div className="max-w-7xl mx-auto px-6 relative z-10">
-        <div className="mb-20">
+        <div className="mb-14 md:mb-16">
           <h2 className={`${uiTokens.sectionTitle} mb-4`}>
             <span className={uiTokens.titleLight}>{pubsText.title}</span> <br />
             <span className={uiTokens.titleBold}>{pubsText.subtitle}</span>
           </h2>
-          <p className="text-teal-400/80 font-mono uppercase text-[10px] tracking-[0.2em] mb-12">{pubsText.desc}</p>
+          <p className="text-teal-400/80 font-mono uppercase text-[10px] tracking-[0.2em] mb-8 md:mb-10">{pubsText.desc}</p>
 
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <span className="text-xs font-mono uppercase tracking-widest text-slate-500">Filter by:</span>
             <div className="relative w-full sm:w-auto">
               <select
@@ -116,7 +116,7 @@ function PublicationsSectionComponent({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="h-96 flex items-center justify-center"
+              className="h-72 md:h-80 flex items-center justify-center"
             >
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-amber-500"></div>
             </motion.div>
@@ -126,7 +126,7 @@ function PublicationsSectionComponent({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="flex flex-col gap-8"
+              className="flex flex-col gap-6 md:gap-7"
             >
               {visiblePublications.map((pub, i) => {
                 const abstractImg = pub.cover_url;
@@ -156,9 +156,9 @@ function PublicationsSectionComponent({
                     transition={{ delay: i * 0.05 }}
                     whileHover={isMobile || prefersReducedMotion ? {} : { y: -3, scale: 1.005 }}
                     style={{ transform: 'translateZ(0)' }}
-                    className={`flex flex-col lg:flex-row gap-8 p-6 md:p-8 ${uiTokens.surfaceCard} ${uiTokens.surfaceCardHover} group`}
+                    className={`flex flex-col lg:flex-row gap-6 md:gap-7 p-5 md:p-6 ${uiTokens.surfaceCard} ${uiTokens.surfaceCardHover} group`}
                   >
-                    <div className="w-full lg:w-1/3 flex flex-col gap-4 shrink-0">
+                      <div className="w-full lg:w-1/3 flex flex-col gap-3 shrink-0">
                       <div className="relative w-full aspect-video bg-white rounded-xl border border-white/[0.05] p-2 flex items-center justify-center group/img overflow-hidden shadow-inner">
                         <Image
                           src={mainImg}
@@ -193,7 +193,7 @@ function PublicationsSectionComponent({
                     </div>
 
                     <div className="w-full lg:w-2/3 flex flex-col">
-                      <div className="flex flex-wrap items-center gap-3 mb-6">
+                      <div className="flex flex-wrap items-center gap-2.5 mb-5">
                         <span className="bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full text-xs font-mono text-amber-300">
                           {getHighlightText(pub.citations, pubsText)}
                         </span>
@@ -211,12 +211,12 @@ function PublicationsSectionComponent({
                         </span>
                       </div>
 
-                      <h3 className="font-display text-2xl md:text-3xl text-slate-200 mb-6 group-hover:text-amber-400 transition-colors leading-snug">
+                      <h3 className="font-display text-xl md:text-2xl text-slate-200 mb-5 group-hover:text-amber-400 transition-colors leading-snug">
                         {pub.title}
                       </h3>
 
-                      <div className="flex flex-col gap-4 mt-auto pt-6 border-t border-white/[0.05]">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="flex flex-col gap-3 mt-auto pt-5 border-t border-white/[0.05]">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                           <div>
                             <div className="text-[10px] font-mono uppercase tracking-widest text-slate-500 mb-1.5">{pubsText.journal}</div>
                             <div className="text-sm text-slate-300 font-medium">{pub.journal}</div>
@@ -249,7 +249,7 @@ function PublicationsSectionComponent({
         </AnimatePresence>
 
         {visiblePublications.length < filteredCount && (
-          <div className="mt-16 flex justify-center">
+          <div className="mt-12 md:mt-14 flex justify-center">
             <button
               onClick={onLoadMore}
               className={`${uiTokens.buttonGhost} px-8 py-3 rounded-full font-mono text-sm flex items-center gap-2 shadow-[0_8px_25px_rgba(0,0,0,0.25)]`}

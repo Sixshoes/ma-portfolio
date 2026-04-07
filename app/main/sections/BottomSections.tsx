@@ -53,9 +53,9 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
   useRenderProfiler('BottomSections');
   return (
     <>
-      <section id="impact" className="py-32 relative overflow-hidden">
+      <section id="impact" className="py-24 md:py-28 relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="text-center mb-20">
+          <div className="text-center mb-14 md:mb-16">
             <h2 className={`${uiTokens.sectionTitle} mb-6`}>
               <span className={uiTokens.titleLight}>{t.impact.title}</span> <br />
               <span className={uiTokens.titleBold}>{t.impact.subtitle}</span>
@@ -63,12 +63,12 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
             <p className="text-xs font-mono text-slate-500/80 mt-4">{t.impact.source}</p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-7">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className={`${uiTokens.surfaceCard} p-8 md:p-10 hover:border-amber-500/30 transition-colors`}
+              className={`${uiTokens.surfaceCard} p-7 md:p-8 hover:border-amber-500/30 transition-colors`}
             >
               <div className="flex items-center gap-4 mb-8 pb-8 border-b border-white/10">
                 <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center shrink-0">
@@ -128,7 +128,7 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
-              className={`${uiTokens.surfaceCard} p-8 md:p-10 hover:border-purple-500/30 transition-colors`}
+              className={`${uiTokens.surfaceCard} p-7 md:p-8 hover:border-purple-500/30 transition-colors`}
             >
               <div className="flex items-center gap-4 mb-8 pb-8 border-b border-white/10">
                 <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center shrink-0">
@@ -186,7 +186,7 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
         </div>
       </section>
 
-      <section id="contact" className="py-32 bg-gradient-to-b from-[#0B101E]/60 to-[#090E1A]/70 border-t border-white/[0.06] relative overflow-hidden">
+      <section id="contact" className="py-24 md:py-28 bg-gradient-to-b from-[#0B101E]/60 to-[#090E1A]/70 border-t border-white/[0.06] relative overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-px bg-gradient-to-r from-transparent via-amber-500/30 to-transparent" />
 
         <motion.div
@@ -195,7 +195,7 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
           viewport={{ once: true }}
           className="max-w-4xl mx-auto px-6 relative z-10"
         >
-          <div className="text-center mb-12 md:mb-16">
+          <div className="text-center mb-10 md:mb-12">
             <h2 className={`${uiTokens.sectionTitle} mb-6`}>
               <span className={uiTokens.titleLight}>{t.contact.title}</span> <br />
               <span className={uiTokens.titleBold}>{t.contact.subtitle}</span>
@@ -203,12 +203,12 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
             <div className="w-24 h-1 bg-gradient-to-r from-amber-500 to-teal-500 mx-auto rounded-full opacity-50"></div>
           </div>
 
-          <div className="bg-gradient-to-b from-white/[0.05] to-white/[0.02] border border-white/[0.08] rounded-3xl p-8 md:p-12 backdrop-blur-md shadow-2xl relative overflow-hidden">
+          <div className="bg-gradient-to-b from-white/[0.05] to-white/[0.02] border border-white/[0.08] rounded-3xl p-7 md:p-10 backdrop-blur-md shadow-2xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-teal-500/5 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none"></div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center relative z-10">
-              <div className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center relative z-10">
+              <div className="space-y-6">
                 <a href={`mailto:${t.contact.email}`} className="flex items-start gap-5 group">
                   <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0 border border-amber-500/20 group-hover:scale-110 group-hover:bg-amber-500/20 transition-all duration-300">
                     <Mail className="w-5 h-5 text-amber-400 stroke-1" />
@@ -240,7 +240,7 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
                 </div>
               </div>
 
-              <div className="flex flex-col items-center justify-center p-8 border-t md:border-t-0 md:border-l border-white/[0.05]">
+              <div className="flex flex-col items-center justify-center p-6 md:p-8 border-t md:border-t-0 md:border-l border-white/[0.05]">
                 <button
                   onClick={onDownloadVCard}
                   className="group relative w-32 h-32 mb-6 rounded-full bg-gradient-to-br from-amber-500/10 to-teal-500/10 flex items-center justify-center border border-white/10 shadow-[0_0_30px_rgba(255,255,255,0.05)] hover:shadow-[0_0_40px_rgba(251,191,36,0.2)] hover:scale-105 hover:border-amber-500/30 transition-all duration-500"
@@ -262,7 +262,7 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
             </div>
           </div>
 
-          <footer className="w-full py-8 mt-24 text-center border-t border-white/10">
+          <footer className="w-full py-8 mt-16 md:mt-20 text-center border-t border-white/10">
             <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-slate-500">
               {t.contact.footer}
             </p>

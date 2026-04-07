@@ -74,7 +74,7 @@ function HeroStatsResearchSectionComponent({
 
   return (
     <>
-      <section className="pt-36 pb-24 px-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-14 items-center min-h-[90vh] relative z-10">
+      <section className="pt-32 md:pt-36 pb-20 md:pb-24 px-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center min-h-[86vh] relative z-10">
         <motion.div
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -85,7 +85,7 @@ function HeroStatsResearchSectionComponent({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="inline-block border border-amber-500/20 bg-amber-500/5 text-amber-400/90 px-4 py-1.5 rounded-full text-[10px] font-mono uppercase tracking-[0.2em] mb-8"
+            className="inline-block border border-amber-500/20 bg-amber-500/5 text-amber-400/90 px-4 py-1.5 rounded-full text-[10px] font-mono uppercase tracking-[0.2em] mb-6"
           >
             {heroText.role}
           </motion.div>
@@ -93,7 +93,7 @@ function HeroStatsResearchSectionComponent({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="text-4xl md:text-7xl lg:text-8xl leading-[1.05] mb-8 text-white drop-shadow-[0_6px_30px_rgba(8,12,22,0.75)]"
+            className="text-4xl md:text-6xl lg:text-7xl leading-[1.06] mb-7 text-white drop-shadow-[0_6px_30px_rgba(8,12,22,0.75)]"
           >
             <span className="font-display font-light text-amber-500/90 tracking-wide inline-block hover:scale-105 transition-transform origin-left">{heroText.title1}</span> <br />
             <span className="font-display font-bold tracking-tight inline-block hover:scale-105 transition-transform origin-left">{heroText.title2}</span> {heroText.title3} <br />
@@ -103,7 +103,7 @@ function HeroStatsResearchSectionComponent({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6, duration: 1 }}
-            className="text-lg text-slate-400/95 max-w-xl leading-relaxed mb-10 font-light"
+            className="text-base md:text-lg text-slate-400/95 max-w-xl leading-relaxed mb-8 font-light"
           >
             {heroText.desc}
           </motion.p>
@@ -112,7 +112,7 @@ function HeroStatsResearchSectionComponent({
               whileHover={prefersReducedMotion ? {} : { scale: 1.03, boxShadow: '0 0 18px rgba(251,191,36,0.28)' }}
               whileTap={{ scale: 0.95 }}
               href="#publications"
-              className={`${uiTokens.buttonPrimary} px-8 py-4 rounded-full text-xs font-display font-bold uppercase tracking-[0.2em] transition-all inline-block`}
+            className={`${uiTokens.buttonPrimary} px-7 py-3.5 rounded-full text-xs font-display font-bold uppercase tracking-[0.2em] transition-all inline-block`}
             >
               {heroText.cta}
             </motion.a>
@@ -183,8 +183,8 @@ function HeroStatsResearchSectionComponent({
         </motion.div>
       </section>
 
-      <section className="border-y border-white/[0.05] bg-white/[0.01] py-16 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-3 gap-8 md:gap-12 text-center">
+      <section className="border-y border-white/[0.05] bg-white/[0.01] py-14 md:py-16 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-3 gap-6 md:gap-10 text-center">
           {[{ label: statsText.pubs, value: totalPubs }, { label: statsText.citations, value: totalCitations }, { label: statsText.exp, value: statsText.expValue }].map((stat, i) => (
             <motion.div key={i} initial={{ opacity: 0, scale: 0.8 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.1, duration: 0.5 }}>
               <div className="font-display font-light text-3xl md:text-5xl text-white mb-2">{stat.value}</div>
@@ -197,9 +197,9 @@ function HeroStatsResearchSectionComponent({
         </div>
       </section>
 
-      <section id="research" className="py-24 md:py-32 px-6 max-w-7xl mx-auto relative">
+      <section id="research" className="py-20 md:py-28 px-6 max-w-7xl mx-auto relative">
         <div className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[800px] h-[300px] md:h-[800px] bg-teal-500/5 rounded-full blur-[80px] md:blur-[120px] pointer-events-none" />
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 md:mb-20 relative z-10">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 md:mb-16 relative z-10">
           <h2 className={uiTokens.sectionTitle}>
             <span className={uiTokens.titleLight}>{researchText.title}</span> <br />
             <span className={uiTokens.titleBold}>{researchText.subtitle}</span>
@@ -208,7 +208,7 @@ function HeroStatsResearchSectionComponent({
             {researchText.desc}
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 relative z-10">
           {researchText.items.map((item, i) => (
             <motion.div
               key={i}
@@ -217,7 +217,7 @@ function HeroStatsResearchSectionComponent({
               viewport={{ once: true, margin: '-50px' }}
               transition={{ duration: 0.6, delay: i * 0.1, ease: [0.215, 0.61, 0.355, 1] }}
               whileHover={prefersReducedMotion ? {} : { y: -6, scale: 1.01 }}
-              className={`${uiTokens.surfaceCard} ${uiTokens.surfaceCardHover} p-10 group relative overflow-hidden`}
+              className={`${uiTokens.surfaceCard} ${uiTokens.surfaceCardHover} p-8 md:p-9 group relative overflow-hidden`}
             >
               <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <div className="relative z-10">
