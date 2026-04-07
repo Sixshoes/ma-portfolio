@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
 import { Publication, publications as fallbackPublications } from '@/lib/publications';
 import { useLanguage } from '../LanguageContext';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { 
   ExternalLink, 
   Magnet, 
@@ -342,7 +341,16 @@ export default function HomePage() {
   const [isExpandedService, setIsExpandedService] = useState(false);
   const t = dict[lang];
 
-  const isMobile = useIsMobile();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const getLinkDisplay = (url: string) => {
     if (!url) return '';
@@ -478,8 +486,26 @@ export default function HomePage() {
     <main className="min-h-screen bg-[#080C16] text-slate-300 font-sans overflow-x-hidden relative">
       {/* Dynamic Animated Background */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full bg-gradient-to-br from-teal-900/20 to-transparent blur-[80px] md:blur-[100px] opacity-[0.12]" />
-        <div className="absolute top-[40%] -right-[20%] w-[60vw] h-[60vw] rounded-full bg-gradient-to-tl from-amber-900/20 to-transparent blur-[120px] opacity-[0.07]" />
+        <motion.div 
+          animate={{ 
+            scale: [1, 1.2, 1],
+            opacity: [0.1, 0.15, 0.1],
+            rotate: [0, 90, 0]
+          }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full bg-gradient-to-br from-teal-900/20 to-transparent blur-[80px] md:blur-[100px]"
+        />
+        <motion.div 
+          animate={{ 
+            scale: [1, 1.5, 1],
+            opacity: [0.05, 0.1, 0.05],
+            x: [0, 100, 0],
+            y: [0, -50, 0]
+          }}
+          transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-[40%] -right-[20%] w-[60vw] h-[60vw] rounded-full bg-gradient-to-tl from-amber-900/20 to-transparent blur-[120px]"
+        />
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
       </div>
 
       {/* Navigation */}
@@ -677,6 +703,8 @@ export default function HomePage() {
             
             {/* Abstract Quantum Nodes (Glowing Orbs) */}
             <div className="absolute top-1/4 left-1/4 w-40 h-40 bg-teal-500/30 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-amber-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-blue-500/20 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '2s' }} />
 
             {/* Profile Image with Soft Gradient Blending */}
             <div className="absolute inset-0 z-10 overflow-hidden rounded-3xl">
@@ -877,10 +905,10 @@ export default function HomePage() {
                   return (
                     <motion.div 
                       key={i}
-                      initial={isMobile ? false : { opacity: 0, y: 20 }}
-                      whileInView={isMobile ? undefined : { opacity: 1, y: 0 }}
-                      viewport={isMobile ? undefined : { once: true, margin: "-50px" }}
-                      transition={{ duration: 0.4 }}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: "-50px" }}
+                      transition={{ delay: i * 0.05 }}
                       whileHover={isMobile ? {} : { y: -5, scale: 1.01 }}
                       style={{ transform: 'translateZ(0)' }}
                       className="flex flex-col lg:flex-row gap-8 p-6 md:p-8 bg-[#0B101E]/80 backdrop-blur-md border border-white/[0.05] rounded-3xl hover:border-amber-500/30 transition-all duration-500 group shadow-[0_8px_32px_rgba(0,0,0,0.2)] hover:shadow-[0_15px_40px_rgba(251,191,36,0.1)]"

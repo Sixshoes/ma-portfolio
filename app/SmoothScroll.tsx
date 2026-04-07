@@ -1,10 +1,19 @@
 'use client';
 
 import { ReactLenis } from 'lenis/react';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useEffect, useState } from 'react';
 
 export default function SmoothScroll({ children }: { children: React.ReactNode }) {
-  const isMobile = useIsMobile();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   return (
     <ReactLenis 
