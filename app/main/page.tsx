@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { Publication, publications as fallbackPublications } from '@/lib/publications';
 import { useLanguage } from '../LanguageContext';
 import { 
@@ -339,6 +339,8 @@ export default function HomePage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isExpandedAdmin, setIsExpandedAdmin] = useState(false);
   const [isExpandedService, setIsExpandedService] = useState(false);
+  const [showPublications, setShowPublications] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
   const t = dict[lang];
 
   const [isMobile, setIsMobile] = useState(false);
@@ -379,7 +381,7 @@ export default function HomePage() {
   };
 
   const profileParticles = useMemo(() => {
-    const count = isMobile ? 4 : 8;
+    const count = isMobile ? 2 : 4;
     return Array.from({ length: count }).map((_, i) => ({
       id: i,
       // Deterministic pseudo-random values based on index
@@ -391,6 +393,11 @@ export default function HomePage() {
       color: i % 2 === 0 ? 'bg-teal-400' : 'bg-amber-400',
     }));
   }, [isMobile]);
+
+  useEffect(() => {
+    const id = window.setTimeout(() => setShowPublications(true), 250);
+    return () => window.clearTimeout(id);
+  }, []);
 
   useEffect(() => {
     fetch('https://sixshoes.github.io/Ma-Research-Portal/papers.json')
@@ -487,22 +494,22 @@ export default function HomePage() {
       {/* Dynamic Animated Background */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
         <motion.div 
-          animate={{ 
-            scale: [1, 1.2, 1],
-            opacity: [0.1, 0.15, 0.1],
-            rotate: [0, 90, 0]
+          animate={prefersReducedMotion ? { opacity: 0.1 } : {
+            scale: [1, 1.1, 1],
+            opacity: [0.08, 0.12, 0.08],
+            rotate: [0, 60, 0]
           }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          transition={prefersReducedMotion ? { duration: 0.2 } : { duration: 28, repeat: Infinity, ease: "linear" }}
           className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full bg-gradient-to-br from-teal-900/20 to-transparent blur-[80px] md:blur-[100px]"
         />
         <motion.div 
-          animate={{ 
-            scale: [1, 1.5, 1],
-            opacity: [0.05, 0.1, 0.05],
-            x: [0, 100, 0],
-            y: [0, -50, 0]
+          animate={prefersReducedMotion ? { opacity: 0.06 } : { 
+            scale: [1, 1.25, 1],
+            opacity: [0.04, 0.08, 0.04],
+            x: [0, 60, 0],
+            y: [0, -30, 0]
           }}
-          transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
+          transition={prefersReducedMotion ? { duration: 0.2 } : { duration: 32, repeat: Infinity, ease: "easeInOut" }}
           className="absolute top-[40%] -right-[20%] w-[60vw] h-[60vw] rounded-full bg-gradient-to-tl from-amber-900/20 to-transparent blur-[120px]"
         />
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
@@ -637,7 +644,7 @@ export default function HomePage() {
             className="flex space-x-4"
           >
             <motion.a 
-              whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(251,191,36,0.4)" }}
+              whileHover={prefersReducedMotion ? {} : { scale: 1.03, boxShadow: "0 0 18px rgba(251,191,36,0.28)" }}
               whileTap={{ scale: 0.95 }}
               href="#publications" 
               className="bg-gradient-to-r from-amber-300 to-amber-400 text-[#080C16] px-8 py-4 rounded-full text-xs font-display font-bold uppercase tracking-[0.2em] transition-all shadow-[0_10px_30px_rgba(251,191,36,0.25)] inline-block border border-amber-200/50"
@@ -657,7 +664,7 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-gradient-to-tr from-teal-500/20 to-amber-500/20 rounded-3xl blur-3xl animate-pulse" />
           
           {/* Floating Particles around Avatar */}
-          {profileParticles.map((p) => (
+          {!prefersReducedMotion && profileParticles.map((p) => (
             <motion.div
               key={`avatar-p-${p.id}`}
               className={`absolute rounded-full ${p.color} opacity-40 blur-[1px] z-20`}
@@ -684,8 +691,8 @@ export default function HomePage() {
           ))}
 
           <motion.div 
-            animate={{ y: [0, -10, 0] }}
-            transition={{ duration: isMobile ? 8 : 6, repeat: Infinity, ease: "easeInOut" }}
+            animate={prefersReducedMotion ? { y: 0 } : { y: [0, -6, 0] }}
+            transition={prefersReducedMotion ? { duration: 0.2 } : { duration: isMobile ? 10 : 8, repeat: Infinity, ease: "easeInOut" }}
             style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}
             className="relative w-full h-full bg-[#080C16] rounded-3xl overflow-hidden border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)] flex items-center justify-center"
           >
@@ -729,8 +736,8 @@ export default function HomePage() {
               <div className="absolute bottom-4 left-4 w-8 h-8 border-b-2 border-l-2 border-teal-500/50 rounded-bl-lg" />
               <div className="absolute bottom-4 right-4 w-8 h-8 border-b-2 border-r-2 border-teal-500/50 rounded-br-lg" />
               <motion.div 
-                animate={{ top: ['0%', '100%', '0%'] }}
-                transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                animate={prefersReducedMotion ? { opacity: 0.5 } : { top: ['0%', '100%', '0%'] }}
+                transition={prefersReducedMotion ? { duration: 0.2 } : { duration: 12, repeat: Infinity, ease: "linear" }}
                 className="hidden md:block absolute left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-teal-400/50 to-transparent"
               />
             </div>
@@ -738,15 +745,15 @@ export default function HomePage() {
           
           {/* Decorative Elements */}
           <motion.div 
-            animate={{ rotate: 360 }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            animate={prefersReducedMotion ? { rotate: 0 } : { rotate: 360 }}
+            transition={prefersReducedMotion ? { duration: 0.2 } : { duration: 28, repeat: Infinity, ease: "linear" }}
             className="absolute -right-6 top-1/4 w-12 h-12 border border-amber-500/30 rounded-full flex items-center justify-center"
           >
             <div className="w-1.5 h-1.5 bg-amber-400 rounded-full" />
           </motion.div>
           <motion.div 
-            animate={{ rotate: -360 }}
-            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+            animate={prefersReducedMotion ? { rotate: 0 } : { rotate: -360 }}
+            transition={prefersReducedMotion ? { duration: 0.2 } : { duration: 24, repeat: Infinity, ease: "linear" }}
             className="absolute -left-6 bottom-1/4 w-16 h-16 border border-teal-500/30 rounded-full flex items-center justify-center"
           >
             <div className="w-1 h-1 bg-teal-400 rounded-full" />
@@ -864,7 +871,7 @@ export default function HomePage() {
           </div>
 
           <AnimatePresence mode="wait">
-            {isLoading ? (
+            {!showPublications || isLoading ? (
               <motion.div 
                 key="loader"
                 initial={{ opacity: 0 }}
