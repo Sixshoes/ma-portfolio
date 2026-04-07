@@ -4,6 +4,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
 import { Publication, publications as fallbackPublications } from '@/lib/publications';
+import { useLanguage } from '../LanguageContext';
 import { 
   ExternalLink, 
   Magnet, 
@@ -12,6 +13,8 @@ import {
   Contrast, 
   Network,
   Mail, 
+  Phone,
+  Printer,
   MapPin, 
   GraduationCap,
   Globe,
@@ -41,10 +44,8 @@ const dict = {
       pubs: 'Publications',
       citations: 'Citations',
       exp: 'Years Experience',
-      patents: 'Patents',
-      scopusNote: '* Citation data sourced from Scopus',
-      expValue: '30+',
-      patentsValue: '15+'
+      scopusNote: '* Citation and publication data sourced from Scopus & ORCID',
+      expValue: '30+'
     },
     research: {
       title: 'Research',
@@ -64,7 +65,9 @@ const dict = {
       desc: 'A curated list of recent high-impact research',
       citations: 'Citations',
       journal: 'Journal',
-      doi: 'DOI',
+      doi: 'Link / DOI',
+      scholar: 'Google Scholar',
+      link: 'Link',
       year: 'Year',
       corresponding: 'Corresponding Author (*)',
       coauthor: 'Co-author',
@@ -159,8 +162,15 @@ const dict = {
       subtitle: 'Touch',
       email: 'yrma@mail.fgu.edu.tw',
       phone: '+886-3-9871000 ext. 11010',
-      vcard: 'Download vCard',
-      footer: '© 2026 Yuan-Ron Ma (Y.R. Ma) • Advanced Materials & Quantum Devices'
+      fax: '+886-3-9874815',
+      vcard: 'Save Contact Info',
+      vcardModal: {
+        title: 'Save Contact',
+        add: 'Add to Contacts',
+        click: 'Click to download'
+      },
+      footer: 'Copyright \u00A9 2026 Yuan-Ron Ma. All Rights Reserved.',
+      developer: 'Developed by Yiting Chen'
     }
   },
   zh: {
@@ -178,10 +188,8 @@ const dict = {
       pubs: '發表論文',
       citations: '引用次數',
       exp: '年研究經驗',
-      patents: '項專利',
-      scopusNote: '* 引用數據來源為 Scopus',
-      expValue: '30+',
-      patentsValue: '15+'
+      scopusNote: '* 引用與發表數據來源為 Scopus & ORCID',
+      expValue: '30+'
     },
     research: {
       title: '專業',
@@ -201,7 +209,9 @@ const dict = {
       desc: '近期高影響力之學術研究發表',
       citations: '引用次數',
       journal: '發表期刊',
-      doi: '數位物件識別碼 (DOI)',
+      doi: '文獻連結 (Link / DOI)',
+      scholar: 'Google Scholar',
+      link: '相關連結',
       year: '發表年份',
       corresponding: '通訊作者 (*)',
       coauthor: '共同作者',
@@ -296,14 +306,32 @@ const dict = {
       subtitle: '方式',
       email: 'yrma@mail.fgu.edu.tw',
       phone: '(03)9871000 分機 11010',
-      vcard: '下載 vCard',
-      footer: '© 2026 馬遠榮 (Yuan-Ron Ma) • 先進材料與量子元件實驗室'
+      fax: '(03)9874815',
+      vcard: '儲存聯絡資訊',
+      vcardModal: {
+        title: '儲存聯絡資訊',
+        add: '加入通訊錄',
+        click: '點擊下載'
+      },
+      footer: 'Copyright \u00A9 2026 馬遠榮 版權所有',
+      developer: '陳奕廷 開發'
     }
   }
 };
 
+const vcardData = `BEGIN:VCARD
+VERSION:3.0
+N:Ma;Yuan-Ron;;;
+FN:Yuan-Ron Ma (馬遠榮)
+TITLE:Vice President, Chair Professor
+ORG:Fo Guang University
+TEL;TYPE=WORK,VOICE:+886-3-9871000;ext=11010
+TEL;TYPE=WORK,FAX:+886-3-9874815
+EMAIL;TYPE=PREF,INTERNET:yrma@mail.fgu.edu.tw
+END:VCARD`;
+
 export default function HomePage() {
-  const [lang, setLang] = useState<'zh' | 'en'>('zh');
+  const { lang, setLang } = useLanguage();
   const [pubFilter, setPubFilter] = useState<string>('All');
   const [visibleCount, setVisibleCount] = useState<number>(10);
   const [publications, setPublications] = useState<Publication[]>(fallbackPublications);
@@ -312,6 +340,35 @@ export default function HomePage() {
   const [adminExpanded, setAdminExpanded] = useState(false);
   const [serviceExpanded, setServiceExpanded] = useState(false);
   const t = dict[lang];
+
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const getLinkDisplay = (url: string) => {
+    if (!url) return '';
+    if (url.includes('doi.org/')) {
+      return url.split('doi.org/')[1];
+    }
+    if (url.includes('scholar.google')) {
+      return 'Google Scholar';
+    }
+    if (url.includes('researchgate.net')) {
+      return 'ResearchGate';
+    }
+    try {
+      return new URL(url).hostname.replace('www.', '');
+    } catch {
+      return 'View Article';
+    }
+  };
 
   useEffect(() => {
     fetch('https://sixshoes.github.io/Ma-Research-Portal/papers.json')
@@ -325,9 +382,11 @@ export default function HomePage() {
         if (Array.isArray(data) && data.length > 0) {
           setPublications(data);
         }
+        setIsLoading(false);
       })
       .catch(err => {
         console.warn('Using fallback publications. Failed to fetch from GitHub:', err);
+        setIsLoading(false);
       });
   }, []);
 
@@ -383,18 +442,7 @@ export default function HomePage() {
   };
 
   const handleDownloadVCard = () => {
-    const vcard = `BEGIN:VCARD
-VERSION:3.0
-N:Ma;Yuan-Ron;;;
-FN:Yuan-Ron Ma (馬遠榮)
-TITLE:Vice President, Chair Professor
-ORG:Fo Guang University
-TEL;TYPE=WORK,VOICE:+886-3-9871000;ext=11010
-EMAIL;TYPE=PREF,INTERNET:yrma@mail.fgu.edu.tw
-URL:${window.location.origin}
-END:VCARD`;
-
-    const blob = new Blob([vcard], { type: 'text/vcard' });
+    const blob = new Blob([vcardData], { type: 'text/vcard' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -420,28 +468,10 @@ END:VCARD`;
 
   return (
     <main className="min-h-screen bg-[#080C16] text-slate-300 font-sans overflow-x-hidden relative">
-      {/* Dynamic Animated Background */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        <motion.div 
-          animate={{ 
-            scale: [1, 1.2, 1],
-            opacity: [0.1, 0.15, 0.1],
-            rotate: [0, 90, 0]
-          }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full bg-gradient-to-br from-teal-900/20 to-transparent blur-[100px]"
-        />
-        <motion.div 
-          animate={{ 
-            scale: [1, 1.5, 1],
-            opacity: [0.05, 0.1, 0.05],
-            x: [0, 100, 0],
-            y: [0, -50, 0]
-          }}
-          transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-[40%] -right-[20%] w-[60vw] h-[60vw] rounded-full bg-gradient-to-tl from-amber-900/20 to-transparent blur-[120px]"
-        />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
+      {/* Subtle static background gradients */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute -top-[20%] -left-[10%] w-[60vw] h-[60vw] rounded-full bg-gradient-to-br from-teal-900/15 to-transparent blur-[100px]" />
+        <div className="absolute top-[40%] -right-[20%] w-[50vw] h-[50vw] rounded-full bg-gradient-to-tl from-amber-900/10 to-transparent blur-[120px]" />
       </div>
 
       {/* Navigation */}
@@ -449,13 +479,13 @@ END:VCARD`;
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-        className="fixed top-0 left-0 w-full z-50 bg-[#080C16]/70 backdrop-blur-xl border-b border-white/[0.05]"
+        className="fixed top-0 left-0 w-full z-50 bg-[#080C16]/70 backdrop-blur-md border-b border-white/[0.05]"
       >
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <div className="font-display text-xl font-bold tracking-widest text-white flex items-center gap-2 hover:scale-105 transition-transform cursor-pointer">
             <span className="text-amber-400">Y.R.</span> MA
           </div>
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-4 md:gap-8">
             <div className="hidden md:flex space-x-8 text-xs uppercase tracking-[0.2em] font-display text-slate-400">
               <motion.a 
                 href="/" 
@@ -502,6 +532,38 @@ END:VCARD`;
             </motion.button>
           </div>
         </div>
+
+        {/* Mobile Menu */}
+        <AnimatePresence>
+          {isMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="md:hidden bg-[#0B101E] border-b border-white/[0.05] overflow-hidden"
+            >
+              <div className="flex flex-col p-6 space-y-4 text-xs uppercase tracking-[0.2em] font-display text-slate-400">
+                <Link 
+                  href="/" 
+                  onClick={() => setIsMenuOpen(false)}
+                  className="hover:text-teal-400 transition-colors py-2"
+                >
+                  {t.nav.home}
+                </Link>
+                {['about', 'research', 'publications', 'contact'].map((item) => (
+                  <a 
+                    key={item}
+                    href={`#${item}`} 
+                    onClick={() => setIsMenuOpen(false)}
+                    className="hover:text-amber-400 transition-colors py-2"
+                  >
+                    {t.nav[item as keyof typeof t.nav]}
+                  </a>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.nav>
 
       {/* Mobile Menu Overlay */}
@@ -568,7 +630,7 @@ END:VCARD`;
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="text-5xl md:text-7xl lg:text-8xl leading-[1.1] mb-8 text-white"
+            className="text-4xl md:text-7xl lg:text-8xl leading-[1.1] mb-8 text-white"
           >
             <span className="font-display font-light text-amber-500/90 tracking-wide inline-block hover:scale-105 transition-transform origin-left">{t.hero.title1}</span> <br />
             <span className="font-display font-bold tracking-tight inline-block hover:scale-105 transition-transform origin-left">{t.hero.title2}</span> {t.hero.title3} <br />
@@ -602,7 +664,7 @@ END:VCARD`;
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1, delay: 0.2 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
           className="relative aspect-[4/5] w-full max-w-md mx-auto"
         >
           {/* High-tech Image Container */}
@@ -705,16 +767,16 @@ END:VCARD`;
       </section>
 
       {/* Research Interests */}
-      <section id="research" className="py-32 px-6 max-w-7xl mx-auto relative">
-        {/* Background glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-teal-500/5 rounded-full blur-[120px] pointer-events-none" />
+      <section id="research" className="py-20 md:py-32 px-6 max-w-7xl mx-auto relative">
+        {/* Subtle background */}
+        <div className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-teal-500/[0.04] rounded-full blur-[120px] pointer-events-none" />
 
-        <div className="flex flex-col md:flex-row justify-between items-end mb-20 relative z-10">
-          <h2 className="text-5xl md:text-7xl text-white">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 md:mb-20 relative z-10">
+          <h2 className="text-4xl md:text-7xl text-white">
             <span className="font-display font-light text-amber-500/90 tracking-wide">{t.research.title}</span> <br />
             <span className="font-display font-bold tracking-tight">{t.research.subtitle}</span>
           </h2>
-          <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-teal-400/80 mt-4 md:mt-0 border border-teal-500/20 px-4 py-2 rounded-full bg-teal-500/5">
+          <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-teal-400/80 mt-6 md:mt-0 border border-teal-500/20 px-4 py-2 rounded-full bg-teal-500/5">
             {t.research.desc}
           </div>
         </div>
@@ -723,10 +785,14 @@ END:VCARD`;
           {t.research.items.map((item, i) => (
             <motion.div 
               key={i} 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
+              initial={{ opacity: 0, y: 30, scale: 0.95 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ 
+                duration: 0.6, 
+                delay: i * 0.1,
+                ease: [0.215, 0.61, 0.355, 1]
+              }}
               whileHover={{ y: -10, scale: 1.02 }}
               className="w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] bg-[#0B101E]/80 backdrop-blur-xl border border-white/[0.05] p-10 rounded-2xl hover:border-amber-500/30 hover:bg-[#0F1629] transition-all duration-500 group relative overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.2)] hover:shadow-[0_15px_40px_rgba(251,191,36,0.1)]"
             >
@@ -749,7 +815,7 @@ END:VCARD`;
       <section id="publications" className="py-32 bg-[#0B101E]/30 border-y border-white/[0.05] relative">
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="mb-20">
-            <h2 className="text-5xl md:text-7xl text-white mb-4">
+            <h2 className="text-4xl md:text-7xl text-white mb-4">
               <span className="font-display font-light text-amber-500/90 tracking-wide">{t.pubs.title}</span> <br />
               <span className="font-display font-bold tracking-tight">{t.pubs.subtitle}</span>
             </h2>
@@ -765,7 +831,7 @@ END:VCARD`;
                     setPubFilter(e.target.value);
                     setVisibleCount(10);
                   }}
-                  className="appearance-none bg-[#0B101E]/80 border border-white/[0.1] text-slate-300 px-6 py-3 pr-12 rounded-full text-sm font-mono focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 transition-all cursor-pointer backdrop-blur-md"
+                  className="w-full sm:w-auto appearance-none bg-[#0B101E]/80 border border-white/[0.1] text-slate-300 px-6 py-3 pr-12 rounded-full text-sm font-mono focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 transition-all cursor-pointer backdrop-blur-md"
                 >
                   <option value="All">All Publications</option>
                   <option value="Selected">Selected / Highlighted</option>
@@ -782,26 +848,44 @@ END:VCARD`;
             </div>
           </div>
 
-          <div className="flex flex-col gap-8">
-            {visiblePublications.map((pub, i) => {
-              // Fix: cover_url is actually the Graphical Abstract (ga1), file_img is the Journal Cover (X...)
-              const abstractImg = pub.cover_url;
-              const journalImg = pub.file_img;
-              const hasAbstract = !!abstractImg;
-              const hasJournal = !!journalImg;
-              const isSameImg = abstractImg === journalImg;
+          <AnimatePresence mode="wait">
+            {isLoading ? (
+              <motion.div 
+                key="loader"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="h-96 flex items-center justify-center"
+              >
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-amber-500"></div>
+              </motion.div>
+            ) : (
+              <motion.div 
+                key="content"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="flex flex-col gap-8"
+              >
+                {visiblePublications.map((pub, i) => {
+                  // Fix: cover_url is actually the Graphical Abstract (ga1), file_img is the Journal Cover (X...)
+                  const abstractImg = pub.cover_url;
+                  const journalImg = pub.file_img;
+                  const hasAbstract = !!abstractImg;
+                  const hasJournal = !!journalImg;
+                  const isSameImg = abstractImg === journalImg;
 
-              let mainImg = abstractImg;
-              let mainLabel = t.pubs.abstract;
-              let secondaryImg = (!isSameImg && hasJournal) ? journalImg : null;
+                  let mainImg = abstractImg;
+                  let mainLabel = t.pubs.abstract;
+                  let secondaryImg = (!isSameImg && hasJournal) ? journalImg : null;
 
-              if (!hasAbstract && hasJournal) {
-                mainImg = journalImg;
-                mainLabel = t.pubs.cover;
-              } else if (!hasAbstract && !hasJournal) {
-                mainImg = "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?q=80&w=800&auto=format&fit=crop";
-                mainLabel = t.pubs.quantum;
-              }
+                  if (!hasAbstract && hasJournal) {
+                    mainImg = journalImg;
+                    mainLabel = t.pubs.cover;
+                  } else if (!hasAbstract && !hasJournal) {
+                    mainImg = "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?q=80&w=800&auto=format&fit=crop";
+                    mainLabel = t.pubs.quantum;
+                  }
 
               return (
                 <motion.div 
@@ -903,7 +987,7 @@ END:VCARD`;
                             rel="noopener noreferrer" 
                             className="text-sm text-amber-400/80 hover:text-amber-400 flex items-center gap-2 break-all transition-colors"
                           >
-                            {pub.doi} <ExternalLink className="w-3 h-3 shrink-0" />
+                            {getLinkDisplay(pub.doi)} <ExternalLink className="w-3 h-3 shrink-0" />
                           </a>
                         </div>
                       </div>
@@ -912,7 +996,9 @@ END:VCARD`;
                 </motion.div>
               );
             })}
-          </div>
+          </motion.div>
+          )}
+          </AnimatePresence>
 
           {visibleCount < filteredPublications.length && (
             <div className="mt-16 flex justify-center">
@@ -942,7 +1028,7 @@ END:VCARD`;
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#080C16] via-transparent to-transparent" />
             </div>
-            <div className="absolute -bottom-12 -right-6 md:-right-12 bg-[#0B101E]/90 backdrop-blur-xl p-8 md:p-10 border border-amber-500/20 rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.5)] max-w-xs">
+            <div className="absolute -bottom-12 -right-6 md:-right-12 bg-[#0B101E]/90 backdrop-blur-md p-8 md:p-10 border border-amber-500/20 rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.5)] max-w-xs">
               <GraduationCap className="w-8 h-8 mb-4 text-amber-400 stroke-1" />
               <h4 className="font-display font-light text-xl text-white mb-3 tracking-wide">{t.about.leadership}</h4>
               <p className="text-sm leading-relaxed text-slate-400 font-light">
@@ -1055,7 +1141,7 @@ END:VCARD`;
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="bg-[#0B101E]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-8 md:p-10 hover:border-amber-500/30 transition-colors shadow-[0_8px_32px_rgba(0,0,0,0.2)]"
+              className="bg-[#0B101E]/80 backdrop-blur-md border border-white/10 rounded-3xl p-8 md:p-10 hover:border-amber-500/30 transition-colors shadow-[0_8px_32px_rgba(0,0,0,0.2)]"
             >
               <div className="flex items-center gap-4 mb-8 pb-8 border-b border-white/10">
                 <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center shrink-0">
@@ -1067,44 +1153,44 @@ END:VCARD`;
                 </div>
               </div>
               
-              <div className="grid grid-cols-3 gap-4 mb-10">
+              <div className="grid grid-cols-3 gap-2 md:gap-4 mb-10">
                 <div className="text-center">
-                  <div className="w-10 h-10 mx-auto rounded-full bg-blue-500/10 flex items-center justify-center mb-3">
-                    <Globe className="w-5 h-5 text-blue-400 stroke-1" />
+                  <div className="w-8 h-8 md:w-10 md:h-10 mx-auto rounded-full bg-blue-500/10 flex items-center justify-center mb-3">
+                    <Globe className="w-4 h-4 md:w-5 md:h-5 text-blue-400 stroke-1" />
                   </div>
-                  <div className="text-2xl font-display font-bold text-white">49,442</div>
-                  <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-1">{t.impact.worldRank}</div>
+                  <div className="text-lg md:text-2xl font-display font-bold text-white">49,442</div>
+                  <div className="text-[8px] md:text-[10px] uppercase tracking-wider text-slate-500 mt-1">{t.impact.worldRank}</div>
                 </div>
                 <div className="text-center">
-                  <div className="w-10 h-10 mx-auto rounded-full bg-red-500/10 flex items-center justify-center mb-3">
-                    <MapPin className="w-5 h-5 text-red-400 stroke-1" />
+                  <div className="w-8 h-8 md:w-10 md:h-10 mx-auto rounded-full bg-red-500/10 flex items-center justify-center mb-3">
+                    <MapPin className="w-4 h-4 md:w-5 md:h-5 text-red-400 stroke-1" />
                   </div>
-                  <div className="text-2xl font-display font-bold text-white">225</div>
-                  <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-1">{t.impact.countryRank}</div>
+                  <div className="text-lg md:text-2xl font-display font-bold text-white">225</div>
+                  <div className="text-[8px] md:text-[10px] uppercase tracking-wider text-slate-500 mt-1">{t.impact.countryRank}</div>
                 </div>
                 <div className="text-center">
-                  <div className="w-10 h-10 mx-auto rounded-full bg-emerald-500/10 flex items-center justify-center mb-3">
-                    <GraduationCap className="w-5 h-5 text-emerald-400 stroke-1" />
+                  <div className="w-8 h-8 md:w-10 md:h-10 mx-auto rounded-full bg-emerald-500/10 flex items-center justify-center mb-3">
+                    <GraduationCap className="w-4 h-4 md:w-5 md:h-5 text-emerald-400 stroke-1" />
                   </div>
-                  <div className="text-2xl font-display font-bold text-white">1</div>
-                  <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-1">{t.impact.uniRank}</div>
+                  <div className="text-lg md:text-2xl font-display font-bold text-white">1</div>
+                  <div className="text-[8px] md:text-[10px] uppercase tracking-wider text-slate-500 mt-1">{t.impact.uniRank}</div>
                 </div>
               </div>
 
-              <div className="bg-white/5 rounded-2xl p-6">
-                <h4 className="text-sm font-mono uppercase tracking-widest text-slate-400 mb-6 text-center">{t.impact.hIndex}</h4>
-                <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="bg-white/5 rounded-2xl p-4 md:p-6">
+                <h4 className="text-xs md:text-sm font-mono uppercase tracking-widest text-slate-400 mb-6 text-center">{t.impact.hIndex}</h4>
+                <div className="grid grid-cols-3 gap-2 md:gap-4 text-center">
                   <div>
-                    <div className="text-3xl font-display font-bold text-amber-400">62</div>
-                    <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-2">{t.impact.total}</div>
+                    <div className="text-xl md:text-3xl font-display font-bold text-amber-400">62</div>
+                    <div className="text-[8px] md:text-[10px] uppercase tracking-wider text-slate-500 mt-2">{t.impact.total}</div>
                   </div>
                   <div>
-                    <div className="text-3xl font-display font-bold text-white">47</div>
-                    <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-2">{t.impact.last5}</div>
+                    <div className="text-xl md:text-3xl font-display font-bold text-white">47</div>
+                    <div className="text-[8px] md:text-[10px] uppercase tracking-wider text-slate-500 mt-2">{t.impact.last5}</div>
                   </div>
                   <div>
-                    <div className="text-3xl font-display font-bold text-white">0.758</div>
-                    <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-2">{t.impact.ratio}</div>
+                    <div className="text-xl md:text-3xl font-display font-bold text-white">0.758</div>
+                    <div className="text-[8px] md:text-[10px] uppercase tracking-wider text-slate-500 mt-2">{t.impact.ratio}</div>
                   </div>
                 </div>
               </div>
@@ -1116,7 +1202,7 @@ END:VCARD`;
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
-              className="bg-[#0B101E]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-8 md:p-10 hover:border-purple-500/30 transition-colors shadow-[0_8px_32px_rgba(0,0,0,0.2)]"
+              className="bg-[#0B101E]/80 backdrop-blur-md border border-white/10 rounded-3xl p-8 md:p-10 hover:border-purple-500/30 transition-colors shadow-[0_8px_32px_rgba(0,0,0,0.2)]"
             >
               <div className="flex items-center gap-4 mb-8 pb-8 border-b border-white/10">
                 <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center shrink-0">
@@ -1128,44 +1214,44 @@ END:VCARD`;
                 </div>
               </div>
               
-              <div className="grid grid-cols-3 gap-4 mb-10">
+              <div className="grid grid-cols-3 gap-2 md:gap-4 mb-10">
                 <div className="text-center">
-                  <div className="w-10 h-10 mx-auto rounded-full bg-blue-500/10 flex items-center justify-center mb-3">
-                    <Globe className="w-5 h-5 text-blue-400 stroke-1" />
+                  <div className="w-8 h-8 md:w-10 md:h-10 mx-auto rounded-full bg-blue-500/10 flex items-center justify-center mb-3">
+                    <Globe className="w-4 h-4 md:w-5 md:h-5 text-blue-400 stroke-1" />
                   </div>
-                  <div className="text-2xl font-display font-bold text-white">80,658</div>
-                  <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-1">{t.impact.worldRank}</div>
+                  <div className="text-lg md:text-2xl font-display font-bold text-white">80,658</div>
+                  <div className="text-[8px] md:text-[10px] uppercase tracking-wider text-slate-500 mt-1">{t.impact.worldRank}</div>
                 </div>
                 <div className="text-center">
-                  <div className="w-10 h-10 mx-auto rounded-full bg-red-500/10 flex items-center justify-center mb-3">
-                    <MapPin className="w-5 h-5 text-red-400 stroke-1" />
+                  <div className="w-8 h-8 md:w-10 md:h-10 mx-auto rounded-full bg-red-500/10 flex items-center justify-center mb-3">
+                    <MapPin className="w-4 h-4 md:w-5 md:h-5 text-red-400 stroke-1" />
                   </div>
-                  <div className="text-2xl font-display font-bold text-white">423</div>
-                  <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-1">{t.impact.countryRank}</div>
+                  <div className="text-lg md:text-2xl font-display font-bold text-white">423</div>
+                  <div className="text-[8px] md:text-[10px] uppercase tracking-wider text-slate-500 mt-1">{t.impact.countryRank}</div>
                 </div>
                 <div className="text-center">
-                  <div className="w-10 h-10 mx-auto rounded-full bg-purple-500/10 flex items-center justify-center mb-3">
-                    <GraduationCap className="w-5 h-5 text-purple-400 stroke-1" />
+                  <div className="w-8 h-8 md:w-10 md:h-10 mx-auto rounded-full bg-purple-500/10 flex items-center justify-center mb-3">
+                    <GraduationCap className="w-4 h-4 md:w-5 md:h-5 text-purple-400 stroke-1" />
                   </div>
-                  <div className="text-2xl font-display font-bold text-white">2</div>
-                  <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-1">{t.impact.uniRank}</div>
+                  <div className="text-lg md:text-2xl font-display font-bold text-white">2</div>
+                  <div className="text-[8px] md:text-[10px] uppercase tracking-wider text-slate-500 mt-1">{t.impact.uniRank}</div>
                 </div>
               </div>
 
-              <div className="bg-white/5 rounded-2xl p-6">
-                <h4 className="text-sm font-mono uppercase tracking-widest text-slate-400 mb-6 text-center">{t.impact.hIndex}</h4>
-                <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="bg-white/5 rounded-2xl p-4 md:p-6">
+                <h4 className="text-xs md:text-sm font-mono uppercase tracking-widest text-slate-400 mb-6 text-center">{t.impact.hIndex}</h4>
+                <div className="grid grid-cols-3 gap-2 md:gap-4 text-center">
                   <div>
-                    <div className="text-3xl font-display font-bold text-purple-400">52</div>
-                    <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-2">{t.impact.total}</div>
+                    <div className="text-xl md:text-3xl font-display font-bold text-purple-400">52</div>
+                    <div className="text-[8px] md:text-[10px] uppercase tracking-wider text-slate-500 mt-2">{t.impact.total}</div>
                   </div>
                   <div>
-                    <div className="text-3xl font-display font-bold text-white">38</div>
-                    <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-2">{t.impact.last5}</div>
+                    <div className="text-xl md:text-3xl font-display font-bold text-white">38</div>
+                    <div className="text-[8px] md:text-[10px] uppercase tracking-wider text-slate-500 mt-2">{t.impact.last5}</div>
                   </div>
                   <div>
-                    <div className="text-3xl font-display font-bold text-white">0.731</div>
-                    <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-2">{t.impact.ratio}</div>
+                    <div className="text-xl md:text-3xl font-display font-bold text-white">0.731</div>
+                    <div className="text-[8px] md:text-[10px] uppercase tracking-wider text-slate-500 mt-2">{t.impact.ratio}</div>
                   </div>
                 </div>
               </div>
@@ -1182,35 +1268,84 @@ END:VCARD`;
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="max-w-7xl mx-auto px-6 text-center relative z-10"
+          className="max-w-4xl mx-auto px-6 relative z-10"
         >
-          <h2 className="text-5xl md:text-7xl text-white mb-16">
-            <span className="font-display font-light text-amber-500/90 tracking-wide">{t.contact.title}</span> <br />
-            <span className="font-display font-bold tracking-tight">{t.contact.subtitle}</span>
-          </h2>
-          <div className="flex flex-col md:flex-row justify-center items-center gap-6 md:gap-8 mb-16">
-            <a href={`mailto:${t.contact.email}`} className="flex items-center gap-4 bg-white/[0.02] px-8 py-5 rounded-full border border-white/[0.05] hover:border-amber-500/30 hover:bg-white/[0.04] transition-all backdrop-blur-sm group">
-              <Mail className="w-5 h-5 text-amber-400 stroke-1 group-hover:scale-110 transition-transform" />
-              <span className="text-sm font-display tracking-[0.1em] text-white">{t.contact.email}</span>
-            </a>
-            <a href={`tel:${t.contact.phone.replace(/[^0-9+]/g, '')}`} className="flex items-center gap-4 bg-white/[0.02] px-8 py-5 rounded-full border border-white/[0.05] hover:border-teal-500/30 hover:bg-white/[0.04] transition-all backdrop-blur-sm group">
-              <Phone className="w-5 h-5 text-teal-400 stroke-1 group-hover:scale-110 transition-transform" />
-              <span className="text-sm font-display tracking-[0.1em] text-white">{t.contact.phone}</span>
-            </a>
+          <div className="text-center mb-12 md:mb-16">
+            <h2 className="text-4xl md:text-7xl text-white mb-6">
+              <span className="font-display font-light text-amber-500/90 tracking-wide">{t.contact.title}</span> <br />
+              <span className="font-display font-bold tracking-tight">{t.contact.subtitle}</span>
+            </h2>
+            <div className="w-24 h-1 bg-gradient-to-r from-amber-500 to-teal-500 mx-auto rounded-full opacity-50"></div>
           </div>
-          <div className="flex justify-center mb-24">
-            <button 
-              onClick={handleDownloadVCard}
-              className="group relative flex items-center gap-3 bg-[#0B101E]/80 text-white px-8 py-4 rounded-full font-display tracking-widest text-sm uppercase border border-white/10 hover:border-amber-500/50 hover:bg-amber-500/10 transition-all duration-500 overflow-hidden shadow-[0_0_20px_rgba(0,0,0,0.3)] hover:shadow-[0_0_30px_rgba(251,191,36,0.2)]"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-amber-500/0 via-amber-500/10 to-amber-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-              <Download className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
-              <span className="relative z-10">{t.contact.vcard}</span>
-            </button>
+
+          <div className="bg-white/[0.02] border border-white/[0.05] rounded-3xl p-8 md:p-12 backdrop-blur-md shadow-2xl relative overflow-hidden">
+            {/* Decorative elements inside card */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-teal-500/5 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none"></div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center relative z-10">
+              <div className="space-y-8">
+                <a href={`mailto:${t.contact.email}`} className="flex items-start gap-5 group">
+                  <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0 border border-amber-500/20 group-hover:scale-110 group-hover:bg-amber-500/20 transition-all duration-300">
+                    <Mail className="w-5 h-5 text-amber-400 stroke-1" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-mono uppercase tracking-widest text-slate-500 mb-1">Email</div>
+                    <div className="text-lg text-slate-200 group-hover:text-amber-400 transition-colors">{t.contact.email}</div>
+                  </div>
+                </a>
+
+                <a href={`tel:${t.contact.phone.replace(/[^0-9+]/g, '')}`} className="flex items-start gap-5 group">
+                  <div className="w-12 h-12 rounded-full bg-teal-500/10 flex items-center justify-center shrink-0 border border-teal-500/20 group-hover:scale-110 group-hover:bg-teal-500/20 transition-all duration-300">
+                    <Phone className="w-5 h-5 text-teal-400 stroke-1" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-mono uppercase tracking-widest text-slate-500 mb-1">Phone</div>
+                    <div className="text-lg text-slate-200 group-hover:text-teal-400 transition-colors">{t.contact.phone}</div>
+                  </div>
+                </a>
+
+                <div className="flex items-start gap-5 group">
+                  <div className="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center shrink-0 border border-purple-500/20 group-hover:scale-110 group-hover:bg-purple-500/20 transition-all duration-300">
+                    <Printer className="w-5 h-5 text-purple-400 stroke-1" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-mono uppercase tracking-widest text-slate-500 mb-1">Fax</div>
+                    <div className="text-lg text-slate-200 group-hover:text-purple-400 transition-colors">{t.contact.fax}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col items-center justify-center p-8 border-t md:border-t-0 md:border-l border-white/[0.05]">
+                <button 
+                  onClick={handleDownloadVCard}
+                  className="group relative w-32 h-32 mb-6 rounded-full bg-gradient-to-br from-amber-500/10 to-teal-500/10 flex items-center justify-center border border-white/10 shadow-[0_0_30px_rgba(255,255,255,0.05)] hover:shadow-[0_0_40px_rgba(251,191,36,0.2)] hover:scale-105 hover:border-amber-500/30 transition-all duration-500"
+                  title={lang === 'en' ? 'Tap to download' : '點擊下載'}
+                >
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-amber-500/20 to-teal-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl" />
+                  <UserPlus className="w-12 h-12 text-slate-300 group-hover:text-amber-400 transition-colors relative z-10" />
+                </button>
+                <div className="text-center">
+                  <div className="text-sm font-display tracking-widest uppercase text-white mb-2">
+                    {t.contact.vcardModal.add}
+                  </div>
+                  <div className="text-xs text-slate-500 flex items-center justify-center gap-1 mx-auto">
+                    <Download className="w-3 h-3" />
+                    {t.contact.vcardModal.click}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-slate-500">
-            {t.contact.footer}
-          </div>
+
+          <footer className="w-full py-8 mt-24 text-center border-t border-white/10">
+            <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-slate-500">
+              {t.contact.footer}
+            </p>
+            <p className="mt-2 text-[10px] font-mono uppercase tracking-[0.3em] text-slate-600">
+              {t.contact.developer}
+            </p>
+          </footer>
         </motion.div>
       </section>
 
