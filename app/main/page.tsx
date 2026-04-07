@@ -906,7 +906,7 @@ export default function HomePage() {
                             alt={mainLabel || "Publication Image"} 
                             fill
                             sizes="(max-width: 1024px) 90vw, 33vw"
-                            loading={i < 2 ? "eager" : "lazy"}
+                            priority={i < 2}
                             className="object-contain p-2 transition-transform duration-500 group-hover/img:scale-105" 
                             referrerPolicy="no-referrer"
                           />

@@ -50,7 +50,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="dns-prefetch" href="https://ars.els-cdn.com" />
         <link rel="dns-prefetch" href="https://pubs.acs.org" />
         <link rel="dns-prefetch" href="https://pubs.rsc.org" />
-        <link rel="preconnect" href="https://sixshoes.github.io" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://sixshoes.github.io" crossOrigin="" />
       </head>
       <body suppressHydrationWarning className="bg-[#080C16] text-slate-300 font-sans antialiased selection:bg-amber-500/30">
         {/* Subtle noise texture overlay for premium material feel - Removed for performance */}

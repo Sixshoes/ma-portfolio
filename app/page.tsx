@@ -59,7 +59,7 @@ export default function VisualsPage() {
       mouseY.set(e.clientY - window.innerHeight / 2);
     };
 
-    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    window.addEventListener('mousemove', handleMouseMove);
     
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
