@@ -100,11 +100,10 @@ export default function VisualsPage() {
         animate={isMobile ? {
           x: [0, 20, -20, 0],
           y: [0, -20, 20, 0],
-        } : undefined}
-        style={!isMobile ? {
+        } : {
           x: springX,
           y: springY,
-        } : undefined}
+        }}
         transition={isMobile ? {
           duration: 10,
           repeat: Infinity,
