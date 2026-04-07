@@ -731,13 +731,13 @@ export default function HomePage() {
             {/* Profile Image with Soft Gradient Blending */}
             <div className="absolute inset-0 z-10 overflow-hidden rounded-3xl">
               <Image 
-                src="https://sixshoes.github.io/Ma-Research-Portal/profile.jpg" 
+                src="/profile.jpg" 
                 alt="馬遠榮副校長個人照 (Prof. Y.R. Ma)"
                 fill
+                sizes="(max-width: 1024px) 100vw, 448px"
                 priority
                 onLoad={() => setIsImgLoaded(true)}
                 className={`object-cover object-top transition-all duration-1000 hover:scale-105 ${isImgLoaded ? 'opacity-100' : 'opacity-0'}`}
-                referrerPolicy="no-referrer"
               />
               {/* Gradient overlays to blend the image into the dark background */}
               <div className="absolute inset-0 bg-gradient-to-t from-[#080C16] via-[#080C16]/20 to-transparent pointer-events-none" />
