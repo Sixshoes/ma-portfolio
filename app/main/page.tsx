@@ -75,7 +75,12 @@ const dict = {
       benchmark: '🔥 International Benchmark',
       keyFocus: '⭐ Key Focus',
       general: '📄 General Paper',
-      quantum: 'Quantum Mechanics'
+      quantum: 'Quantum Mechanics',
+      filterBy: 'Filter by:',
+      allPubs: 'All Publications',
+      selected: 'Selected / Highlighted',
+      byYear: 'By Year',
+      loadMore: 'Load More',
     },
     about: {
       title: 'Academic',
@@ -162,6 +167,9 @@ const dict = {
       email: 'yrma@mail.fgu.edu.tw',
       phone: '+886-3-9871000 ext. 11010',
       fax: '+886-3-9874815',
+      emailLabel: 'Email',
+      phoneLabel: 'Phone',
+      faxLabel: 'Fax',
       vcard: 'Save Contact Info',
       vcardModal: {
         title: 'Save Contact',
@@ -219,7 +227,12 @@ const dict = {
       benchmark: '🔥 國際標竿',
       keyFocus: '⭐ 重點關注',
       general: '📄 一般論文',
-      quantum: '量子力學'
+      quantum: '量子力學',
+      filterBy: '篩選：',
+      allPubs: '所有論文',
+      selected: '精選 / 重點',
+      byYear: '依年份',
+      loadMore: '載入更多',
     },
     about: {
       title: '學術',
@@ -306,6 +319,9 @@ const dict = {
       email: 'yrma@mail.fgu.edu.tw',
       phone: '(03)9871000 分機 11010',
       fax: '(03)9874815',
+      emailLabel: '電子郵件',
+      phoneLabel: '電話',
+      faxLabel: '傳真',
       vcard: '儲存聯絡資訊',
       vcardModal: {
         title: '儲存聯絡資訊',
@@ -324,7 +340,7 @@ N:Ma;Yuan-Ron;;;
 FN:Yuan-Ron Ma (馬遠榮)
 TITLE:Vice President, Chair Professor
 ORG:Fo Guang University
-TEL;TYPE=WORK,VOICE:+886-3-9871000;ext=11010
+TEL;TYPE=WORK,VOICE:+886-3-9871000 x11010
 TEL;TYPE=WORK,FAX:+886-3-9874815
 EMAIL;TYPE=PREF,INTERNET:yrma@mail.fgu.edu.tw
 END:VCARD`;
@@ -376,6 +392,12 @@ export default function HomePage() {
     } catch {
       return 'View Article'; // 萬一網址格式壞掉的最後防線
     }
+  };
+
+  const getTelHref = (phone: string) => {
+    // Strip everything from "ext." or "分機" onward, then keep only digits and leading +
+    const mainNumber = phone.split(/ext\.|分機/i)[0];
+    return `tel:${mainNumber.replace(/[^0-9+]/g, '')}`;
   };
 
   const profileParticles = useMemo(() => {
@@ -505,7 +527,7 @@ export default function HomePage() {
           transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
           className="absolute top-[40%] -right-[20%] w-[60vw] h-[60vw] rounded-full bg-gradient-to-tl from-amber-900/20 to-transparent blur-[120px]"
         />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
+        <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-20 mix-blend-overlay"></div>
       </div>
 
       {/* Navigation */}
@@ -836,7 +858,7 @@ export default function HomePage() {
             
             {/* Filter UI */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-              <span className="text-xs font-mono uppercase tracking-widest text-slate-500">Filter by:</span>
+              <span className="text-xs font-mono uppercase tracking-widest text-slate-500">{t.pubs.filterBy}</span>
               <div className="relative w-full sm:w-auto">
                 <select 
                   value={pubFilter}
@@ -846,9 +868,9 @@ export default function HomePage() {
                   }}
                   className="w-full sm:w-auto appearance-none bg-[#0B101E]/80 border border-white/[0.1] text-slate-300 px-6 py-3 pr-12 rounded-full text-sm font-mono focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 transition-all cursor-pointer backdrop-blur-md"
                 >
-                  <option value="All">All Publications</option>
-                  <option value="Selected">Selected / Highlighted</option>
-                  <optgroup label="By Year">
+                  <option value="All">{t.pubs.allPubs}</option>
+                  <option value="Selected">{t.pubs.selected}</option>
+                  <optgroup label={t.pubs.byYear}>
                     {uniqueYears.map(year => (
                       <option key={year} value={year}>{year}</option>
                     ))}
@@ -904,7 +926,7 @@ export default function HomePage() {
 
                   return (
                     <motion.div 
-                      key={i}
+                      key={pub.doi}
                       initial={{ opacity: 0, y: 20 }}
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true, margin: "-50px" }}
@@ -920,6 +942,7 @@ export default function HomePage() {
                             src={mainImg} 
                             alt={mainLabel || "Publication Image"} 
                             fill
+                            sizes="(max-width: 1024px) 100vw, 33vw"
                             priority={i < 2}
                             className="object-contain p-2 transition-transform duration-500 group-hover/img:scale-105" 
                             referrerPolicy="no-referrer"
@@ -934,6 +957,7 @@ export default function HomePage() {
                           src={secondaryImg} 
                           alt={t.pubs.cover || "Journal Cover"} 
                           fill
+                          sizes="120px"
                           className="object-contain p-1 transition-transform duration-500 group-hover/img:scale-105" 
                           referrerPolicy="no-referrer"
                         />
@@ -1012,7 +1036,7 @@ export default function HomePage() {
                 onClick={() => setVisibleCount(prev => prev + 10)}
                 className="px-8 py-3 rounded-full border border-amber-500/30 text-amber-500 font-mono text-sm hover:bg-amber-500/10 hover:border-amber-500/50 transition-all duration-300 flex items-center gap-2"
               >
-                {lang === 'zh' ? '載入更多' : 'Load More'}
+                {t.pubs.loadMore}
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="6 9 12 15 18 9"></polyline>
                 </svg>
@@ -1292,17 +1316,17 @@ export default function HomePage() {
                     <Mail className="w-5 h-5 text-amber-400 stroke-1" />
                   </div>
                   <div>
-                    <div className="text-xs font-mono uppercase tracking-widest text-slate-500 mb-1">Email</div>
+                    <div className="text-xs font-mono uppercase tracking-widest text-slate-500 mb-1">{t.contact.emailLabel}</div>
                     <div className="text-lg text-slate-200 group-hover:text-amber-400 transition-colors">{t.contact.email}</div>
                   </div>
                 </a>
 
-                <a href={`tel:${t.contact.phone.replace(/[^0-9+]/g, '')}`} className="flex items-start gap-5 group">
+        <a href={getTelHref(t.contact.phone)} className="flex items-start gap-5 group">
                   <div className="w-12 h-12 rounded-full bg-teal-500/10 flex items-center justify-center shrink-0 border border-teal-500/20 group-hover:scale-110 group-hover:bg-teal-500/20 transition-all duration-300">
                     <Phone className="w-5 h-5 text-teal-400 stroke-1" />
                   </div>
                   <div>
-                    <div className="text-xs font-mono uppercase tracking-widest text-slate-500 mb-1">Phone</div>
+                    <div className="text-xs font-mono uppercase tracking-widest text-slate-500 mb-1">{t.contact.phoneLabel}</div>
                     <div className="text-lg text-slate-200 group-hover:text-teal-400 transition-colors">{t.contact.phone}</div>
                   </div>
                 </a>
@@ -1312,7 +1336,7 @@ export default function HomePage() {
                     <Printer className="w-5 h-5 text-purple-400 stroke-1" />
                   </div>
                   <div>
-                    <div className="text-xs font-mono uppercase tracking-widest text-slate-500 mb-1">Fax</div>
+                    <div className="text-xs font-mono uppercase tracking-widest text-slate-500 mb-1">{t.contact.faxLabel}</div>
                     <div className="text-lg text-slate-200 group-hover:text-purple-400 transition-colors">{t.contact.fax}</div>
                   </div>
                 </div>
