@@ -42,7 +42,7 @@ export default function VisualsPage() {
   }, []);
 
   const particles = useMemo(() => {
-    const count = isMobile ? 45 : 60; // Increased from 30 to 45 for better visual on mobile
+    const count = isMobile ? 24 : 36;
     return Array.from({ length: count }).map((_, i) => ({
       id: i,
       // Deterministic pseudo-random values based on index

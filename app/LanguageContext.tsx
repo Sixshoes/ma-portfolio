@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
 type Lang = 'en' | 'zh';
@@ -23,16 +23,14 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setTimeout(() => {
-      setMounted(true);
-      const savedLang = localStorage.getItem('preferred_lang') as Lang;
-      if (savedLang === 'en' || savedLang === 'zh') {
-        setLangState(savedLang);
-      }
-    }, 0);
+    setMounted(true);
+    const savedLang = localStorage.getItem('preferred_lang') as Lang;
+    if (savedLang === 'en' || savedLang === 'zh') {
+      setLangState(savedLang);
+    }
   }, []);
 
-  const setLang = (newLang: Lang) => {
+  const setLang = useCallback((newLang: Lang) => {
     if (newLang === lang || isTransitioning) return;
     setIsTransitioning(true);
     
@@ -46,7 +44,7 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
     setTimeout(() => {
       setIsTransitioning(false);
     }, 600);
-  };
+  }, [lang, isTransitioning]);
 
   const particles = useMemo(() => {
     return Array.from({ length: 12 }).map((_, i) => {
@@ -58,10 +56,15 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
     });
   }, []);
 
+  const contextValue = useMemo(
+    () => ({ lang, setLang, isTransitioning }),
+    [lang, setLang, isTransitioning]
+  );
+
   if (!mounted) return <>{children}</>;
 
   return (
-    <LanguageContext.Provider value={{ lang, setLang, isTransitioning }}>
+    <LanguageContext.Provider value={contextValue}>
       <AnimatePresence>
         {isTransitioning && (
           <motion.div

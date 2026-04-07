@@ -920,7 +920,9 @@ export default function HomePage() {
                             src={mainImg} 
                             alt={mainLabel || "Publication Image"} 
                             fill
-                            priority={i < 2}
+                            priority={i < 1}
+                            loading={i < 1 ? 'eager' : 'lazy'}
+                            sizes="(max-width: 1024px) 100vw, 33vw"
                             className="object-contain p-2 transition-transform duration-500 group-hover/img:scale-105" 
                             referrerPolicy="no-referrer"
                           />
@@ -934,6 +936,8 @@ export default function HomePage() {
                           src={secondaryImg} 
                           alt={t.pubs.cover || "Journal Cover"} 
                           fill
+                          loading="lazy"
+                          sizes="120px"
                           className="object-contain p-1 transition-transform duration-500 group-hover/img:scale-105" 
                           referrerPolicy="no-referrer"
                         />
