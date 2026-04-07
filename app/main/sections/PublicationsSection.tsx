@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ExternalLink, Quote, Star } from 'lucide-react';
 import { Publication } from '@/lib/publications';
 import { useRenderProfiler } from './useRenderProfiler';
+import { uiTokens } from './uiTokens';
 
 type PublicationsText = {
   title: string;
@@ -77,9 +78,9 @@ function PublicationsSectionComponent({
     <section id="publications" className="py-32 bg-gradient-to-b from-[#0B101E]/40 to-[#0A0F1C]/40 border-y border-white/[0.06] relative">
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         <div className="mb-20">
-          <h2 className="text-4xl md:text-7xl text-white mb-4">
-            <span className="font-display font-light text-amber-500/90 tracking-wide">{pubsText.title}</span> <br />
-            <span className="font-display font-bold tracking-tight">{pubsText.subtitle}</span>
+          <h2 className={`${uiTokens.sectionTitle} mb-4`}>
+            <span className={uiTokens.titleLight}>{pubsText.title}</span> <br />
+            <span className={uiTokens.titleBold}>{pubsText.subtitle}</span>
           </h2>
           <p className="text-teal-400/80 font-mono uppercase text-[10px] tracking-[0.2em] mb-12">{pubsText.desc}</p>
 
@@ -155,7 +156,7 @@ function PublicationsSectionComponent({
                     transition={{ delay: i * 0.05 }}
                     whileHover={isMobile || prefersReducedMotion ? {} : { y: -3, scale: 1.005 }}
                     style={{ transform: 'translateZ(0)' }}
-                    className="flex flex-col lg:flex-row gap-8 p-6 md:p-8 bg-gradient-to-b from-[#0C1325]/95 to-[#0A1120]/95 backdrop-blur-md border border-white/[0.08] rounded-3xl hover:border-amber-500/30 transition-all duration-500 group shadow-[0_12px_36px_rgba(0,0,0,0.28)] hover:shadow-[0_20px_48px_rgba(251,191,36,0.12)]"
+                    className={`flex flex-col lg:flex-row gap-8 p-6 md:p-8 ${uiTokens.surfaceCard} ${uiTokens.surfaceCardHover} group`}
                   >
                     <div className="w-full lg:w-1/3 flex flex-col gap-4 shrink-0">
                       <div className="relative w-full aspect-video bg-white rounded-xl border border-white/[0.05] p-2 flex items-center justify-center group/img overflow-hidden shadow-inner">
@@ -251,7 +252,7 @@ function PublicationsSectionComponent({
           <div className="mt-16 flex justify-center">
             <button
               onClick={onLoadMore}
-              className="px-8 py-3 rounded-full border border-amber-500/35 text-amber-300 font-mono text-sm hover:bg-amber-500/10 hover:border-amber-400/60 transition-all duration-300 flex items-center gap-2 shadow-[0_8px_25px_rgba(0,0,0,0.25)]"
+              className={`${uiTokens.buttonGhost} px-8 py-3 rounded-full font-mono text-sm flex items-center gap-2 shadow-[0_8px_25px_rgba(0,0,0,0.25)]`}
             >
               {lang === 'zh' ? '載入更多' : 'Load More'}
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

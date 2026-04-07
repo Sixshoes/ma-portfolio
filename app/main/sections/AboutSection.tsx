@@ -4,6 +4,7 @@ import React, { memo, useState } from 'react';
 import Image from 'next/image';
 import { GraduationCap } from 'lucide-react';
 import { useRenderProfiler } from './useRenderProfiler';
+import { uiTokens } from './uiTokens';
 
 type AboutText = {
   title: string;
@@ -66,9 +67,9 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
           </div>
         </div>
         <div>
-          <h2 className="text-5xl md:text-7xl text-white mb-16">
-            <span className="font-display font-light text-amber-500/90 tracking-wide">{aboutText.title}</span> <br />
-            <span className="font-display font-bold tracking-tight">{aboutText.subtitle}</span>
+          <h2 className={`${uiTokens.sectionTitle} mb-16`}>
+            <span className={uiTokens.titleLight}>{aboutText.title}</span> <br />
+            <span className={uiTokens.titleBold}>{aboutText.subtitle}</span>
           </h2>
           <div className="space-y-10">
             <div className="flex gap-6 group">

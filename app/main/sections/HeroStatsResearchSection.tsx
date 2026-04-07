@@ -4,6 +4,7 @@ import React, { memo, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'motion/react';
 import { useRenderProfiler } from './useRenderProfiler';
+import { uiTokens } from './uiTokens';
 
 type HeroText = {
   role: string;
@@ -111,7 +112,7 @@ function HeroStatsResearchSectionComponent({
               whileHover={prefersReducedMotion ? {} : { scale: 1.03, boxShadow: '0 0 18px rgba(251,191,36,0.28)' }}
               whileTap={{ scale: 0.95 }}
               href="#publications"
-              className="bg-gradient-to-r from-amber-300 to-amber-400 text-[#080C16] px-8 py-4 rounded-full text-xs font-display font-bold uppercase tracking-[0.2em] transition-all shadow-[0_10px_30px_rgba(251,191,36,0.25)] inline-block border border-amber-200/50"
+              className={`${uiTokens.buttonPrimary} px-8 py-4 rounded-full text-xs font-display font-bold uppercase tracking-[0.2em] transition-all inline-block`}
             >
               {heroText.cta}
             </motion.a>
@@ -199,11 +200,11 @@ function HeroStatsResearchSectionComponent({
       <section id="research" className="py-24 md:py-32 px-6 max-w-7xl mx-auto relative">
         <div className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[800px] h-[300px] md:h-[800px] bg-teal-500/5 rounded-full blur-[80px] md:blur-[120px] pointer-events-none" />
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 md:mb-20 relative z-10">
-          <h2 className="text-4xl md:text-7xl text-white">
-            <span className="font-display font-light text-amber-500/90 tracking-wide">{researchText.title}</span> <br />
-            <span className="font-display font-bold tracking-tight">{researchText.subtitle}</span>
+          <h2 className={uiTokens.sectionTitle}>
+            <span className={uiTokens.titleLight}>{researchText.title}</span> <br />
+            <span className={uiTokens.titleBold}>{researchText.subtitle}</span>
           </h2>
-          <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-teal-400/80 mt-6 md:mt-0 border border-teal-500/20 px-4 py-2 rounded-full bg-teal-500/5">
+          <div className={`${uiTokens.sectionEyebrow} mt-6 md:mt-0`}>
             {researchText.desc}
           </div>
         </div>
@@ -216,7 +217,7 @@ function HeroStatsResearchSectionComponent({
               viewport={{ once: true, margin: '-50px' }}
               transition={{ duration: 0.6, delay: i * 0.1, ease: [0.215, 0.61, 0.355, 1] }}
               whileHover={prefersReducedMotion ? {} : { y: -6, scale: 1.01 }}
-              className="bg-gradient-to-b from-[#0C1324]/95 to-[#0A1120]/95 backdrop-blur-md border border-white/[0.08] p-10 rounded-3xl hover:border-amber-500/35 hover:bg-[#101a31] transition-all duration-500 group relative overflow-hidden shadow-[0_12px_36px_rgba(0,0,0,0.28)] hover:shadow-[0_20px_50px_rgba(251,191,36,0.12)]"
+              className={`${uiTokens.surfaceCard} ${uiTokens.surfaceCardHover} p-10 group relative overflow-hidden`}
             >
               <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <div className="relative z-10">

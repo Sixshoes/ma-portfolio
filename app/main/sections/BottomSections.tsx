@@ -3,6 +3,7 @@
 import React, { memo } from 'react';
 import { motion } from 'motion/react';
 import { useRenderProfiler } from './useRenderProfiler';
+import { uiTokens } from './uiTokens';
 import {
   Globe,
   MapPin,
@@ -55,9 +56,9 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
       <section id="impact" className="py-32 relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="text-center mb-20">
-            <h2 className="text-5xl md:text-7xl text-white mb-6">
-              <span className="font-display font-light text-amber-500/90 tracking-wide">{t.impact.title}</span> <br />
-              <span className="font-display font-bold tracking-tight">{t.impact.subtitle}</span>
+            <h2 className={`${uiTokens.sectionTitle} mb-6`}>
+              <span className={uiTokens.titleLight}>{t.impact.title}</span> <br />
+              <span className={uiTokens.titleBold}>{t.impact.subtitle}</span>
             </h2>
             <p className="text-xs font-mono text-slate-500/80 mt-4">{t.impact.source}</p>
           </div>
@@ -67,7 +68,7 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="bg-[#0B101E]/80 backdrop-blur-md border border-white/10 rounded-3xl p-8 md:p-10 hover:border-amber-500/30 transition-colors shadow-[0_8px_32px_rgba(0,0,0,0.2)]"
+              className={`${uiTokens.surfaceCard} p-8 md:p-10 hover:border-amber-500/30 transition-colors`}
             >
               <div className="flex items-center gap-4 mb-8 pb-8 border-b border-white/10">
                 <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center shrink-0">
@@ -127,7 +128,7 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
-              className="bg-[#0B101E]/80 backdrop-blur-md border border-white/10 rounded-3xl p-8 md:p-10 hover:border-purple-500/30 transition-colors shadow-[0_8px_32px_rgba(0,0,0,0.2)]"
+              className={`${uiTokens.surfaceCard} p-8 md:p-10 hover:border-purple-500/30 transition-colors`}
             >
               <div className="flex items-center gap-4 mb-8 pb-8 border-b border-white/10">
                 <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center shrink-0">
@@ -195,9 +196,9 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
           className="max-w-4xl mx-auto px-6 relative z-10"
         >
           <div className="text-center mb-12 md:mb-16">
-            <h2 className="text-4xl md:text-7xl text-white mb-6">
-              <span className="font-display font-light text-amber-500/90 tracking-wide">{t.contact.title}</span> <br />
-              <span className="font-display font-bold tracking-tight">{t.contact.subtitle}</span>
+            <h2 className={`${uiTokens.sectionTitle} mb-6`}>
+              <span className={uiTokens.titleLight}>{t.contact.title}</span> <br />
+              <span className={uiTokens.titleBold}>{t.contact.subtitle}</span>
             </h2>
             <div className="w-24 h-1 bg-gradient-to-r from-amber-500 to-teal-500 mx-auto rounded-full opacity-50"></div>
           </div>

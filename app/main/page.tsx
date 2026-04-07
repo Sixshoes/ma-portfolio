@@ -10,6 +10,7 @@ import { PublicationsSection } from './sections/PublicationsSection';
 import { AboutSection } from './sections/AboutSection';
 import { HeroStatsResearchSection } from './sections/HeroStatsResearchSection';
 import { useRenderProfiler } from './sections/useRenderProfiler';
+import { uiTokens } from './sections/uiTokens';
 import { 
   Magnet, 
   BatteryCharging, 
@@ -496,7 +497,7 @@ export default function HomePage() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setLang(lang === 'en' ? 'zh' : 'en')}
-                className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-mono text-slate-300 hover:text-amber-400 transition-colors border border-white/10 px-3 py-1.5 rounded-full bg-white/[0.02]"
+                className={`flex items-center gap-2 text-[10px] uppercase tracking-widest font-mono px-3 py-1.5 rounded-full ${uiTokens.buttonGhost}`}
               >
                 <Globe className="w-3 h-3" />
                 {lang === 'en' ? '中文' : 'EN'}
