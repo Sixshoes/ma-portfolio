@@ -2,6 +2,7 @@
 
 import React, { memo } from 'react';
 import { motion } from 'motion/react';
+import { useRenderProfiler } from './useRenderProfiler';
 import {
   Globe,
   MapPin,
@@ -48,6 +49,7 @@ type BottomSectionsProps = {
 };
 
 function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsProps) {
+  useRenderProfiler('BottomSections');
   return (
     <>
       <section id="impact" className="py-32 relative overflow-hidden">

@@ -3,6 +3,7 @@
 import React, { memo, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'motion/react';
+import { useRenderProfiler } from './useRenderProfiler';
 
 type HeroText = {
   role: string;
@@ -54,6 +55,7 @@ function HeroStatsResearchSectionComponent({
   isMobile,
   prefersReducedMotion,
 }: HeroStatsResearchSectionProps) {
+  useRenderProfiler('HeroStatsResearchSection');
   const [isImgLoaded, setIsImgLoaded] = useState(false);
 
   const profileParticles = useMemo(() => {

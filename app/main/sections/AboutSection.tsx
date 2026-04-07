@@ -3,6 +3,7 @@
 import React, { memo, useState } from 'react';
 import Image from 'next/image';
 import { GraduationCap } from 'lucide-react';
+import { useRenderProfiler } from './useRenderProfiler';
 
 type AboutText = {
   title: string;
@@ -40,6 +41,7 @@ function renderListItem(text: string) {
 }
 
 function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
+  useRenderProfiler('AboutSection');
   const [isExpandedAdmin, setIsExpandedAdmin] = useState(false);
   const [isExpandedService, setIsExpandedService] = useState(false);
 

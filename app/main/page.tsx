@@ -9,6 +9,7 @@ import { BottomSections } from './sections/BottomSections';
 import { PublicationsSection } from './sections/PublicationsSection';
 import { AboutSection } from './sections/AboutSection';
 import { HeroStatsResearchSection } from './sections/HeroStatsResearchSection';
+import { useRenderProfiler } from './sections/useRenderProfiler';
 import { 
   Magnet, 
   BatteryCharging, 
@@ -323,6 +324,7 @@ EMAIL;TYPE=PREF,INTERNET:yrma@mail.fgu.edu.tw
 END:VCARD`;
 
 export default function HomePage() {
+  useRenderProfiler('MainPage');
   const { lang, setLang } = useLanguage();
   const [pubFilter, setPubFilter] = useState<string>('All');
   const [visibleCount, setVisibleCount] = useState<number>(10);

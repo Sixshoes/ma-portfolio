@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
 import { ExternalLink, Quote, Star } from 'lucide-react';
 import { Publication } from '@/lib/publications';
+import { useRenderProfiler } from './useRenderProfiler';
 
 type PublicationsText = {
   title: string;
@@ -71,6 +72,7 @@ function PublicationsSectionComponent({
   onFilterChange,
   onLoadMore,
 }: PublicationsSectionProps) {
+  useRenderProfiler('PublicationsSection');
   return (
     <section id="publications" className="py-32 bg-gradient-to-b from-[#0B101E]/40 to-[#0A0F1C]/40 border-y border-white/[0.06] relative">
       <div className="max-w-7xl mx-auto px-6 relative z-10">
