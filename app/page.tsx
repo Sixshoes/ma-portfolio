@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { motion, useMotionValue, useSpring } from 'motion/react';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
 import { useLanguage } from './LanguageContext';
 
 const dict = {
@@ -33,19 +32,17 @@ export default function VisualsPage() {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    const mql = window.matchMedia('(max-width: 767px)');
+    const onChange = () => setIsMobile(mql.matches);
+    onChange();
+    mql.addEventListener('change', onChange);
+    return () => mql.removeEventListener('change', onChange);
   }, []);
 
   const particles = useMemo(() => {
-    const count = isMobile ? 45 : 60; // Increased from 30 to 45 for better visual on mobile
+    const count = isMobile ? 25 : 40;
     return Array.from({ length: count }).map((_, i) => ({
       id: i,
-      // Deterministic pseudo-random values based on index
       size: ((i * 7) % 6) + 1,
       x: (i * 13) % 100,
       y: (i * 17) % 100,
@@ -56,17 +53,18 @@ export default function VisualsPage() {
   }, [isMobile]);
 
   useEffect(() => {
+    if (isMobile) return;
     const handleMouseMove = (e: MouseEvent) => {
       mouseX.set(e.clientX - window.innerWidth / 2);
       mouseY.set(e.clientY - window.innerHeight / 2);
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
     
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
     };
-  }, [mouseX, mouseY]);
+  }, [mouseX, mouseY, isMobile]);
 
   return (
     <main className="relative w-full h-[100dvh] bg-[#080C16] overflow-hidden flex items-center justify-center font-sans">
@@ -96,7 +94,7 @@ export default function VisualsPage() {
 
       {/* Mouse Follower Glow - Optimized for mobile */}
       <motion.div
-        className="absolute w-[60vw] h-[60vw] md:w-[40vw] md:h-[40vw] rounded-full bg-teal-500/5 md:bg-teal-500/10 blur-[80px] md:blur-[100px] pointer-events-none z-0"
+        className="absolute w-[60vw] h-[60vw] md:w-[40vw] md:h-[40vw] rounded-full bg-teal-500/5 md:bg-teal-500/10 blur-[60px] md:blur-[80px] pointer-events-none z-0"
         animate={isMobile ? {
           x: [0, 20, -20, 0],
           y: [0, -20, 20, 0],
@@ -112,41 +110,33 @@ export default function VisualsPage() {
         } : undefined}
       />
 
-      {/* Central Quantum Core */}
+      {/* Central Quantum Core - Using CSS animations for orbits */}
       <div className="relative z-10 flex items-center justify-center">
         {/* Outer Orbit */}
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+        <div
+          style={{ animation: 'orbit-cw 40s linear infinite' }}
           className="absolute w-[300px] h-[300px] md:w-[600px] md:h-[600px] border border-white/[0.03] rounded-full border-dashed"
         />
         
         {/* Middle Orbit */}
-        <motion.div
-          animate={{ rotate: -360 }}
-          transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+        <div
+          style={{ animation: 'orbit-ccw 30s linear infinite' }}
           className="absolute w-[200px] h-[200px] md:w-[400px] md:h-[400px] border border-teal-500/20 rounded-full"
         >
           <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 md:w-3 md:h-3 bg-teal-400 rounded-full shadow-[0_0_15px_rgba(45,212,191,0.8)]" />
-        </motion.div>
+        </div>
 
         {/* Inner Orbit */}
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+        <div
+          style={{ animation: 'orbit-cw 15s linear infinite' }}
           className="absolute w-[120px] h-[120px] md:w-[200px] md:h-[200px] border border-amber-500/30 rounded-full"
         >
           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-3 h-3 md:w-4 md:h-4 bg-amber-400 rounded-full shadow-[0_0_20px_rgba(251,191,36,0.8)]" />
-        </motion.div>
+        </div>
 
-        {/* Core Glow */}
-        <motion.div
-          animate={{ 
-            scale: [1, 1.2, 1], 
-            opacity: [0.6, 1, 0.6],
-            rotate: [0, 180, 360]
-          }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        {/* Core Glow - CSS animation */}
+        <div
+          style={{ animation: 'core-glow 8s ease-in-out infinite' }}
           className="w-24 h-24 md:w-40 md:h-40 bg-gradient-to-tr from-amber-500 to-teal-500 rounded-full blur-2xl opacity-80 mix-blend-screen"
         />
         
@@ -176,10 +166,10 @@ export default function VisualsPage() {
         </div>
       </div>
 
-      {/* Floating Particles Container */}
+      {/* Floating Particles Container - CSS animation */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
         {particles.map((p) => (
-          <motion.div
+          <div
             key={p.id}
             className={`absolute rounded-full ${p.color} opacity-30`}
             style={{
@@ -187,27 +177,14 @@ export default function VisualsPage() {
               height: p.size,
               left: `${p.x}%`,
               top: `${p.y}%`,
-              willChange: 'transform, opacity',
-            }}
-            animate={{
-              y: [0, -800],
-              opacity: [0, 0.8, 0.8, 0],
-              x: [0, Math.sin(p.id) * 150, 0],
-              scale: [0, 1.5, 1.5, 0]
-            }}
-            transition={{
-              duration: p.duration,
-              repeat: Infinity,
-              delay: p.delay,
-              ease: "linear",
-              times: [0, 0.1, 0.9, 1]
+              animation: `float-up ${p.duration}s linear ${p.delay}s infinite`,
             }}
           />
         ))}
       </div>
 
-      {/* Grain Overlay */}
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay pointer-events-none z-50"></div>
+      {/* Grain Overlay - Inline noise texture */}
+      <div className="absolute inset-0 noise-overlay opacity-20 mix-blend-overlay pointer-events-none z-50"></div>
     </main>
   );
 }

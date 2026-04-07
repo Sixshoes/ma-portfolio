@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
@@ -344,15 +344,14 @@ export default function HomePage() {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    const mql = window.matchMedia('(max-width: 767px)');
+    const onChange = () => setIsMobile(mql.matches);
+    onChange();
+    mql.addEventListener('change', onChange);
+    return () => mql.removeEventListener('change', onChange);
   }, []);
 
-  const getLinkDisplay = (url: string) => {
+  const getLinkDisplay = useCallback((url: string) => {
     if (!url) return '';
     
     // 1. 如果是 DOI，自動切掉前面，只留乾淨的號碼 (例如 10.1016/...)
@@ -374,12 +373,12 @@ export default function HomePage() {
     try {
       return new URL(url).hostname.replace('www.', '');
     } catch {
-      return 'View Article'; // 萬一網址格式壞掉的最後防線
+      return 'View Article';
     }
-  };
+  }, []);
 
   const profileParticles = useMemo(() => {
-    const count = isMobile ? 4 : 8;
+    const count = isMobile ? 3 : 5;
     return Array.from({ length: count }).map((_, i) => ({
       id: i,
       // Deterministic pseudo-random values based on index
@@ -451,13 +450,13 @@ export default function HomePage() {
   const totalPubs = publications.length > 0 ? publications.length : '200+';
   const totalCitations = publications.length > 0 ? publications.reduce((sum, p) => sum + (p.citations || 0), 0) : '5000+';
 
-  const getHighlightText = (citations: number) => {
+  const getHighlightText = useCallback((citations: number) => {
     if (citations >= 100) return t.pubs.benchmark;
     if (citations >= 50) return t.pubs.keyFocus;
     return t.pubs.general;
-  };
+  }, [t.pubs.benchmark, t.pubs.keyFocus, t.pubs.general]);
 
-  const handleDownloadVCard = () => {
+  const handleDownloadVCard = useCallback(() => {
     const blob = new Blob([vcardData], { type: 'text/vcard' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -467,9 +466,9 @@ export default function HomePage() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  };
+  }, []);
 
-  const renderListItem = (text: string) => {
+  const renderListItem = useCallback((text: string) => {
     const match = text.match(/(.*?)\s*\(([^)]+)\)$/);
     if (match) {
       return (
@@ -480,32 +479,21 @@ export default function HomePage() {
       );
     }
     return <div className="py-2 text-slate-300 leading-relaxed">{text}</div>;
-  };
+  }, []);
 
   return (
     <main className="min-h-screen bg-[#080C16] text-slate-300 font-sans overflow-x-hidden relative">
-      {/* Dynamic Animated Background */}
+      {/* Dynamic Animated Background - CSS animations for better GPU performance */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        <motion.div 
-          animate={{ 
-            scale: [1, 1.2, 1],
-            opacity: [0.1, 0.15, 0.1],
-            rotate: [0, 90, 0]
-          }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full bg-gradient-to-br from-teal-900/20 to-transparent blur-[80px] md:blur-[100px]"
+        <div 
+          style={{ animation: 'bg-pulse 20s linear infinite' }}
+          className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full bg-gradient-to-br from-teal-900/20 to-transparent blur-[60px] md:blur-[80px]"
         />
-        <motion.div 
-          animate={{ 
-            scale: [1, 1.5, 1],
-            opacity: [0.05, 0.1, 0.05],
-            x: [0, 100, 0],
-            y: [0, -50, 0]
-          }}
-          transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-[40%] -right-[20%] w-[60vw] h-[60vw] rounded-full bg-gradient-to-tl from-amber-900/20 to-transparent blur-[120px]"
+        <div 
+          style={{ animation: 'bg-drift 25s ease-in-out infinite' }}
+          className="absolute top-[40%] -right-[20%] w-[60vw] h-[60vw] rounded-full bg-gradient-to-tl from-amber-900/20 to-transparent blur-[80px]"
         />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
+        <div className="absolute inset-0 noise-overlay opacity-20 mix-blend-overlay"></div>
       </div>
 
       {/* Navigation */}
@@ -666,7 +654,6 @@ export default function HomePage() {
                 height: p.size,
                 left: `${p.x}%`,
                 top: `${p.y}%`,
-                willChange: 'transform, opacity',
               }}
               animate={{
                 y: [0, -40, 0],
@@ -712,6 +699,7 @@ export default function HomePage() {
                 src="https://sixshoes.github.io/Ma-Research-Portal/profile.jpg" 
                 alt="馬遠榮副校長個人照 (Prof. Y.R. Ma)"
                 fill
+                sizes="(max-width: 768px) 90vw, 400px"
                 priority
                 onLoad={() => setIsImgLoaded(true)}
                 className={`object-cover object-top transition-all duration-1000 hover:scale-105 ${isImgLoaded ? 'opacity-100' : 'opacity-0'}`}
@@ -728,29 +716,26 @@ export default function HomePage() {
               <div className="absolute top-4 right-4 w-8 h-8 border-t-2 border-r-2 border-teal-500/50 rounded-tr-lg" />
               <div className="absolute bottom-4 left-4 w-8 h-8 border-b-2 border-l-2 border-teal-500/50 rounded-bl-lg" />
               <div className="absolute bottom-4 right-4 w-8 h-8 border-b-2 border-r-2 border-teal-500/50 rounded-br-lg" />
-              <motion.div 
-                animate={{ top: ['0%', '100%', '0%'] }}
-                transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+              <div 
                 className="hidden md:block absolute left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-teal-400/50 to-transparent"
+                style={{ animation: 'scan-line 8s linear infinite' }}
               />
             </div>
           </motion.div>
           
-          {/* Decorative Elements */}
-          <motion.div 
-            animate={{ rotate: 360 }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          {/* Decorative Elements - CSS animations */}
+          <div 
+            style={{ animation: 'orbit-cw 20s linear infinite' }}
             className="absolute -right-6 top-1/4 w-12 h-12 border border-amber-500/30 rounded-full flex items-center justify-center"
           >
             <div className="w-1.5 h-1.5 bg-amber-400 rounded-full" />
-          </motion.div>
-          <motion.div 
-            animate={{ rotate: -360 }}
-            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+          </div>
+          <div 
+            style={{ animation: 'orbit-ccw 15s linear infinite' }}
             className="absolute -left-6 bottom-1/4 w-16 h-16 border border-teal-500/30 rounded-full flex items-center justify-center"
           >
             <div className="w-1 h-1 bg-teal-400 rounded-full" />
-          </motion.div>
+          </div>
         </motion.div>
       </section>
 
@@ -920,7 +905,8 @@ export default function HomePage() {
                             src={mainImg} 
                             alt={mainLabel || "Publication Image"} 
                             fill
-                            priority={i < 2}
+                            sizes="(max-width: 1024px) 90vw, 33vw"
+                            loading={i < 2 ? "eager" : "lazy"}
                             className="object-contain p-2 transition-transform duration-500 group-hover/img:scale-105" 
                             referrerPolicy="no-referrer"
                           />
@@ -934,6 +920,8 @@ export default function HomePage() {
                           src={secondaryImg} 
                           alt={t.pubs.cover || "Journal Cover"} 
                           fill
+                          sizes="120px"
+                          loading="lazy"
                           className="object-contain p-1 transition-transform duration-500 group-hover/img:scale-105" 
                           referrerPolicy="no-referrer"
                         />
@@ -1031,6 +1019,8 @@ export default function HomePage() {
                 src="https://picsum.photos/seed/university/1000/1000" 
                 alt="Fo Guang University"
                 fill
+                sizes="(max-width: 1024px) 90vw, 50vw"
+                loading="lazy"
                 className="object-cover opacity-50 mix-blend-luminosity"
                 referrerPolicy="no-referrer"
               />

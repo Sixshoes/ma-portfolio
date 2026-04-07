@@ -8,16 +8,19 @@ import ScrollToTop from './ScrollToTop';
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-sans',
+  display: 'swap',
 });
 
 const outfit = Outfit({
   subsets: ['latin'],
   variable: '--font-display',
+  display: 'swap',
 });
 
 const mono = JetBrains_Mono({
   subsets: ['latin'],
   variable: '--font-mono',
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -41,6 +44,14 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${outfit.variable} ${mono.variable}`}>
+      <head>
+        {/* DNS prefetch for external domains to reduce latency */}
+        <link rel="dns-prefetch" href="https://sixshoes.github.io" />
+        <link rel="dns-prefetch" href="https://ars.els-cdn.com" />
+        <link rel="dns-prefetch" href="https://pubs.acs.org" />
+        <link rel="dns-prefetch" href="https://pubs.rsc.org" />
+        <link rel="preconnect" href="https://sixshoes.github.io" crossOrigin="anonymous" />
+      </head>
       <body suppressHydrationWarning className="bg-[#080C16] text-slate-300 font-sans antialiased selection:bg-amber-500/30">
         {/* Subtle noise texture overlay for premium material feel - Removed for performance */}
         {/* <div 

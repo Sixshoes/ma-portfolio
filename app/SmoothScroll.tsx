@@ -7,12 +7,11 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    const mql = window.matchMedia('(max-width: 767px)');
+    const onChange = () => setIsMobile(mql.matches);
+    onChange();
+    mql.addEventListener('change', onChange);
+    return () => mql.removeEventListener('change', onChange);
   }, []);
 
   return (
@@ -22,7 +21,7 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
         lerp: 0.08, 
         duration: 1.2, 
         smoothWheel: !isMobile,
-        syncTouch: false, // Let mobile use native touch scrolling
+        syncTouch: false,
       }}
     >
       {children}

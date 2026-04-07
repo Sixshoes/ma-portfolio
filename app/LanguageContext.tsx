@@ -23,35 +23,32 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setTimeout(() => {
-      setMounted(true);
+    requestAnimationFrame(() => {
       const savedLang = localStorage.getItem('preferred_lang') as Lang;
       if (savedLang === 'en' || savedLang === 'zh') {
         setLangState(savedLang);
       }
-    }, 0);
+      setMounted(true);
+    });
   }, []);
 
   const setLang = (newLang: Lang) => {
     if (newLang === lang || isTransitioning) return;
     setIsTransitioning(true);
     
-    // Quick switch
     setTimeout(() => {
       setLangState(newLang);
       localStorage.setItem('preferred_lang', newLang);
     }, 300);
 
-    // Snappy end
     setTimeout(() => {
       setIsTransitioning(false);
     }, 600);
   };
 
   const particles = useMemo(() => {
-    return Array.from({ length: 12 }).map((_, i) => {
-      const angle = (i / 12) * Math.PI * 2;
-      // Deterministic pseudo-random values based on index
+    return Array.from({ length: 6 }).map((_, i) => {
+      const angle = (i / 6) * Math.PI * 2;
       const distance = 100 + ((i * 137) % 50);
       const duration = 0.5 + ((i * 7) % 3) * 0.1;
       return { angle, distance, duration };
@@ -71,7 +68,6 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[9999999] pointer-events-none flex items-center justify-center bg-white/10"
           >
-            {/* Minimalist Particles */}
             {particles.map((p, i) => {
               return (
                 <motion.div
@@ -93,7 +89,6 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
                     top: '50%',
                     marginLeft: '-4px',
                     marginTop: '-4px',
-                    willChange: 'transform, opacity',
                   }}
                 />
               );
