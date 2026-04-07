@@ -5,24 +5,44 @@ import { motion } from 'motion/react';
 import Link from 'next/link';
 import { useLanguage } from './LanguageContext';
 
-const dict = {
-  en: {
-    name: 'Prof. Yuan-Ron Ma',
-    title: 'Academic Portfolio',
-    subtitle: 'Advanced Materials & Quantum Devices',
-    enter: 'Enter Portfolio'
-  },
-  zh: {
-    name: '馬遠榮 教授',
-    title: '學術研究專頁',
-    subtitle: '先進材料與量子元件',
-    enter: '進入專頁'
-  }
-};
-
 export default function VisualsPage() {
-  const { lang, setLang } = useLanguage();
-  const t = dict[lang];
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [windowSize, setWindowSize] = useState({ width: 1000, height: 1000 });
+  const [particles, setParticles] = useState<Array<{id: number, size: number, x: number, y: number, duration: number, delay: number, color: string}>>([]);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePosition({ x: e.clientX, y: e.clientY });
+    };
+
+    const handleResize = () => {
+      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+    };
+
+    const initializeParticles = () => {
+      // Generate random particles only on client to avoid hydration mismatch
+      const generatedParticles = Array.from({ length: 80 }).map((_, i) => ({
+        id: i,
+        size: Math.random() * 6 + 1,
+        x: Math.random() * 100,
+        y: Math.random() * 100,
+        duration: Math.random() * 20 + 15,
+        delay: Math.random() * 10,
+        color: Math.random() > 0.5 ? 'bg-teal-400' : 'bg-amber-400',
+      }));
+      setParticles(generatedParticles);
+    };
+
+    initializeParticles();
+    handleResize();
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   return (
     <main className="relative w-full h-[100dvh] bg-[#080C16] overflow-hidden flex items-center justify-center font-sans">
