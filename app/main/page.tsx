@@ -483,7 +483,7 @@ export default function HomePage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#080C16] text-slate-300 font-sans overflow-x-hidden relative">
+    <main className="min-h-screen bg-[#080C16] text-slate-300 font-sans overflow-x-hidden relative bg-[radial-gradient(circle_at_top,rgba(45,212,191,0.08),transparent_45%),radial-gradient(circle_at_80%_20%,rgba(251,191,36,0.08),transparent_35%)]">
       {/* Dynamic Animated Background */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
         <motion.div 
@@ -513,10 +513,10 @@ export default function HomePage() {
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-        className="fixed top-0 left-0 w-full z-50 bg-[#080C16]/70 backdrop-blur-md border-b border-white/[0.05]"
+        className="fixed top-0 left-0 w-full z-50 bg-[#080C16]/75 backdrop-blur-xl border-b border-white/[0.08] shadow-[0_10px_30px_rgba(0,0,0,0.35)]"
       >
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="font-display text-xl font-bold tracking-widest text-white flex items-center gap-2 hover:scale-105 transition-transform cursor-pointer">
+          <div className="font-display text-xl font-bold tracking-[0.25em] text-white flex items-center gap-2 hover:scale-105 transition-transform cursor-pointer">
             <span className="text-amber-400">Y.R.</span> MA
           </div>
           <div className="flex items-center gap-4 md:gap-8">
@@ -570,7 +570,7 @@ export default function HomePage() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="md:hidden bg-[#0B101E] border-b border-white/[0.05] overflow-hidden"
+              className="md:hidden bg-[#0B101E]/95 backdrop-blur-xl border-b border-white/[0.08] overflow-hidden"
             >
               <div className="flex flex-col p-6 space-y-4 text-xs uppercase tracking-[0.2em] font-display text-slate-400">
                 <Link 
@@ -597,7 +597,7 @@ export default function HomePage() {
       </motion.nav>
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center min-h-[90vh] relative z-10">
+      <section className="pt-36 pb-24 px-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-14 items-center min-h-[90vh] relative z-10">
         <motion.div 
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -616,7 +616,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="text-4xl md:text-7xl lg:text-8xl leading-[1.1] mb-8 text-white"
+            className="text-4xl md:text-7xl lg:text-8xl leading-[1.05] mb-8 text-white drop-shadow-[0_6px_30px_rgba(8,12,22,0.75)]"
           >
             <span className="font-display font-light text-amber-500/90 tracking-wide inline-block hover:scale-105 transition-transform origin-left">{t.hero.title1}</span> <br />
             <span className="font-display font-bold tracking-tight inline-block hover:scale-105 transition-transform origin-left">{t.hero.title2}</span> {t.hero.title3} <br />
@@ -626,7 +626,7 @@ export default function HomePage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6, duration: 1 }}
-            className="text-lg text-slate-400 max-w-md leading-relaxed mb-10 font-light"
+            className="text-lg text-slate-400/95 max-w-xl leading-relaxed mb-10 font-light"
           >
             {t.hero.desc}
           </motion.p>
@@ -640,7 +640,7 @@ export default function HomePage() {
               whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(251,191,36,0.4)" }}
               whileTap={{ scale: 0.95 }}
               href="#publications" 
-              className="bg-amber-400 text-[#080C16] px-8 py-4 rounded-full text-xs font-display font-bold uppercase tracking-[0.2em] transition-all shadow-[0_0_20px_rgba(251,191,36,0.15)] inline-block"
+              className="bg-gradient-to-r from-amber-300 to-amber-400 text-[#080C16] px-8 py-4 rounded-full text-xs font-display font-bold uppercase tracking-[0.2em] transition-all shadow-[0_10px_30px_rgba(251,191,36,0.25)] inline-block border border-amber-200/50"
             >
               {t.hero.cta}
             </motion.a>
@@ -780,7 +780,7 @@ export default function HomePage() {
       </section>
 
       {/* Research Interests */}
-      <section id="research" className="py-20 md:py-32 px-6 max-w-7xl mx-auto relative">
+      <section id="research" className="py-24 md:py-32 px-6 max-w-7xl mx-auto relative">
         {/* Background glow */}
         <div className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[800px] h-[300px] md:h-[800px] bg-teal-500/5 rounded-full blur-[80px] md:blur-[120px] pointer-events-none" />
 
@@ -807,7 +807,7 @@ export default function HomePage() {
                 ease: [0.215, 0.61, 0.355, 1]
               }}
               whileHover={{ y: -10, scale: 1.02 }}
-              className="bg-[#0B101E]/80 backdrop-blur-md border border-white/[0.05] p-10 rounded-2xl hover:border-amber-500/30 hover:bg-[#0F1629] transition-all duration-500 group relative overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.2)] hover:shadow-[0_15px_40px_rgba(251,191,36,0.1)]"
+            className="bg-gradient-to-b from-[#0C1324]/95 to-[#0A1120]/95 backdrop-blur-md border border-white/[0.08] p-10 rounded-3xl hover:border-amber-500/35 hover:bg-[#101a31] transition-all duration-500 group relative overflow-hidden shadow-[0_12px_36px_rgba(0,0,0,0.28)] hover:shadow-[0_20px_50px_rgba(251,191,36,0.12)]"
             >
               {/* Hover gradient background */}
               <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -825,7 +825,7 @@ export default function HomePage() {
       </section>
 
       {/* Publications Section */}
-      <section id="publications" className="py-32 bg-[#0B101E]/30 border-y border-white/[0.05] relative">
+      <section id="publications" className="py-32 bg-gradient-to-b from-[#0B101E]/40 to-[#0A0F1C]/40 border-y border-white/[0.06] relative">
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="mb-20">
             <h2 className="text-4xl md:text-7xl text-white mb-4">
@@ -911,7 +911,7 @@ export default function HomePage() {
                       transition={{ delay: i * 0.05 }}
                       whileHover={isMobile ? {} : { y: -5, scale: 1.01 }}
                       style={{ transform: 'translateZ(0)' }}
-                      className="flex flex-col lg:flex-row gap-8 p-6 md:p-8 bg-[#0B101E]/80 backdrop-blur-md border border-white/[0.05] rounded-3xl hover:border-amber-500/30 transition-all duration-500 group shadow-[0_8px_32px_rgba(0,0,0,0.2)] hover:shadow-[0_15px_40px_rgba(251,191,36,0.1)]"
+                      className="flex flex-col lg:flex-row gap-8 p-6 md:p-8 bg-gradient-to-b from-[#0C1325]/95 to-[#0A1120]/95 backdrop-blur-md border border-white/[0.08] rounded-3xl hover:border-amber-500/30 transition-all duration-500 group shadow-[0_12px_36px_rgba(0,0,0,0.28)] hover:shadow-[0_20px_48px_rgba(251,191,36,0.12)]"
                     >
                       {/* Visuals Column */}
                       <div className="w-full lg:w-1/3 flex flex-col gap-4 shrink-0">
@@ -1014,7 +1014,7 @@ export default function HomePage() {
             <div className="mt-16 flex justify-center">
               <button
                 onClick={() => setVisibleCount(prev => prev + 10)}
-                className="px-8 py-3 rounded-full border border-amber-500/30 text-amber-500 font-mono text-sm hover:bg-amber-500/10 hover:border-amber-500/50 transition-all duration-300 flex items-center gap-2"
+                className="px-8 py-3 rounded-full border border-amber-500/35 text-amber-300 font-mono text-sm hover:bg-amber-500/10 hover:border-amber-400/60 transition-all duration-300 flex items-center gap-2 shadow-[0_8px_25px_rgba(0,0,0,0.25)]"
               >
                 {lang === 'zh' ? '載入更多' : 'Load More'}
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1267,7 +1267,7 @@ export default function HomePage() {
       </section>
 
       {/* Contact Section */}
-      <section id="contact" className="py-32 bg-[#0B101E]/50 border-t border-white/[0.05] relative overflow-hidden">
+      <section id="contact" className="py-32 bg-gradient-to-b from-[#0B101E]/60 to-[#090E1A]/70 border-t border-white/[0.06] relative overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-px bg-gradient-to-r from-transparent via-amber-500/30 to-transparent" />
         
         <motion.div 
@@ -1284,7 +1284,7 @@ export default function HomePage() {
             <div className="w-24 h-1 bg-gradient-to-r from-amber-500 to-teal-500 mx-auto rounded-full opacity-50"></div>
           </div>
 
-          <div className="bg-white/[0.02] border border-white/[0.05] rounded-3xl p-8 md:p-12 backdrop-blur-md shadow-2xl relative overflow-hidden">
+          <div className="bg-gradient-to-b from-white/[0.05] to-white/[0.02] border border-white/[0.08] rounded-3xl p-8 md:p-12 backdrop-blur-md shadow-2xl relative overflow-hidden">
             {/* Decorative elements inside card */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-teal-500/5 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none"></div>
