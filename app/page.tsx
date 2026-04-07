@@ -3,7 +3,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { motion, useMotionValue, useSpring } from 'motion/react';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
 import { useLanguage } from './LanguageContext';
 
 const dict = {
@@ -207,7 +206,7 @@ export default function VisualsPage() {
       </div>
 
       {/* Grain Overlay */}
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay pointer-events-none z-50"></div>
+      <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-20 mix-blend-overlay pointer-events-none z-50"></div>
     </main>
   );
 }
