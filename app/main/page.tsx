@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
 import { Publication, publications as fallbackPublications } from '@/lib/publications';
 import { useLanguage } from '../LanguageContext';
@@ -21,10 +22,9 @@ import {
   Quote,
   Star,
   Download,
-  Menu,
+  UserPlus,
   X,
-  ChevronDown,
-  ChevronUp
+  Menu
 } from 'lucide-react';
 
 const dict = {
@@ -334,10 +334,11 @@ export default function HomePage() {
   const [pubFilter, setPubFilter] = useState<string>('All');
   const [visibleCount, setVisibleCount] = useState<number>(10);
   const [publications, setPublications] = useState<Publication[]>(fallbackPublications);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [showScrollTop, setShowScrollTop] = useState(false);
-  const [adminExpanded, setAdminExpanded] = useState(false);
-  const [serviceExpanded, setServiceExpanded] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isImgLoaded, setIsImgLoaded] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isExpandedAdmin, setIsExpandedAdmin] = useState(false);
+  const [isExpandedService, setIsExpandedService] = useState(false);
   const t = dict[lang];
 
   const [isMobile, setIsMobile] = useState(false);
@@ -353,21 +354,43 @@ export default function HomePage() {
 
   const getLinkDisplay = (url: string) => {
     if (!url) return '';
+    
+    // 1. 如果是 DOI，自動切掉前面，只留乾淨的號碼 (例如 10.1016/...)
     if (url.includes('doi.org/')) {
       return url.split('doi.org/')[1];
     }
+    
+    // 2. 如果是 Google Scholar，直接顯示品牌名稱
     if (url.includes('scholar.google')) {
       return 'Google Scholar';
     }
+
+    // 3. 如果是 ResearchGate，也顯示品牌名稱
     if (url.includes('researchgate.net')) {
       return 'ResearchGate';
     }
+
+    // 4. 其他未知網址的備用方案：只擷取主網域名稱 (例如 fgu.edu.tw)
     try {
       return new URL(url).hostname.replace('www.', '');
     } catch {
-      return 'View Article';
+      return 'View Article'; // 萬一網址格式壞掉的最後防線
     }
   };
+
+  const profileParticles = useMemo(() => {
+    const count = isMobile ? 4 : 8;
+    return Array.from({ length: count }).map((_, i) => ({
+      id: i,
+      // Deterministic pseudo-random values based on index
+      size: ((i * 13) % 4) + 2,
+      x: ((i * 17) % 120) - 10, // Slightly wider than container
+      y: ((i * 23) % 120) - 10,
+      duration: ((i * 7) % 10) + 10,
+      delay: (i * 0.25) % 5,
+      color: i % 2 === 0 ? 'bg-teal-400' : 'bg-amber-400',
+    }));
+  }, [isMobile]);
 
   useEffect(() => {
     fetch('https://sixshoes.github.io/Ma-Research-Portal/papers.json')
@@ -387,12 +410,6 @@ export default function HomePage() {
         console.warn('Using fallback publications. Failed to fetch from GitHub:', err);
         setIsLoading(false);
       });
-  }, []);
-
-  useEffect(() => {
-    const handleScroll = () => setShowScrollTop(window.scrollY > 400);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const uniqueYears = useMemo(() => {
@@ -467,10 +484,28 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-[#080C16] text-slate-300 font-sans overflow-x-hidden relative">
-      {/* Subtle static background gradients */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute -top-[20%] -left-[10%] w-[60vw] h-[60vw] rounded-full bg-gradient-to-br from-teal-900/15 to-transparent blur-[100px]" />
-        <div className="absolute top-[40%] -right-[20%] w-[50vw] h-[50vw] rounded-full bg-gradient-to-tl from-amber-900/10 to-transparent blur-[120px]" />
+      {/* Dynamic Animated Background */}
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+        <motion.div 
+          animate={{ 
+            scale: [1, 1.2, 1],
+            opacity: [0.1, 0.15, 0.1],
+            rotate: [0, 90, 0]
+          }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full bg-gradient-to-br from-teal-900/20 to-transparent blur-[80px] md:blur-[100px]"
+        />
+        <motion.div 
+          animate={{ 
+            scale: [1, 1.5, 1],
+            opacity: [0.05, 0.1, 0.05],
+            x: [0, 100, 0],
+            y: [0, -50, 0]
+          }}
+          transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-[40%] -right-[20%] w-[60vw] h-[60vw] rounded-full bg-gradient-to-tl from-amber-900/20 to-transparent blur-[120px]"
+        />
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
       </div>
 
       {/* Navigation */}
@@ -506,29 +541,25 @@ export default function HomePage() {
                 </motion.a>
               ))}
             </div>
-            <motion.button 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setLang(lang === 'en' ? 'zh' : 'en')}
-              className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-mono text-slate-300 hover:text-amber-400 transition-colors border border-white/10 px-3 py-1.5 rounded-full bg-white/[0.02]"
-            >
-              <Globe className="w-3 h-3" />
-              {lang === 'en' ? '中文' : 'EN'}
-            </motion.button>
-            {/* Mobile hamburger */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="md:hidden flex items-center justify-center w-9 h-9 border border-white/10 rounded-lg bg-white/[0.02] text-slate-300 hover:text-white hover:border-white/20 transition-colors"
-              aria-label="Toggle menu"
-            >
-              {menuOpen ? (
-                <X className="w-4 h-4" />
-              ) : (
-                <Menu className="w-4 h-4" />
-              )}
-            </motion.button>
+            
+            <div className="flex items-center gap-3">
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setLang(lang === 'en' ? 'zh' : 'en')}
+                className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-mono text-slate-300 hover:text-amber-400 transition-colors border border-white/10 px-3 py-1.5 rounded-full bg-white/[0.02]"
+              >
+                <Globe className="w-3 h-3" />
+                {lang === 'en' ? '中文' : 'EN'}
+              </motion.button>
+
+              <button 
+                className="md:hidden p-2 text-slate-300 hover:text-amber-400 transition-colors"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+              >
+                {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -565,51 +596,7 @@ export default function HomePage() {
         </AnimatePresence>
       </motion.nav>
 
-      {/* Mobile Menu Overlay */}
-      <AnimatePresence>
-        {menuOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setMenuOpen(false)}
-              className="fixed inset-0 z-40 bg-[#080C16]/60 backdrop-blur-sm md:hidden"
-            />
-            <motion.div
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-              className="fixed top-0 right-0 h-full w-64 bg-[#080C16]/95 backdrop-blur-xl border-l border-white/[0.05] z-50 flex flex-col pt-24 px-8 md:hidden"
-            >
-              <nav className="flex flex-col space-y-6 text-xs uppercase tracking-[0.2em] font-display text-slate-400">
-                <motion.a
-                  href="/"
-                  whileHover={{ x: 4, color: '#2dd4bf' }}
-                  onClick={() => setMenuOpen(false)}
-                  className="transition-colors text-teal-500/80"
-                >
-                  {t.nav.home}
-                </motion.a>
-                {['about', 'research', 'publications', 'contact'].map((item) => (
-                  <motion.a
-                    key={item}
-                    href={`#${item}`}
-                    whileHover={{ x: 4, color: '#fbbf24' }}
-                    onClick={() => setMenuOpen(false)}
-                    className="transition-colors"
-                  >
-                    {t.nav[item as keyof typeof t.nav]}
-                  </motion.a>
-                ))}
-              </nav>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-
+      {/* Hero Section */}
       <section className="pt-32 pb-20 px-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center min-h-[90vh] relative z-10">
         <motion.div 
           initial={{ opacity: 0, x: -50 }}
@@ -663,14 +650,43 @@ export default function HomePage() {
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
+          transition={{ duration: 1, delay: 0.2 }}
           className="relative aspect-[4/5] w-full max-w-md mx-auto"
         >
           {/* High-tech Image Container */}
           <div className="absolute inset-0 bg-gradient-to-tr from-teal-500/20 to-amber-500/20 rounded-3xl blur-3xl animate-pulse" />
+          
+          {/* Floating Particles around Avatar */}
+          {profileParticles.map((p) => (
+            <motion.div
+              key={`avatar-p-${p.id}`}
+              className={`absolute rounded-full ${p.color} opacity-40 blur-[1px] z-20`}
+              style={{
+                width: p.size,
+                height: p.size,
+                left: `${p.x}%`,
+                top: `${p.y}%`,
+                willChange: 'transform, opacity',
+              }}
+              animate={{
+                y: [0, -40, 0],
+                x: [0, Math.sin(p.id) * 30, 0],
+                opacity: [0.2, 0.5, 0.2],
+                scale: [1, 1.2, 1],
+              }}
+              transition={{
+                duration: p.duration,
+                repeat: Infinity,
+                delay: p.delay,
+                ease: "easeInOut",
+              }}
+            />
+          ))}
+
           <motion.div 
             animate={{ y: [0, -10, 0] }}
-            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            transition={{ duration: isMobile ? 8 : 6, repeat: Infinity, ease: "easeInOut" }}
+            style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}
             className="relative w-full h-full bg-[#080C16] rounded-3xl overflow-hidden border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)] flex items-center justify-center"
           >
             {/* Thematic Background: Graphene Hex Grid */}
@@ -694,14 +710,12 @@ export default function HomePage() {
             <div className="absolute inset-0 z-10 overflow-hidden rounded-3xl">
               <Image 
                 src="https://sixshoes.github.io/Ma-Research-Portal/profile.jpg" 
-                alt="Prof. Y.R. Ma"
+                alt="馬遠榮副校長個人照 (Prof. Y.R. Ma)"
                 fill
-                sizes="(max-width: 768px) 100vw, 50vw"
-                className="object-cover object-top transition-all duration-1000 hover:scale-105"
-                onError={(e) => {
-                  // Fallback to a placeholder if the image fails to load
-                  e.currentTarget.src = "https://picsum.photos/seed/profma/800/1000";
-                }}
+                priority
+                onLoad={() => setIsImgLoaded(true)}
+                className={`object-cover object-top transition-all duration-1000 hover:scale-105 ${isImgLoaded ? 'opacity-100' : 'opacity-0'}`}
+                referrerPolicy="no-referrer"
               />
               {/* Gradient overlays to blend the image into the dark background */}
               <div className="absolute inset-0 bg-gradient-to-t from-[#080C16] via-[#080C16]/20 to-transparent pointer-events-none" />
@@ -717,7 +731,7 @@ export default function HomePage() {
               <motion.div 
                 animate={{ top: ['0%', '100%', '0%'] }}
                 transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                className="absolute left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-teal-400/50 to-transparent"
+                className="hidden md:block absolute left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-teal-400/50 to-transparent"
               />
             </div>
           </motion.div>
@@ -742,23 +756,23 @@ export default function HomePage() {
 
       {/* Stats Section */}
       <section className="border-y border-white/[0.05] bg-white/[0.01] py-16 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-12 text-center">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0 }}>
-            <div className="font-display font-light text-4xl md:text-5xl text-white mb-2">{totalPubs}</div>
-            <div className="text-[10px] uppercase tracking-[0.2em] font-mono text-amber-400/80">{t.stats.pubs}</div>
-          </motion.div>
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}>
-            <div className="font-display font-light text-4xl md:text-5xl text-white mb-2">{totalCitations}</div>
-            <div className="text-[10px] uppercase tracking-[0.2em] font-mono text-amber-400/80">{t.stats.citations}</div>
-          </motion.div>
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }}>
-            <div className="font-display font-light text-4xl md:text-5xl text-white mb-2">{t.stats.expValue}</div>
-            <div className="text-[10px] uppercase tracking-[0.2em] font-mono text-amber-400/80">{t.stats.exp}</div>
-          </motion.div>
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.3 }}>
-            <div className="font-display font-light text-4xl md:text-5xl text-white mb-2">{t.stats.patentsValue}</div>
-            <div className="text-[10px] uppercase tracking-[0.2em] font-mono text-amber-400/80">{t.stats.patents}</div>
-          </motion.div>
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-3 gap-8 md:gap-12 text-center">
+          {[
+            { label: t.stats.pubs, value: totalPubs },
+            { label: t.stats.citations, value: totalCitations },
+            { label: t.stats.exp, value: t.stats.expValue }
+          ].map((stat, i) => (
+            <motion.div 
+              key={i}
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1, duration: 0.5 }}
+            >
+              <div className="font-display font-light text-3xl md:text-5xl text-white mb-2">{stat.value}</div>
+              <div className="text-[10px] uppercase tracking-[0.2em] font-mono text-amber-400/80">{stat.label}</div>
+            </motion.div>
+          ))}
         </div>
         <div className="mt-8 text-center">
           <p className="text-xs font-mono text-slate-500/80">{t.stats.scopusNote}</p>
@@ -767,8 +781,8 @@ export default function HomePage() {
 
       {/* Research Interests */}
       <section id="research" className="py-20 md:py-32 px-6 max-w-7xl mx-auto relative">
-        {/* Subtle background */}
-        <div className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-teal-500/[0.04] rounded-full blur-[120px] pointer-events-none" />
+        {/* Background glow */}
+        <div className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[800px] h-[300px] md:h-[800px] bg-teal-500/5 rounded-full blur-[80px] md:blur-[120px] pointer-events-none" />
 
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 md:mb-20 relative z-10">
           <h2 className="text-4xl md:text-7xl text-white">
@@ -780,7 +794,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="flex flex-wrap justify-center gap-6 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
           {t.research.items.map((item, i) => (
             <motion.div 
               key={i} 
@@ -793,7 +807,7 @@ export default function HomePage() {
                 ease: [0.215, 0.61, 0.355, 1]
               }}
               whileHover={{ y: -10, scale: 1.02 }}
-              className="w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] bg-[#0B101E]/80 backdrop-blur-xl border border-white/[0.05] p-10 rounded-2xl hover:border-amber-500/30 hover:bg-[#0F1629] transition-all duration-500 group relative overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.2)] hover:shadow-[0_15px_40px_rgba(251,191,36,0.1)]"
+              className="bg-[#0B101E]/80 backdrop-blur-md border border-white/[0.05] p-10 rounded-2xl hover:border-amber-500/30 hover:bg-[#0F1629] transition-all duration-500 group relative overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.2)] hover:shadow-[0_15px_40px_rgba(251,191,36,0.1)]"
             >
               {/* Hover gradient background */}
               <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -821,9 +835,9 @@ export default function HomePage() {
             <p className="text-teal-400/80 font-mono uppercase text-[10px] tracking-[0.2em] mb-12">{t.pubs.desc}</p>
             
             {/* Filter UI */}
-            <div className="flex items-center gap-4">
-              <span className="text-xs font-mono uppercase tracking-widest text-slate-500">{lang === 'zh' ? '篩選：' : 'Filter by:'}</span>
-              <div className="relative">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <span className="text-xs font-mono uppercase tracking-widest text-slate-500">Filter by:</span>
+              <div className="relative w-full sm:w-auto">
                 <select 
                   value={pubFilter}
                   onChange={(e) => {
@@ -841,7 +855,9 @@ export default function HomePage() {
                   </optgroup>
                 </select>
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
-                  <ChevronDown className="w-3 h-3" />
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
                 </div>
               </div>
             </div>
@@ -886,32 +902,28 @@ export default function HomePage() {
                     mainLabel = t.pubs.quantum;
                   }
 
-              return (
-                <motion.div 
-                  key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.05 }}
-                  whileHover={{ y: -5, scale: 1.01 }}
-                  className="flex flex-col lg:flex-row gap-8 p-6 md:p-8 bg-[#0B101E]/80 backdrop-blur-xl border border-white/[0.05] rounded-3xl hover:border-amber-500/30 transition-all duration-500 group shadow-[0_8px_32px_rgba(0,0,0,0.2)] hover:shadow-[0_15px_40px_rgba(251,191,36,0.1)]"
-                >
-                  {/* Visuals Column */}
-                  <div className="w-full lg:w-1/3 flex flex-col gap-4 shrink-0">
-                    <div className="relative w-full aspect-video bg-white rounded-xl border border-white/[0.05] p-2 flex items-center justify-center group/img overflow-hidden shadow-inner">
-                      <Image 
-                        src={mainImg} 
-                        alt={mainLabel}
-                        fill
-                        sizes="(max-width: 1024px) 100vw, 33vw"
-                        className="object-contain p-2 transition-transform duration-500 group-hover/img:scale-105" 
-                        referrerPolicy="no-referrer"
-                        onError={(e) => {
-                          // Fallback to a fixed quantum mechanics related image
-                          e.currentTarget.src = "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?q=80&w=800&auto=format&fit=crop";
-                          e.currentTarget.onerror = null; // Prevent infinite loop if fallback also fails
-                        }}
-                      />
+                  return (
+                    <motion.div 
+                      key={i}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: "-50px" }}
+                      transition={{ delay: i * 0.05 }}
+                      whileHover={isMobile ? {} : { y: -5, scale: 1.01 }}
+                      style={{ transform: 'translateZ(0)' }}
+                      className="flex flex-col lg:flex-row gap-8 p-6 md:p-8 bg-[#0B101E]/80 backdrop-blur-md border border-white/[0.05] rounded-3xl hover:border-amber-500/30 transition-all duration-500 group shadow-[0_8px_32px_rgba(0,0,0,0.2)] hover:shadow-[0_15px_40px_rgba(251,191,36,0.1)]"
+                    >
+                      {/* Visuals Column */}
+                      <div className="w-full lg:w-1/3 flex flex-col gap-4 shrink-0">
+                        <div className="relative w-full aspect-video bg-white rounded-xl border border-white/[0.05] p-2 flex items-center justify-center group/img overflow-hidden shadow-inner">
+                          <Image 
+                            src={mainImg} 
+                            alt={mainLabel || "Publication Image"} 
+                            fill
+                            priority={i < 2}
+                            className="object-contain p-2 transition-transform duration-500 group-hover/img:scale-105" 
+                            referrerPolicy="no-referrer"
+                          />
                       <div className="absolute top-2 left-2 text-[10px] font-mono uppercase tracking-widest text-slate-800 bg-white/90 px-2 py-1 rounded border border-slate-200 backdrop-blur-md shadow-sm">
                         {mainLabel}
                       </div>
@@ -920,15 +932,10 @@ export default function HomePage() {
                       <div className="relative w-1/3 max-w-[120px] aspect-[3/4] bg-white rounded-xl border border-white/[0.05] p-1 flex items-center justify-center group/img overflow-hidden shadow-md">
                         <Image 
                           src={secondaryImg} 
-                          alt={t.pubs.cover}
+                          alt={t.pubs.cover || "Journal Cover"} 
                           fill
-                          sizes="120px"
                           className="object-contain p-1 transition-transform duration-500 group-hover/img:scale-105" 
                           referrerPolicy="no-referrer"
-                          onError={(e) => {
-                            const parent = e.currentTarget.parentElement;
-                            if (parent) parent.style.display = 'none';
-                          }}
                         />
                         <div className="absolute top-1 left-1 text-[8px] font-mono uppercase tracking-widest text-slate-800 bg-white/90 px-1.5 py-0.5 rounded border border-slate-200 backdrop-blur-md">
                           {t.pubs.cover}
@@ -1006,7 +1013,9 @@ export default function HomePage() {
                 className="px-8 py-3 rounded-full border border-amber-500/30 text-amber-500 font-mono text-sm hover:bg-amber-500/10 hover:border-amber-500/50 transition-all duration-300 flex items-center gap-2"
               >
                 {lang === 'zh' ? '載入更多' : 'Load More'}
-                <ChevronDown className="w-4 h-4" />
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
               </button>
             </div>
           )}
@@ -1041,7 +1050,7 @@ export default function HomePage() {
               <span className="font-display font-bold tracking-tight">{t.about.subtitle}</span>
             </h2>
             <div className="space-y-10">
-              <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0 }} className="flex gap-6 group">
+              <div className="flex gap-6 group">
                 <div className="w-px h-full min-h-[48px] bg-white/10 group-hover:bg-amber-400 transition-colors" />
                 <div className="flex-1">
                   <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-amber-400/80 mb-4">{t.about.roleLabel}</div>
@@ -1051,8 +1060,8 @@ export default function HomePage() {
                     ))}
                   </div>
                 </div>
-              </motion.div>
-              <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }} className="flex gap-6 group">
+              </div>
+              <div className="flex gap-6 group">
                 <div className="w-px h-full min-h-[48px] bg-white/10 group-hover:bg-blue-400 transition-colors" />
                 <div className="flex-1">
                   <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-blue-400/80 mb-4">{t.about.eduLabel}</div>
@@ -1062,52 +1071,46 @@ export default function HomePage() {
                     ))}
                   </div>
                 </div>
-              </motion.div>
-              <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }} className="flex gap-6 group">
+              </div>
+              <div className="flex gap-6 group">
                 <div className="w-px h-full min-h-[48px] bg-white/10 group-hover:bg-purple-400 transition-colors" />
                 <div className="flex-1">
                   <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-purple-400/80 mb-4">{t.about.adminLabel}</div>
                   <div className="space-y-1">
-                    {(adminExpanded ? t.about.admin : t.about.admin.slice(0, 5)).map((item, idx) => (
+                    {(isExpandedAdmin ? t.about.admin : t.about.admin.slice(0, 5)).map((item, idx) => (
                       <div key={idx}>{renderListItem(item)}</div>
                     ))}
                   </div>
                   {t.about.admin.length > 5 && (
-                    <button
-                      onClick={() => setAdminExpanded(!adminExpanded)}
-                      className="mt-3 text-[10px] font-mono uppercase tracking-widest text-purple-400/70 hover:text-purple-400 flex items-center gap-1.5 transition-colors"
+                    <button 
+                      onClick={() => setIsExpandedAdmin(!isExpandedAdmin)}
+                      className="mt-4 text-[10px] font-mono text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-1"
                     >
-                      {adminExpanded
-                        ? (lang === 'zh' ? '收合' : 'Show Less')
-                        : (lang === 'zh' ? `顯示全部 ${t.about.admin.length} 筆` : `Show All ${t.about.admin.length}`)}
-                      <ChevronDown className="w-3 h-3 transition-transform duration-300" style={{ transform: adminExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+                      {isExpandedAdmin ? (lang === 'zh' ? '收起' : 'Show Less') : (lang === 'zh' ? `顯示更多 (${t.about.admin.length - 5})` : `Show More (${t.about.admin.length - 5})`)}
                     </button>
                   )}
                 </div>
-              </motion.div>
-              <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.3 }} className="flex gap-6 group">
+              </div>
+              <div className="flex gap-6 group">
                 <div className="w-px h-full min-h-[48px] bg-white/10 group-hover:bg-emerald-400 transition-colors" />
                 <div className="flex-1">
                   <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-emerald-400/80 mb-4">{t.about.serviceLabel}</div>
                   <div className="space-y-1">
-                    {(serviceExpanded ? t.about.service : t.about.service.slice(0, 5)).map((item, idx) => (
+                    {(isExpandedService ? t.about.service : t.about.service.slice(0, 5)).map((item, idx) => (
                       <div key={idx}>{renderListItem(item)}</div>
                     ))}
                   </div>
                   {t.about.service.length > 5 && (
-                    <button
-                      onClick={() => setServiceExpanded(!serviceExpanded)}
-                      className="mt-3 text-[10px] font-mono uppercase tracking-widest text-emerald-400/70 hover:text-emerald-400 flex items-center gap-1.5 transition-colors"
+                    <button 
+                      onClick={() => setIsExpandedService(!isExpandedService)}
+                      className="mt-4 text-[10px] font-mono text-emerald-400 hover:text-emerald-300 transition-colors flex items-center gap-1"
                     >
-                      {serviceExpanded
-                        ? (lang === 'zh' ? '收合' : 'Show Less')
-                        : (lang === 'zh' ? `顯示全部 ${t.about.service.length} 筆` : `Show All ${t.about.service.length}`)}
-                      <ChevronDown className="w-3 h-3 transition-transform duration-300" style={{ transform: serviceExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+                      {isExpandedService ? (lang === 'zh' ? '收起' : 'Show Less') : (lang === 'zh' ? `顯示更多 (${t.about.service.length - 5})` : `Show More (${t.about.service.length - 5})`)}
                     </button>
                   )}
                 </div>
-              </motion.div>
-              <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.4 }} className="flex gap-6 group">
+              </div>
+              <div className="flex gap-6 group">
                 <div className="w-px h-full min-h-[48px] bg-white/10 group-hover:bg-rose-400 transition-colors" />
                 <div className="flex-1">
                   <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-rose-400/80 mb-4">{t.about.awardsLabel}</div>
@@ -1117,7 +1120,7 @@ export default function HomePage() {
                     ))}
                   </div>
                 </div>
-              </motion.div>
+              </div>
             </div>
           </div>
         </div>
@@ -1347,30 +1350,6 @@ export default function HomePage() {
           </footer>
         </motion.div>
       </section>
-
-      <style jsx global>{`
-        html {
-          scroll-behavior: smooth;
-        }
-      `}</style>
-
-      {/* Back to Top Button */}
-      <AnimatePresence>
-        {showScrollTop && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.5 }}
-            whileHover={{ scale: 1.15, boxShadow: '0 0 30px rgba(251,191,36,0.6)' }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="fixed bottom-8 right-8 z-50 w-12 h-12 bg-amber-400 text-[#080C16] rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(251,191,36,0.4)] transition-shadow"
-            aria-label="Back to top"
-          >
-            <ChevronUp className="w-5 h-5 stroke-[2.5]" />
-          </motion.button>
-        )}
-      </AnimatePresence>
     </main>
   );
 }
