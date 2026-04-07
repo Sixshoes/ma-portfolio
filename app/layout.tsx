@@ -20,9 +20,6 @@ const mono = JetBrains_Mono({
   variable: '--font-mono',
 });
 
-const SITE_URL = process.env.APP_URL ?? 'https://sixshoes.github.io/Ma-Research-Portal';
-const OG_IMAGE = `${SITE_URL}/profile.jpg`;
-
 export const metadata: Metadata = {
   title: '馬遠榮副校長 | 佛光大學 個人學術網站',
   description: '展示馬遠榮副校長的學術履歷、研究成果、發行著作以及相關專業經歷。',
@@ -31,28 +28,19 @@ export const metadata: Metadata = {
     description: '展示馬遠榮副校長的學術履歷、研究成果、發行著作以及相關專業經歷。',
     type: 'website',
     locale: 'zh_TW',
-    url: SITE_URL,
+    url: 'https://ais-dev-2vkfnzcdenqunkr3e52tml-76665202037.asia-northeast1.run.app',
     siteName: '馬遠榮副校長學術網站',
-    images: [
-      {
-        url: OG_IMAGE,
-        width: 800,
-        height: 600,
-        alt: '馬遠榮副校長',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: '馬遠榮副校長 | 佛光大學 個人學術網站',
     description: '展示馬遠榮副校長的學術履歷、研究成果、發行著作以及相關專業經歷。',
-    images: [OG_IMAGE],
   },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="zh-TW" className={`${inter.variable} ${outfit.variable} ${mono.variable}`}>
+    <html lang="en" className={`${inter.variable} ${outfit.variable} ${mono.variable}`}>
       <body suppressHydrationWarning className="bg-[#080C16] text-slate-300 font-sans antialiased selection:bg-amber-500/30">
         {/* Subtle noise texture overlay for premium material feel - Removed for performance */}
         {/* <div 

@@ -16,12 +16,25 @@ export default function ScrollToTop() {
   }, []);
 
   useLenis(({ scroll }) => {
+    // Only show if not on landing page and scrolled a bit
     if (pathname === '/') {
       setShowScrollTop(false);
     } else {
       setShowScrollTop(scroll > 10);
     }
   });
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (pathname === '/') {
+        setShowScrollTop(false);
+      } else {
+        setShowScrollTop(window.scrollY > 10);
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [pathname]);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
