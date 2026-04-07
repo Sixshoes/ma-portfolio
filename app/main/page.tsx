@@ -20,7 +20,6 @@ import {
   Globe,
   Quote,
   Star,
-  Phone,
   Download,
   Menu,
   X,
