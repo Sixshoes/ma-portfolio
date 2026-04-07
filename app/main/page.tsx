@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Publication, publications as fallbackPublications } from '@/lib/publications';
 import { 
   ExternalLink, 
@@ -18,7 +18,11 @@ import {
   Quote,
   Star,
   Phone,
-  Download
+  Download,
+  Menu,
+  X,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
 const dict = {
@@ -303,6 +307,10 @@ export default function HomePage() {
   const [pubFilter, setPubFilter] = useState<string>('All');
   const [visibleCount, setVisibleCount] = useState<number>(10);
   const [publications, setPublications] = useState<Publication[]>(fallbackPublications);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const [adminExpanded, setAdminExpanded] = useState(false);
+  const [serviceExpanded, setServiceExpanded] = useState(false);
   const t = dict[lang];
 
   useEffect(() => {
@@ -321,6 +329,12 @@ export default function HomePage() {
       .catch(err => {
         console.warn('Using fallback publications. Failed to fetch from GitHub:', err);
       });
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => setShowScrollTop(window.scrollY > 400);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const uniqueYears = useMemo(() => {
@@ -472,11 +486,69 @@ END:VCARD`;
               <Globe className="w-3 h-3" />
               {lang === 'en' ? '中文' : 'EN'}
             </motion.button>
+            {/* Mobile hamburger */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="md:hidden flex items-center justify-center w-9 h-9 border border-white/10 rounded-lg bg-white/[0.02] text-slate-300 hover:text-white hover:border-white/20 transition-colors"
+              aria-label="Toggle menu"
+            >
+              {menuOpen ? (
+                <X className="w-4 h-4" />
+              ) : (
+                <Menu className="w-4 h-4" />
+              )}
+            </motion.button>
           </div>
         </div>
       </motion.nav>
 
-      {/* Hero Section */}
+      {/* Mobile Menu Overlay */}
+      <AnimatePresence>
+        {menuOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMenuOpen(false)}
+              className="fixed inset-0 z-40 bg-[#080C16]/60 backdrop-blur-sm md:hidden"
+            />
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+              className="fixed top-0 right-0 h-full w-64 bg-[#080C16]/95 backdrop-blur-xl border-l border-white/[0.05] z-50 flex flex-col pt-24 px-8 md:hidden"
+            >
+              <nav className="flex flex-col space-y-6 text-xs uppercase tracking-[0.2em] font-display text-slate-400">
+                <motion.a
+                  href="/"
+                  whileHover={{ x: 4, color: '#2dd4bf' }}
+                  onClick={() => setMenuOpen(false)}
+                  className="transition-colors text-teal-500/80"
+                >
+                  {t.nav.home}
+                </motion.a>
+                {['about', 'research', 'publications', 'contact'].map((item) => (
+                  <motion.a
+                    key={item}
+                    href={`#${item}`}
+                    whileHover={{ x: 4, color: '#fbbf24' }}
+                    onClick={() => setMenuOpen(false)}
+                    className="transition-colors"
+                  >
+                    {t.nav[item as keyof typeof t.nav]}
+                  </motion.a>
+                ))}
+              </nav>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+
       <section className="pt-32 pb-20 px-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center min-h-[90vh] relative z-10">
         <motion.div 
           initial={{ opacity: 0, x: -50 }}
@@ -610,22 +682,22 @@ END:VCARD`;
       {/* Stats Section */}
       <section className="border-y border-white/[0.05] bg-white/[0.01] py-16 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-12 text-center">
-          <div>
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0 }}>
             <div className="font-display font-light text-4xl md:text-5xl text-white mb-2">{totalPubs}</div>
             <div className="text-[10px] uppercase tracking-[0.2em] font-mono text-amber-400/80">{t.stats.pubs}</div>
-          </div>
-          <div>
+          </motion.div>
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}>
             <div className="font-display font-light text-4xl md:text-5xl text-white mb-2">{totalCitations}</div>
             <div className="text-[10px] uppercase tracking-[0.2em] font-mono text-amber-400/80">{t.stats.citations}</div>
-          </div>
-          <div>
+          </motion.div>
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }}>
             <div className="font-display font-light text-4xl md:text-5xl text-white mb-2">{t.stats.expValue}</div>
             <div className="text-[10px] uppercase tracking-[0.2em] font-mono text-amber-400/80">{t.stats.exp}</div>
-          </div>
-          <div>
+          </motion.div>
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.3 }}>
             <div className="font-display font-light text-4xl md:text-5xl text-white mb-2">{t.stats.patentsValue}</div>
             <div className="text-[10px] uppercase tracking-[0.2em] font-mono text-amber-400/80">{t.stats.patents}</div>
-          </div>
+          </motion.div>
         </div>
         <div className="mt-8 text-center">
           <p className="text-xs font-mono text-slate-500/80">{t.stats.scopusNote}</p>
@@ -647,7 +719,7 @@ END:VCARD`;
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
+        <div className="flex flex-wrap justify-center gap-6 relative z-10">
           {t.research.items.map((item, i) => (
             <motion.div 
               key={i} 
@@ -656,7 +728,7 @@ END:VCARD`;
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
               whileHover={{ y: -10, scale: 1.02 }}
-              className="bg-[#0B101E]/80 backdrop-blur-xl border border-white/[0.05] p-10 rounded-2xl hover:border-amber-500/30 hover:bg-[#0F1629] transition-all duration-500 group relative overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.2)] hover:shadow-[0_15px_40px_rgba(251,191,36,0.1)]"
+              className="w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] bg-[#0B101E]/80 backdrop-blur-xl border border-white/[0.05] p-10 rounded-2xl hover:border-amber-500/30 hover:bg-[#0F1629] transition-all duration-500 group relative overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.2)] hover:shadow-[0_15px_40px_rgba(251,191,36,0.1)]"
             >
               {/* Hover gradient background */}
               <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -685,7 +757,7 @@ END:VCARD`;
             
             {/* Filter UI */}
             <div className="flex items-center gap-4">
-              <span className="text-xs font-mono uppercase tracking-widest text-slate-500">Filter by:</span>
+              <span className="text-xs font-mono uppercase tracking-widest text-slate-500">{lang === 'zh' ? '篩選：' : 'Filter by:'}</span>
               <div className="relative">
                 <select 
                   value={pubFilter}
@@ -704,9 +776,7 @@ END:VCARD`;
                   </optgroup>
                 </select>
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
+                  <ChevronDown className="w-3 h-3" />
                 </div>
               </div>
             </div>
@@ -851,9 +921,7 @@ END:VCARD`;
                 className="px-8 py-3 rounded-full border border-amber-500/30 text-amber-500 font-mono text-sm hover:bg-amber-500/10 hover:border-amber-500/50 transition-all duration-300 flex items-center gap-2"
               >
                 {lang === 'zh' ? '載入更多' : 'Load More'}
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
+                <ChevronDown className="w-4 h-4" />
               </button>
             </div>
           )}
@@ -888,7 +956,7 @@ END:VCARD`;
               <span className="font-display font-bold tracking-tight">{t.about.subtitle}</span>
             </h2>
             <div className="space-y-10">
-              <div className="flex gap-6 group">
+              <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0 }} className="flex gap-6 group">
                 <div className="w-px h-full min-h-[48px] bg-white/10 group-hover:bg-amber-400 transition-colors" />
                 <div className="flex-1">
                   <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-amber-400/80 mb-4">{t.about.roleLabel}</div>
@@ -898,8 +966,8 @@ END:VCARD`;
                     ))}
                   </div>
                 </div>
-              </div>
-              <div className="flex gap-6 group">
+              </motion.div>
+              <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }} className="flex gap-6 group">
                 <div className="w-px h-full min-h-[48px] bg-white/10 group-hover:bg-blue-400 transition-colors" />
                 <div className="flex-1">
                   <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-blue-400/80 mb-4">{t.about.eduLabel}</div>
@@ -909,30 +977,52 @@ END:VCARD`;
                     ))}
                   </div>
                 </div>
-              </div>
-              <div className="flex gap-6 group">
+              </motion.div>
+              <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }} className="flex gap-6 group">
                 <div className="w-px h-full min-h-[48px] bg-white/10 group-hover:bg-purple-400 transition-colors" />
                 <div className="flex-1">
                   <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-purple-400/80 mb-4">{t.about.adminLabel}</div>
                   <div className="space-y-1">
-                    {t.about.admin.map((item, idx) => (
+                    {(adminExpanded ? t.about.admin : t.about.admin.slice(0, 5)).map((item, idx) => (
                       <div key={idx}>{renderListItem(item)}</div>
                     ))}
                   </div>
+                  {t.about.admin.length > 5 && (
+                    <button
+                      onClick={() => setAdminExpanded(!adminExpanded)}
+                      className="mt-3 text-[10px] font-mono uppercase tracking-widest text-purple-400/70 hover:text-purple-400 flex items-center gap-1.5 transition-colors"
+                    >
+                      {adminExpanded
+                        ? (lang === 'zh' ? '收合' : 'Show Less')
+                        : (lang === 'zh' ? `顯示全部 ${t.about.admin.length} 筆` : `Show All ${t.about.admin.length}`)}
+                      <ChevronDown className="w-3 h-3 transition-transform duration-300" style={{ transform: adminExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+                    </button>
+                  )}
                 </div>
-              </div>
-              <div className="flex gap-6 group">
+              </motion.div>
+              <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.3 }} className="flex gap-6 group">
                 <div className="w-px h-full min-h-[48px] bg-white/10 group-hover:bg-emerald-400 transition-colors" />
                 <div className="flex-1">
                   <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-emerald-400/80 mb-4">{t.about.serviceLabel}</div>
                   <div className="space-y-1">
-                    {t.about.service.map((item, idx) => (
+                    {(serviceExpanded ? t.about.service : t.about.service.slice(0, 5)).map((item, idx) => (
                       <div key={idx}>{renderListItem(item)}</div>
                     ))}
                   </div>
+                  {t.about.service.length > 5 && (
+                    <button
+                      onClick={() => setServiceExpanded(!serviceExpanded)}
+                      className="mt-3 text-[10px] font-mono uppercase tracking-widest text-emerald-400/70 hover:text-emerald-400 flex items-center gap-1.5 transition-colors"
+                    >
+                      {serviceExpanded
+                        ? (lang === 'zh' ? '收合' : 'Show Less')
+                        : (lang === 'zh' ? `顯示全部 ${t.about.service.length} 筆` : `Show All ${t.about.service.length}`)}
+                      <ChevronDown className="w-3 h-3 transition-transform duration-300" style={{ transform: serviceExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+                    </button>
+                  )}
                 </div>
-              </div>
-              <div className="flex gap-6 group">
+              </motion.div>
+              <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.4 }} className="flex gap-6 group">
                 <div className="w-px h-full min-h-[48px] bg-white/10 group-hover:bg-rose-400 transition-colors" />
                 <div className="flex-1">
                   <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-rose-400/80 mb-4">{t.about.awardsLabel}</div>
@@ -942,7 +1032,7 @@ END:VCARD`;
                     ))}
                   </div>
                 </div>
-              </div>
+              </motion.div>
             </div>
           </div>
         </div>
@@ -1129,6 +1219,24 @@ END:VCARD`;
           scroll-behavior: smooth;
         }
       `}</style>
+
+      {/* Back to Top Button */}
+      <AnimatePresence>
+        {showScrollTop && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.5 }}
+            whileHover={{ scale: 1.15, boxShadow: '0 0 30px rgba(251,191,36,0.6)' }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="fixed bottom-8 right-8 z-50 w-12 h-12 bg-amber-400 text-[#080C16] rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(251,191,36,0.4)] transition-shadow"
+            aria-label="Back to top"
+          >
+            <ChevronUp className="w-5 h-5 stroke-[2.5]" />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </main>
   );
 }
