@@ -354,43 +354,21 @@ export default function HomePage() {
 
   const getLinkDisplay = (url: string) => {
     if (!url) return '';
-    
-    // 1. 如果是 DOI，自動切掉前面，只留乾淨的號碼 (例如 10.1016/...)
     if (url.includes('doi.org/')) {
       return url.split('doi.org/')[1];
     }
-    
-    // 2. 如果是 Google Scholar，直接顯示品牌名稱
     if (url.includes('scholar.google')) {
       return 'Google Scholar';
     }
-
-    // 3. 如果是 ResearchGate，也顯示品牌名稱
     if (url.includes('researchgate.net')) {
       return 'ResearchGate';
     }
-
-    // 4. 其他未知網址的備用方案：只擷取主網域名稱 (例如 fgu.edu.tw)
     try {
       return new URL(url).hostname.replace('www.', '');
     } catch {
-      return 'View Article'; // 萬一網址格式壞掉的最後防線
+      return 'View Article';
     }
   };
-
-  const profileParticles = useMemo(() => {
-    const count = isMobile ? 4 : 8;
-    return Array.from({ length: count }).map((_, i) => ({
-      id: i,
-      // Deterministic pseudo-random values based on index
-      size: ((i * 13) % 4) + 2,
-      x: ((i * 17) % 120) - 10, // Slightly wider than container
-      y: ((i * 23) % 120) - 10,
-      duration: ((i * 7) % 10) + 10,
-      delay: (i * 0.25) % 5,
-      color: i % 2 === 0 ? 'bg-teal-400' : 'bg-amber-400',
-    }));
-  }, [isMobile]);
 
   useEffect(() => {
     fetch('https://sixshoes.github.io/Ma-Research-Portal/papers.json')
@@ -484,28 +462,10 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-[#080C16] text-slate-300 font-sans overflow-x-hidden relative">
-      {/* Dynamic Animated Background */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        <motion.div 
-          animate={{ 
-            scale: [1, 1.2, 1],
-            opacity: [0.1, 0.15, 0.1],
-            rotate: [0, 90, 0]
-          }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full bg-gradient-to-br from-teal-900/20 to-transparent blur-[80px] md:blur-[100px]"
-        />
-        <motion.div 
-          animate={{ 
-            scale: [1, 1.5, 1],
-            opacity: [0.05, 0.1, 0.05],
-            x: [0, 100, 0],
-            y: [0, -50, 0]
-          }}
-          transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-[40%] -right-[20%] w-[60vw] h-[60vw] rounded-full bg-gradient-to-tl from-amber-900/20 to-transparent blur-[120px]"
-        />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
+      {/* Subtle static background gradients */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute -top-[20%] -left-[10%] w-[60vw] h-[60vw] rounded-full bg-gradient-to-br from-teal-900/15 to-transparent blur-[100px]" />
+        <div className="absolute top-[40%] -right-[20%] w-[50vw] h-[50vw] rounded-full bg-gradient-to-tl from-amber-900/10 to-transparent blur-[120px]" />
       </div>
 
       {/* Navigation */}
@@ -650,107 +610,23 @@ export default function HomePage() {
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1, delay: 0.2 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
           className="relative aspect-[4/5] w-full max-w-md mx-auto"
         >
-          {/* High-tech Image Container */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-teal-500/20 to-amber-500/20 rounded-3xl blur-3xl animate-pulse" />
-          
-          {/* Floating Particles around Avatar */}
-          {profileParticles.map((p) => (
-            <motion.div
-              key={`avatar-p-${p.id}`}
-              className={`absolute rounded-full ${p.color} opacity-40 blur-[1px] z-20`}
-              style={{
-                width: p.size,
-                height: p.size,
-                left: `${p.x}%`,
-                top: `${p.y}%`,
-                willChange: 'transform, opacity',
-              }}
-              animate={{
-                y: [0, -40, 0],
-                x: [0, Math.sin(p.id) * 30, 0],
-                opacity: [0.2, 0.5, 0.2],
-                scale: [1, 1.2, 1],
-              }}
-              transition={{
-                duration: p.duration,
-                repeat: Infinity,
-                delay: p.delay,
-                ease: "easeInOut",
-              }}
+          {/* Clean profile image card */}
+          <div className="relative w-full h-full bg-[#080C16] rounded-3xl overflow-hidden border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+            <Image
+              src="https://sixshoes.github.io/Ma-Research-Portal/profile.jpg"
+              alt="馬遠榮副校長個人照 (Prof. Y.R. Ma)"
+              fill
+              priority
+              onLoad={() => setIsImgLoaded(true)}
+              className={`object-cover object-top transition-opacity duration-700 ${isImgLoaded ? 'opacity-100' : 'opacity-0'}`}
+              referrerPolicy="no-referrer"
             />
-          ))}
-
-          <motion.div 
-            animate={{ y: [0, -10, 0] }}
-            transition={{ duration: isMobile ? 8 : 6, repeat: Infinity, ease: "easeInOut" }}
-            style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}
-            className="relative w-full h-full bg-[#080C16] rounded-3xl overflow-hidden border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)] flex items-center justify-center"
-          >
-            {/* Thematic Background: Graphene Hex Grid */}
-            <div className="absolute inset-0 opacity-40">
-              <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                  <pattern id="hex" width="40" height="69.282" patternUnits="userSpaceOnUse" patternTransform="scale(1.5)">
-                    <path d="M40 17.32l-20 11.547L0 17.32V-5.774l20-11.547L40-5.774V17.32zm0 46.188l-20 11.548-20-11.548V40.414L20 28.867l20 11.547v23.094z" fill="none" stroke="rgba(20, 184, 166, 0.3)" strokeWidth="1" />
-                  </pattern>
-                </defs>
-                <rect width="100%" height="100%" fill="url(#hex)" />
-              </svg>
-            </div>
-            
-            {/* Abstract Quantum Nodes (Glowing Orbs) */}
-            <div className="absolute top-1/4 left-1/4 w-40 h-40 bg-teal-500/30 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-amber-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-blue-500/20 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '2s' }} />
-
-            {/* Profile Image with Soft Gradient Blending */}
-            <div className="absolute inset-0 z-10 overflow-hidden rounded-3xl">
-              <Image 
-                src="https://sixshoes.github.io/Ma-Research-Portal/profile.jpg" 
-                alt="馬遠榮副校長個人照 (Prof. Y.R. Ma)"
-                fill
-                priority
-                onLoad={() => setIsImgLoaded(true)}
-                className={`object-cover object-top transition-all duration-1000 hover:scale-105 ${isImgLoaded ? 'opacity-100' : 'opacity-0'}`}
-                referrerPolicy="no-referrer"
-              />
-              {/* Gradient overlays to blend the image into the dark background */}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#080C16] via-[#080C16]/20 to-transparent pointer-events-none" />
-              <div className="absolute inset-0 bg-gradient-to-r from-[#080C16] via-transparent to-[#080C16] opacity-50 pointer-events-none" />
-            </div>
-
-            {/* High-Tech HUD Elements */}
-            <div className="absolute inset-0 z-20 pointer-events-none">
-              <div className="absolute top-4 left-4 w-8 h-8 border-t-2 border-l-2 border-teal-500/50 rounded-tl-lg" />
-              <div className="absolute top-4 right-4 w-8 h-8 border-t-2 border-r-2 border-teal-500/50 rounded-tr-lg" />
-              <div className="absolute bottom-4 left-4 w-8 h-8 border-b-2 border-l-2 border-teal-500/50 rounded-bl-lg" />
-              <div className="absolute bottom-4 right-4 w-8 h-8 border-b-2 border-r-2 border-teal-500/50 rounded-br-lg" />
-              <motion.div 
-                animate={{ top: ['0%', '100%', '0%'] }}
-                transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                className="hidden md:block absolute left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-teal-400/50 to-transparent"
-              />
-            </div>
-          </motion.div>
-          
-          {/* Decorative Elements */}
-          <motion.div 
-            animate={{ rotate: 360 }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            className="absolute -right-6 top-1/4 w-12 h-12 border border-amber-500/30 rounded-full flex items-center justify-center"
-          >
-            <div className="w-1.5 h-1.5 bg-amber-400 rounded-full" />
-          </motion.div>
-          <motion.div 
-            animate={{ rotate: -360 }}
-            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-            className="absolute -left-6 bottom-1/4 w-16 h-16 border border-teal-500/30 rounded-full flex items-center justify-center"
-          >
-            <div className="w-1 h-1 bg-teal-400 rounded-full" />
-          </motion.div>
+            {/* Soft gradient at the bottom to blend into background */}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#080C16]/80 via-[#080C16]/10 to-transparent pointer-events-none" />
+          </div>
         </motion.div>
       </section>
 
@@ -762,10 +638,10 @@ export default function HomePage() {
             { label: t.stats.citations, value: totalCitations },
             { label: t.stats.exp, value: t.stats.expValue }
           ].map((stat, i) => (
-            <motion.div 
+            <motion.div
               key={i}
-              initial={{ opacity: 0, scale: 0.8 }}
-              whileInView={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1, duration: 0.5 }}
             >
@@ -781,8 +657,8 @@ export default function HomePage() {
 
       {/* Research Interests */}
       <section id="research" className="py-20 md:py-32 px-6 max-w-7xl mx-auto relative">
-        {/* Background glow */}
-        <div className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[800px] h-[300px] md:h-[800px] bg-teal-500/5 rounded-full blur-[80px] md:blur-[120px] pointer-events-none" />
+        {/* Subtle background */}
+        <div className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-teal-500/[0.04] rounded-full blur-[120px] pointer-events-none" />
 
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 md:mb-20 relative z-10">
           <h2 className="text-4xl md:text-7xl text-white">
