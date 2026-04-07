@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
+import React, { createContext, useContext, useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
 type Lang = 'en' | 'zh';
@@ -18,17 +18,14 @@ const LanguageContext = createContext<LanguageContextType>({
 });
 
 export const LanguageProvider = ({ children }: { children: React.ReactNode }) => {
-  const [lang, setLangState] = useState<Lang>('en');
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    const savedLang = localStorage.getItem('preferred_lang') as Lang;
-    if (savedLang === 'en' || savedLang === 'zh') {
-      setLangState(savedLang);
+  const [lang, setLangState] = useState<Lang>(() => {
+    if (typeof window !== 'undefined') {
+      const savedLang = localStorage.getItem('preferred_lang') as Lang;
+      if (savedLang === 'en' || savedLang === 'zh') return savedLang;
     }
-  }, []);
+    return 'en';
+  });
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   const setLang = useCallback((newLang: Lang) => {
     if (newLang === lang || isTransitioning) return;
@@ -60,8 +57,6 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
     () => ({ lang, setLang, isTransitioning }),
     [lang, setLang, isTransitioning]
   );
-
-  if (!mounted) return <>{children}</>;
 
   return (
     <LanguageContext.Provider value={contextValue}>

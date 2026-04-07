@@ -805,15 +805,15 @@ export default function HomePage() {
           {t.research.items.map((item, i) => (
             <motion.div 
               key={i} 
-              initial={{ opacity: 0, y: 30, scale: 0.95 }}
-              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 30, scale: 0.95 }}
+              whileInView={prefersReducedMotion ? undefined : { opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ 
                 duration: 0.6, 
                 delay: i * 0.1,
                 ease: [0.215, 0.61, 0.355, 1]
               }}
-              whileHover={{ y: -10, scale: 1.02 }}
+              whileHover={prefersReducedMotion ? {} : { y: -6, scale: 1.01 }}
             className="bg-gradient-to-b from-[#0C1324]/95 to-[#0A1120]/95 backdrop-blur-md border border-white/[0.08] p-10 rounded-3xl hover:border-amber-500/35 hover:bg-[#101a31] transition-all duration-500 group relative overflow-hidden shadow-[0_12px_36px_rgba(0,0,0,0.28)] hover:shadow-[0_20px_50px_rgba(251,191,36,0.12)]"
             >
               {/* Hover gradient background */}
@@ -912,11 +912,11 @@ export default function HomePage() {
                   return (
                     <motion.div 
                       key={i}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
+                      initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
+                      whileInView={prefersReducedMotion ? undefined : { opacity: 1, y: 0 }}
                       viewport={{ once: true, margin: "-50px" }}
                       transition={{ delay: i * 0.05 }}
-                      whileHover={isMobile ? {} : { y: -5, scale: 1.01 }}
+                      whileHover={isMobile || prefersReducedMotion ? {} : { y: -3, scale: 1.005 }}
                       style={{ transform: 'translateZ(0)' }}
                       className="flex flex-col lg:flex-row gap-8 p-6 md:p-8 bg-gradient-to-b from-[#0C1325]/95 to-[#0A1120]/95 backdrop-blur-md border border-white/[0.08] rounded-3xl hover:border-amber-500/30 transition-all duration-500 group shadow-[0_12px_36px_rgba(0,0,0,0.28)] hover:shadow-[0_20px_48px_rgba(251,191,36,0.12)]"
                     >

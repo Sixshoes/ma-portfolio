@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowUp } from 'lucide-react';
 import { useLenis } from 'lenis/react';
@@ -8,12 +8,7 @@ import { usePathname } from 'next/navigation';
 
 export default function ScrollToTop() {
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useLenis(({ scroll }) => {
     const nextShow = pathname !== '/' && scroll > 10;
@@ -23,8 +18,6 @@ export default function ScrollToTop() {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
-  if (!mounted) return null;
 
   return (
     <AnimatePresence>
