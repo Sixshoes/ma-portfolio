@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { motion, useMotionValue, useSpring } from 'motion/react';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
 import { useLanguage } from './LanguageContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const dict = {
   en: {
@@ -30,19 +30,10 @@ export default function VisualsPage() {
   const springX = useSpring(mouseX, { damping: 40, stiffness: 50, mass: 1 });
   const springY = useSpring(mouseY, { damping: 40, stiffness: 50, mass: 1 });
 
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  const isMobile = useIsMobile();
 
   const particles = useMemo(() => {
-    const count = isMobile ? 45 : 60; // Increased from 30 to 45 for better visual on mobile
+    const count = isMobile ? 20 : 30;
     return Array.from({ length: count }).map((_, i) => ({
       id: i,
       // Deterministic pseudo-random values based on index
@@ -191,23 +182,17 @@ export default function VisualsPage() {
             }}
             animate={{
               y: [0, -800],
-              opacity: [0, 0.8, 0.8, 0],
-              x: [0, Math.sin(p.id) * 150, 0],
-              scale: [0, 1.5, 1.5, 0]
+              opacity: [0, 0.8, 0],
             }}
             transition={{
               duration: p.duration,
               repeat: Infinity,
               delay: p.delay,
               ease: "linear",
-              times: [0, 0.1, 0.9, 1]
             }}
           />
         ))}
       </div>
-
-      {/* Grain Overlay */}
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay pointer-events-none z-50"></div>
     </main>
   );
 }
