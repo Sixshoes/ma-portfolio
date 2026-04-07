@@ -211,7 +211,7 @@ function PublicationsSectionComponent({
                         </span>
                       </div>
 
-                      <h3 className="font-display text-xl md:text-2xl text-slate-200 mb-5 group-hover:text-amber-400 transition-colors leading-snug">
+                      <h3 className="font-display text-xl md:text-2xl text-slate-100 mb-5 group-hover:text-amber-300 transition-colors leading-snug">
                         {pub.title}
                       </h3>
 
@@ -233,7 +233,7 @@ function PublicationsSectionComponent({
                               href={pub.doi}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-sm text-amber-400/80 hover:text-amber-400 flex items-center gap-2 break-all transition-colors"
+                              className="text-sm text-amber-300 hover:text-amber-200 flex items-center gap-2 break-all transition-colors"
                             >
                               {getLinkDisplay(pub.doi)} <ExternalLink className="w-3 h-3 shrink-0" />
                             </a>

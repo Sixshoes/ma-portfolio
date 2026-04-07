@@ -243,11 +243,11 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
               <div className="flex flex-col items-center justify-center p-6 md:p-8 border-t md:border-t-0 md:border-l border-white/[0.05]">
                 <button
                   onClick={onDownloadVCard}
-                  className="group relative w-32 h-32 mb-6 rounded-full bg-gradient-to-br from-amber-500/10 to-teal-500/10 flex items-center justify-center border border-white/10 shadow-[0_0_30px_rgba(255,255,255,0.05)] hover:shadow-[0_0_40px_rgba(251,191,36,0.2)] hover:scale-105 hover:border-amber-500/30 transition-all duration-500"
+                  className={`group relative w-32 h-32 mb-6 rounded-full ${uiTokens.buttonPrimaryStrong} flex items-center justify-center hover:shadow-[0_0_40px_rgba(251,191,36,0.2)] hover:scale-105 transition-all duration-500`}
                   title={lang === 'en' ? 'Tap to download' : '點擊下載'}
                 >
                   <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-amber-500/20 to-teal-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl" />
-                  <UserPlus className="w-12 h-12 text-slate-300 group-hover:text-amber-400 transition-colors relative z-10" />
+                  <UserPlus className="w-12 h-12 text-[#0A0F1C] group-hover:text-[#080C16] transition-colors relative z-10" />
                 </button>
                 <div className="text-center">
                   <div className="text-sm font-display tracking-widest uppercase text-white mb-2">

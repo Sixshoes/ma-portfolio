@@ -107,12 +107,12 @@ function HeroStatsResearchSectionComponent({
           >
             {heroText.desc}
           </motion.p>
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }} className="flex space-x-4">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }} className="flex space-x-4 pt-1">
             <motion.a
               whileHover={prefersReducedMotion ? {} : { scale: 1.03, boxShadow: '0 0 18px rgba(251,191,36,0.28)' }}
               whileTap={{ scale: 0.95 }}
               href="#publications"
-            className={`${uiTokens.buttonPrimary} px-7 py-3.5 rounded-full text-xs font-display font-bold uppercase tracking-[0.2em] transition-all inline-block`}
+              className={`${uiTokens.buttonPrimaryStrong} px-7 py-3.5 rounded-full text-xs font-display font-bold uppercase tracking-[0.2em] transition-all inline-block`}
             >
               {heroText.cta}
             </motion.a>

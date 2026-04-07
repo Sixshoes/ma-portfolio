@@ -10,6 +10,8 @@ export const uiTokens = {
     'hover:border-amber-400/35 hover:shadow-[0_20px_50px_rgba(251,191,36,0.14)] transition-all duration-500',
   buttonPrimary:
     'bg-gradient-to-r from-amber-300 to-amber-400 text-[#080C16] border border-amber-200/60 shadow-[0_10px_30px_rgba(251,191,36,0.25)]',
+  buttonPrimaryStrong:
+    'bg-gradient-to-r from-amber-300 via-amber-400 to-amber-300 text-[#080C16] border border-amber-100/70 shadow-[0_14px_36px_rgba(251,191,36,0.32)]',
   buttonGhost:
     'border border-white/15 bg-white/[0.03] text-slate-300 hover:text-amber-300 hover:border-amber-400/40 transition-colors',
 } as const;
