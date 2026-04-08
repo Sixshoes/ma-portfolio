@@ -74,6 +74,9 @@ function PublicationsSectionComponent({
   onLoadMore,
 }: PublicationsSectionProps) {
   useRenderProfiler('PublicationsSection');
+  const litePub = prefersReducedMotion || isMobile;
+  const cardStaggerDelay = (i: number) => (litePub ? 0 : Math.min(i, 10) * 0.04);
+
   return (
     <section id="publications" className="py-24 md:py-28 bg-gradient-to-b from-[#0B101E]/40 to-[#0A0F1C]/40 border-y border-white/[0.06] relative">
       <div className="max-w-7xl mx-auto px-6 relative z-10">
@@ -150,11 +153,11 @@ function PublicationsSectionComponent({
                 return (
                   <motion.div
                     key={i}
-                    initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
-                    whileInView={prefersReducedMotion ? undefined : { opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: '-50px' }}
-                    transition={{ delay: i * 0.05 }}
-                    whileHover={isMobile || prefersReducedMotion ? {} : { y: -3, scale: 1.005 }}
+                    initial={litePub ? false : { opacity: 0, y: 20 }}
+                    whileInView={litePub ? undefined : { opacity: 1, y: 0 }}
+                    viewport={litePub ? undefined : { once: true, margin: '-12% 0px -8% 0px' }}
+                    transition={{ delay: cardStaggerDelay(i), duration: litePub ? 0 : 0.35 }}
+                    whileHover={litePub ? {} : { y: -3, scale: 1.005 }}
                     style={{ transform: 'translateZ(0)' }}
                     className={`flex flex-col lg:flex-row gap-6 md:gap-7 p-5 md:p-6 ${uiTokens.surfaceCard} ${uiTokens.surfaceCardHover} group`}
                   >
@@ -164,9 +167,9 @@ function PublicationsSectionComponent({
                           src={mainImg}
                           alt={mainLabel || 'Publication Image'}
                           fill
-                          priority={i < 1}
-                          loading={i < 1 ? 'eager' : 'lazy'}
-                          sizes="(max-width: 1024px) 100vw, 33vw"
+                          priority={!isMobile && i === 0}
+                          loading={!isMobile && i === 0 ? 'eager' : 'lazy'}
+                          sizes={isMobile ? '100vw' : '(max-width: 1024px) 100vw, 33vw'}
                           className="object-contain p-2 transition-transform duration-500 group-hover/img:scale-105"
                           referrerPolicy="no-referrer"
                         />

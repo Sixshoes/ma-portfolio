@@ -325,11 +325,14 @@ TEL;TYPE=WORK,FAX:+886-3-9874815
 EMAIL;TYPE=PREF,INTERNET:yrma@mail.fgu.edu.tw
 END:VCARD`;
 
+const PUB_PAGE_DESKTOP = 10;
+const PUB_PAGE_MOBILE = 6;
+
 export default function HomePage() {
   useRenderProfiler('MainPage');
   const { lang, setLang } = useLanguage();
   const [pubFilter, setPubFilter] = useState<string>('All');
-  const [visibleCount, setVisibleCount] = useState<number>(10);
+  const [visibleCount, setVisibleCount] = useState<number>(PUB_PAGE_DESKTOP);
   const [publications, setPublications] = useState<Publication[]>(fallbackPublications);
   const [isLoading, setIsLoading] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -337,6 +340,12 @@ export default function HomePage() {
   const prefersReducedMotion = useReducedMotion();
   const t = dict[lang];
   const isMobile = useIsMobile();
+
+  React.useLayoutEffect(() => {
+    if (window.matchMedia('(max-width: 767px)').matches) {
+      setVisibleCount(PUB_PAGE_MOBILE);
+    }
+  }, []);
 
   useEffect(() => {
     const id = window.setTimeout(() => setShowPublications(true), 250);
@@ -404,12 +413,13 @@ export default function HomePage() {
 
   const handlePubFilterChange = React.useCallback((value: string) => {
     setPubFilter(value);
-    setVisibleCount(10);
-  }, []);
+    setVisibleCount(isMobile ? PUB_PAGE_MOBILE : PUB_PAGE_DESKTOP);
+  }, [isMobile]);
 
   const handleLoadMore = React.useCallback(() => {
-    setVisibleCount((prev) => prev + 10);
-  }, []);
+    const step = isMobile ? PUB_PAGE_MOBILE : PUB_PAGE_DESKTOP;
+    setVisibleCount((prev) => prev + step);
+  }, [isMobile]);
 
   const handleDownloadVCard = () => {
     const blob = new Blob([vcardData], { type: 'text/vcard' });
