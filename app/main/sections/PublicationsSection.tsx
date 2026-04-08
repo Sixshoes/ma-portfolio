@@ -12,6 +12,10 @@ type PublicationsText = {
   title: string;
   subtitle: string;
   desc: string;
+  filterBy: string;
+  filterAll: string;
+  filterSelected: string;
+  filterYearGroup: string;
   citations: string;
   journal: string;
   doi: string;
@@ -59,6 +63,16 @@ function getHighlightText(citations: number, pubsText: PublicationsText): string
   return pubsText.general;
 }
 
+function getHighlightBadgeClass(highlight: string, pubsText: PublicationsText): string {
+  if (highlight === pubsText.benchmark) {
+    return 'border-amber-400/35 bg-amber-500/[0.12] text-amber-200/95';
+  }
+  if (highlight === pubsText.keyFocus) {
+    return 'border-teal-400/35 bg-teal-500/[0.1] text-teal-200/95';
+  }
+  return 'border-white/[0.1] bg-white/[0.04] text-slate-400';
+}
+
 function PublicationsSectionComponent({
   pubsText,
   lang,
@@ -88,22 +102,27 @@ function PublicationsSectionComponent({
           <p className="text-teal-400/80 font-mono uppercase text-[10px] tracking-[0.2em] mb-8 md:mb-10">{pubsText.desc}</p>
 
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            <span className="text-xs font-mono uppercase tracking-widest text-slate-500">Filter by:</span>
+            <span className="text-xs font-mono uppercase tracking-widest text-slate-500">
+              {pubsText.filterBy}
+              <span className="text-slate-600" aria-hidden>
+                :
+              </span>
+            </span>
             <div className="relative w-full sm:w-auto">
               <select
                 value={pubFilter}
                 onChange={(e) => onFilterChange(e.target.value)}
-                className="w-full sm:w-auto appearance-none bg-[#0B101E]/80 border border-white/[0.1] text-slate-300 px-6 py-3 pr-12 rounded-full text-sm font-mono focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 transition-all cursor-pointer backdrop-blur-md"
+                className={`w-full sm:w-auto ${uiTokens.fieldSelect}`}
               >
-                <option value="All">All Publications</option>
-                <option value="Selected">Selected / Highlighted</option>
-                <optgroup label="By Year">
+                <option value="All">{pubsText.filterAll}</option>
+                <option value="Selected">{pubsText.filterSelected}</option>
+                <optgroup label={pubsText.filterYearGroup}>
                   {uniqueYears.map((year) => (
                     <option key={year} value={year}>{year}</option>
                   ))}
                 </optgroup>
               </select>
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-teal-500/50">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="6 9 12 15 18 9"></polyline>
                 </svg>
@@ -132,6 +151,7 @@ function PublicationsSectionComponent({
               className="flex flex-col gap-6 md:gap-7"
             >
               {visiblePublications.map((pub, i) => {
+                const highlightLabel = getHighlightText(pub.citations, pubsText);
                 const abstractImg = pub.cover_url;
                 const journalImg = pub.file_img;
                 const hasAbstract = !!abstractImg;
@@ -162,7 +182,9 @@ function PublicationsSectionComponent({
                     className={`flex flex-col lg:flex-row gap-6 md:gap-7 p-5 md:p-6 ${uiTokens.surfaceCard} ${uiTokens.surfaceCardHover} group`}
                   >
                       <div className="w-full lg:w-1/3 flex flex-col gap-3 shrink-0">
-                      <div className="relative w-full aspect-video bg-white rounded-xl border border-white/[0.05] p-2 flex items-center justify-center group/img overflow-hidden shadow-inner">
+                      <div
+                        className={`relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] group/img ${uiTokens.pubFigureSurface}`}
+                      >
                         <Image
                           src={mainImg}
                           alt={mainLabel || 'Publication Image'}
@@ -170,25 +192,27 @@ function PublicationsSectionComponent({
                           priority={!isMobile && i === 0}
                           loading={!isMobile && i === 0 ? 'eager' : 'lazy'}
                           sizes={isMobile ? '100vw' : '(max-width: 1024px) 100vw, 33vw'}
-                          className="object-contain p-2 transition-transform duration-500 group-hover/img:scale-105"
+                          className="object-contain p-2 transition-transform duration-500 group-hover/img:scale-[1.02]"
                           referrerPolicy="no-referrer"
                         />
-                        <div className="absolute top-2 left-2 text-[10px] font-mono uppercase tracking-widest text-slate-800 bg-white/90 px-2 py-1 rounded border border-slate-200 backdrop-blur-md shadow-sm">
+                        <div className="absolute left-2 top-2 rounded border border-white/15 bg-[#080C16]/75 px-2 py-1 text-[10px] font-mono uppercase tracking-widest text-slate-200 backdrop-blur-md">
                           {mainLabel}
                         </div>
                       </div>
                       {secondaryImg && (
-                        <div className="relative w-1/3 max-w-[120px] aspect-[3/4] bg-white rounded-xl border border-white/[0.05] p-1 flex items-center justify-center group/img overflow-hidden shadow-md">
+                        <div
+                          className={`group/img relative flex aspect-[3/4] w-1/3 max-w-[120px] items-center justify-center overflow-hidden rounded-xl p-1 shadow-md ${uiTokens.pubFigureSurface}`}
+                        >
                           <Image
                             src={secondaryImg}
                             alt={pubsText.cover || 'Journal Cover'}
                             fill
                             loading="lazy"
                             sizes="120px"
-                            className="object-contain p-1 transition-transform duration-500 group-hover/img:scale-105"
+                            className="object-contain p-1 transition-transform duration-500 group-hover/img:scale-[1.02]"
                             referrerPolicy="no-referrer"
                           />
-                          <div className="absolute top-1 left-1 text-[8px] font-mono uppercase tracking-widest text-slate-800 bg-white/90 px-1.5 py-0.5 rounded border border-slate-200 backdrop-blur-md">
+                          <div className="absolute left-1 top-1 rounded border border-white/15 bg-[#080C16]/75 px-1.5 py-0.5 text-[8px] font-mono uppercase tracking-widest text-slate-200 backdrop-blur-md">
                             {pubsText.cover}
                           </div>
                         </div>
@@ -197,8 +221,10 @@ function PublicationsSectionComponent({
 
                     <div className="w-full lg:w-2/3 flex flex-col">
                       <div className="flex flex-wrap items-center gap-2.5 mb-5">
-                        <span className="bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full text-xs font-mono text-amber-300">
-                          {getHighlightText(pub.citations, pubsText)}
+                        <span
+                          className={`rounded-full border px-3 py-1 text-xs font-mono ${getHighlightBadgeClass(highlightLabel, pubsText)}`}
+                        >
+                          {highlightLabel}
                         </span>
                         {pub.is_star === '是' ? (
                           <span className="bg-teal-500/10 border border-teal-500/20 px-3 py-1 rounded-full text-xs font-mono text-teal-300 flex items-center gap-1.5">

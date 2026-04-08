@@ -14,4 +14,10 @@ export const uiTokens = {
     'bg-gradient-to-r from-amber-300 via-amber-400 to-amber-300 text-[#080C16] border border-amber-100/70 shadow-[0_14px_36px_rgba(251,191,36,0.32)]',
   buttonGhost:
     'border border-white/15 bg-white/[0.03] text-slate-300 hover:text-amber-300 hover:border-amber-400/40 transition-colors',
+  /** 論文圖卡背景：比純白更融入深色主題 */
+  pubFigureSurface:
+    'bg-gradient-to-b from-[#141c2e] via-[#0f1524] to-[#0a101c] border border-white/[0.08]',
+  /** 篩選下拉：與 ghost 鈕同系 */
+  fieldSelect:
+    'appearance-none bg-[#0B101E]/90 border border-white/[0.1] text-slate-200 px-6 py-3 pr-12 rounded-full text-sm font-mono focus:outline-none focus:border-teal-400/45 focus:ring-1 focus:ring-teal-400/35 transition-all cursor-pointer backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
 } as const;

@@ -1,1 +1,15 @@
 @import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+}
+
+/* 與全站琥珀／青綠主題一致的鍵盤焦點 */
+:focus-visible {
+  outline: 2px solid rgba(251, 191, 36, 0.55);
+  outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}

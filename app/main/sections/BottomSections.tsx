@@ -68,11 +68,11 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className={`${uiTokens.surfaceCard} p-7 md:p-8 hover:border-amber-500/30 transition-colors`}
+              className={`${uiTokens.surfaceCard} p-7 md:p-8 transition-colors hover:border-amber-400/35`}
             >
-              <div className="flex items-center gap-4 mb-8 pb-8 border-b border-white/10">
-                <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center shrink-0">
-                  <GraduationCap className="w-8 h-8 text-amber-400 stroke-1" />
+              <div className="mb-8 flex items-center gap-4 border-b border-white/10 pb-8">
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-amber-500/15 bg-amber-500/[0.06]">
+                  <GraduationCap className="h-8 w-8 stroke-1 text-amber-400" />
                 </div>
                 <div>
                   <h3 className="text-xl md:text-2xl font-display font-bold text-white">{t.impact.ndhu}</h3>
@@ -80,35 +80,35 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 md:gap-4 mb-10">
+              <div className="mb-10 grid grid-cols-3 gap-2 md:gap-4">
                 <div className="text-center">
-                  <div className="w-8 h-8 md:w-10 md:h-10 mx-auto rounded-full bg-blue-500/10 flex items-center justify-center mb-3">
-                    <Globe className="w-4 h-4 md:w-5 md:h-5 text-blue-400 stroke-1" />
+                  <div className="mx-auto mb-3 flex h-8 w-8 items-center justify-center rounded-full border border-teal-500/20 bg-teal-500/[0.08] md:h-10 md:w-10">
+                    <Globe className="h-4 w-4 stroke-1 text-teal-400 md:h-5 md:w-5" />
                   </div>
-                  <div className="text-lg md:text-2xl font-display font-bold text-white">49,442</div>
-                  <div className="text-[8px] md:text-[10px] uppercase tracking-wider text-slate-500 mt-1">{t.impact.worldRank}</div>
+                  <div className="font-display text-lg font-bold text-white md:text-2xl">49,442</div>
+                  <div className="mt-1 text-[8px] font-medium uppercase tracking-wider text-slate-500 md:text-[10px]">{t.impact.worldRank}</div>
                 </div>
                 <div className="text-center">
-                  <div className="w-8 h-8 md:w-10 md:h-10 mx-auto rounded-full bg-red-500/10 flex items-center justify-center mb-3">
-                    <MapPin className="w-4 h-4 md:w-5 md:h-5 text-red-400 stroke-1" />
+                  <div className="mx-auto mb-3 flex h-8 w-8 items-center justify-center rounded-full border border-amber-500/20 bg-amber-500/[0.08] md:h-10 md:w-10">
+                    <MapPin className="h-4 w-4 stroke-1 text-amber-400 md:h-5 md:w-5" />
                   </div>
-                  <div className="text-lg md:text-2xl font-display font-bold text-white">225</div>
-                  <div className="text-[8px] md:text-[10px] uppercase tracking-wider text-slate-500 mt-1">{t.impact.countryRank}</div>
+                  <div className="font-display text-lg font-bold text-white md:text-2xl">225</div>
+                  <div className="mt-1 text-[8px] font-medium uppercase tracking-wider text-slate-500 md:text-[10px]">{t.impact.countryRank}</div>
                 </div>
                 <div className="text-center">
-                  <div className="w-8 h-8 md:w-10 md:h-10 mx-auto rounded-full bg-emerald-500/10 flex items-center justify-center mb-3">
-                    <GraduationCap className="w-4 h-4 md:w-5 md:h-5 text-emerald-400 stroke-1" />
+                  <div className="mx-auto mb-3 flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] md:h-10 md:w-10">
+                    <GraduationCap className="h-4 w-4 stroke-1 text-slate-300 md:h-5 md:w-5" />
                   </div>
-                  <div className="text-lg md:text-2xl font-display font-bold text-white">1</div>
-                  <div className="text-[8px] md:text-[10px] uppercase tracking-wider text-slate-500 mt-1">{t.impact.uniRank}</div>
+                  <div className="font-display text-lg font-bold text-white md:text-2xl">1</div>
+                  <div className="mt-1 text-[8px] font-medium uppercase tracking-wider text-slate-500 md:text-[10px]">{t.impact.uniRank}</div>
                 </div>
               </div>
 
-              <div className="bg-white/5 rounded-2xl p-4 md:p-6">
-                <h4 className="text-xs md:text-sm font-mono uppercase tracking-widest text-slate-400 mb-6 text-center">{t.impact.hIndex}</h4>
-                <div className="grid grid-cols-3 gap-2 md:gap-4 text-center">
+              <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-4 md:p-6">
+                <h4 className="mb-6 text-center font-mono text-xs uppercase tracking-widest text-slate-400 md:text-sm">{t.impact.hIndex}</h4>
+                <div className="grid grid-cols-3 gap-2 text-center md:gap-4">
                   <div>
-                    <div className="text-xl md:text-3xl font-display font-bold text-amber-400">62</div>
+                    <div className="font-display text-xl font-bold text-amber-400 md:text-3xl">62</div>
                     <div className="text-[8px] md:text-[10px] uppercase tracking-wider text-slate-500 mt-2">{t.impact.total}</div>
                   </div>
                   <div>
@@ -128,11 +128,11 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
-              className={`${uiTokens.surfaceCard} p-7 md:p-8 hover:border-purple-500/30 transition-colors`}
+              className={`${uiTokens.surfaceCard} p-7 md:p-8 transition-colors hover:border-teal-400/35`}
             >
-              <div className="flex items-center gap-4 mb-8 pb-8 border-b border-white/10">
-                <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center shrink-0">
-                  <GraduationCap className="w-8 h-8 text-purple-400 stroke-1" />
+              <div className="mb-8 flex items-center gap-4 border-b border-white/10 pb-8">
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-teal-500/15 bg-teal-500/[0.06]">
+                  <GraduationCap className="h-8 w-8 stroke-1 text-teal-400" />
                 </div>
                 <div>
                   <h3 className="text-xl md:text-2xl font-display font-bold text-white">{t.impact.fgu}</h3>
@@ -140,35 +140,35 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 md:gap-4 mb-10">
+              <div className="mb-10 grid grid-cols-3 gap-2 md:gap-4">
                 <div className="text-center">
-                  <div className="w-8 h-8 md:w-10 md:h-10 mx-auto rounded-full bg-blue-500/10 flex items-center justify-center mb-3">
-                    <Globe className="w-4 h-4 md:w-5 md:h-5 text-blue-400 stroke-1" />
+                  <div className="mx-auto mb-3 flex h-8 w-8 items-center justify-center rounded-full border border-teal-500/20 bg-teal-500/[0.08] md:h-10 md:w-10">
+                    <Globe className="h-4 w-4 stroke-1 text-teal-400 md:h-5 md:w-5" />
                   </div>
-                  <div className="text-lg md:text-2xl font-display font-bold text-white">80,658</div>
-                  <div className="text-[8px] md:text-[10px] uppercase tracking-wider text-slate-500 mt-1">{t.impact.worldRank}</div>
+                  <div className="font-display text-lg font-bold text-white md:text-2xl">80,658</div>
+                  <div className="mt-1 text-[8px] font-medium uppercase tracking-wider text-slate-500 md:text-[10px]">{t.impact.worldRank}</div>
                 </div>
                 <div className="text-center">
-                  <div className="w-8 h-8 md:w-10 md:h-10 mx-auto rounded-full bg-red-500/10 flex items-center justify-center mb-3">
-                    <MapPin className="w-4 h-4 md:w-5 md:h-5 text-red-400 stroke-1" />
+                  <div className="mx-auto mb-3 flex h-8 w-8 items-center justify-center rounded-full border border-amber-500/20 bg-amber-500/[0.08] md:h-10 md:w-10">
+                    <MapPin className="h-4 w-4 stroke-1 text-amber-400 md:h-5 md:w-5" />
                   </div>
-                  <div className="text-lg md:text-2xl font-display font-bold text-white">423</div>
-                  <div className="text-[8px] md:text-[10px] uppercase tracking-wider text-slate-500 mt-1">{t.impact.countryRank}</div>
+                  <div className="font-display text-lg font-bold text-white md:text-2xl">423</div>
+                  <div className="mt-1 text-[8px] font-medium uppercase tracking-wider text-slate-500 md:text-[10px]">{t.impact.countryRank}</div>
                 </div>
                 <div className="text-center">
-                  <div className="w-8 h-8 md:w-10 md:h-10 mx-auto rounded-full bg-purple-500/10 flex items-center justify-center mb-3">
-                    <GraduationCap className="w-4 h-4 md:w-5 md:h-5 text-purple-400 stroke-1" />
+                  <div className="mx-auto mb-3 flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] md:h-10 md:w-10">
+                    <GraduationCap className="h-4 w-4 stroke-1 text-slate-300 md:h-5 md:w-5" />
                   </div>
-                  <div className="text-lg md:text-2xl font-display font-bold text-white">2</div>
-                  <div className="text-[8px] md:text-[10px] uppercase tracking-wider text-slate-500 mt-1">{t.impact.uniRank}</div>
+                  <div className="font-display text-lg font-bold text-white md:text-2xl">2</div>
+                  <div className="mt-1 text-[8px] font-medium uppercase tracking-wider text-slate-500 md:text-[10px]">{t.impact.uniRank}</div>
                 </div>
               </div>
 
-              <div className="bg-white/5 rounded-2xl p-4 md:p-6">
-                <h4 className="text-xs md:text-sm font-mono uppercase tracking-widest text-slate-400 mb-6 text-center">{t.impact.hIndex}</h4>
-                <div className="grid grid-cols-3 gap-2 md:gap-4 text-center">
+              <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-4 md:p-6">
+                <h4 className="mb-6 text-center font-mono text-xs uppercase tracking-widest text-slate-400 md:text-sm">{t.impact.hIndex}</h4>
+                <div className="grid grid-cols-3 gap-2 text-center md:gap-4">
                   <div>
-                    <div className="text-xl md:text-3xl font-display font-bold text-purple-400">52</div>
+                    <div className="font-display text-xl font-bold text-teal-400 md:text-3xl">52</div>
                     <div className="text-[8px] md:text-[10px] uppercase tracking-wider text-slate-500 mt-2">{t.impact.total}</div>
                   </div>
                   <div>
@@ -229,13 +229,13 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
                   </div>
                 </a>
 
-                <div className="flex items-start gap-5 group">
-                  <div className="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center shrink-0 border border-purple-500/20 group-hover:scale-110 group-hover:bg-purple-500/20 transition-all duration-300">
-                    <Printer className="w-5 h-5 text-purple-400 stroke-1" />
+                <div className="group flex items-start gap-5">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/12 bg-white/[0.04] transition-all duration-300 group-hover:scale-110 group-hover:border-slate-400/30 group-hover:bg-white/[0.06]">
+                    <Printer className="h-5 w-5 stroke-1 text-slate-400" />
                   </div>
                   <div>
-                    <div className="text-xs font-mono uppercase tracking-widest text-slate-500 mb-1">Fax</div>
-                    <div className="text-lg text-slate-200 group-hover:text-purple-400 transition-colors">{t.contact.fax}</div>
+                    <div className="mb-1 font-mono text-xs uppercase tracking-widest text-slate-500">Fax</div>
+                    <div className="text-lg text-slate-200 transition-colors group-hover:text-slate-100">{t.contact.fax}</div>
                   </div>
                 </div>
               </div>
