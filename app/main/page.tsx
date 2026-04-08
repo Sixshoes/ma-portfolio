@@ -11,6 +11,7 @@ import { AboutSection } from './sections/AboutSection';
 import { HeroStatsResearchSection } from './sections/HeroStatsResearchSection';
 import { useRenderProfiler } from './sections/useRenderProfiler';
 import { uiTokens } from './sections/uiTokens';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { 
   Magnet, 
   BatteryCharging, 
@@ -335,17 +336,7 @@ export default function HomePage() {
   const [showPublications, setShowPublications] = useState(false);
   const prefersReducedMotion = useReducedMotion();
   const t = dict[lang];
-
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const id = window.setTimeout(() => setShowPublications(true), 250);

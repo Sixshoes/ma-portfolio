@@ -1,19 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowUp } from 'lucide-react';
 import { useLenis } from 'lenis/react';
 import { usePathname } from 'next/navigation';
+import { useIsMobile } from '@/hooks/use-mobile';
 
-export default function ScrollToTop() {
-  const [showScrollTop, setShowScrollTop] = useState(false);
+function ScrollTopFab({ showScrollTop }: { showScrollTop: boolean }) {
   const pathname = usePathname();
-
-  useLenis(({ scroll }) => {
-    const nextShow = pathname !== '/' && scroll > 10;
-    setShowScrollTop((prev) => (prev === nextShow ? prev : nextShow));
-  }, [pathname]);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -38,4 +33,39 @@ export default function ScrollToTop() {
       )}
     </AnimatePresence>
   );
+}
+
+function ScrollToTopLenis() {
+  const pathname = usePathname();
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useLenis(({ scroll }) => {
+    const nextShow = pathname !== '/' && scroll > 10;
+    setShowScrollTop((prev) => (prev === nextShow ? prev : nextShow));
+  }, [pathname]);
+
+  return <ScrollTopFab showScrollTop={showScrollTop} />;
+}
+
+function ScrollToTopNative() {
+  const pathname = usePathname();
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const scroll = window.scrollY || document.documentElement.scrollTop;
+      const nextShow = pathname !== '/' && scroll > 10;
+      setShowScrollTop((prev) => (prev === nextShow ? prev : nextShow));
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [pathname]);
+
+  return <ScrollTopFab showScrollTop={showScrollTop} />;
+}
+
+export default function ScrollToTop() {
+  const isMobile = useIsMobile();
+  return isMobile ? <ScrollToTopNative /> : <ScrollToTopLenis />;
 }

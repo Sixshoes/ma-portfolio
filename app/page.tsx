@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
-import { motion, useMotionValue, useSpring } from 'motion/react';
+import React, { useEffect, useMemo } from 'react';
+import { motion, useMotionValue, useSpring, useReducedMotion } from 'motion/react';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
 import { useLanguage } from './LanguageContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const dict = {
   en: {
@@ -24,25 +24,19 @@ const dict = {
 export default function VisualsPage() {
   const { lang, setLang } = useLanguage();
   const t = dict[lang];
+  const isMobile = useIsMobile();
+  const prefersReducedMotion = useReducedMotion();
 
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   const springX = useSpring(mouseX, { damping: 40, stiffness: 50, mass: 1 });
   const springY = useSpring(mouseY, { damping: 40, stiffness: 50, mass: 1 });
 
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  const landingLite = prefersReducedMotion === true || isMobile;
 
   const particles = useMemo(() => {
-    const count = isMobile ? 24 : 36;
+    if (prefersReducedMotion) return [];
+    const count = isMobile ? 8 : 36;
     return Array.from({ length: count }).map((_, i) => ({
       id: i,
       // Deterministic pseudo-random values based on index
@@ -53,20 +47,22 @@ export default function VisualsPage() {
       delay: (i * 0.5) % 2,
       color: i % 2 === 0 ? 'bg-teal-400' : 'bg-amber-400',
     }));
-  }, [isMobile]);
+  }, [isMobile, prefersReducedMotion]);
 
   useEffect(() => {
+    if (isMobile || prefersReducedMotion) return;
+
     const handleMouseMove = (e: MouseEvent) => {
       mouseX.set(e.clientX - window.innerWidth / 2);
       mouseY.set(e.clientY - window.innerHeight / 2);
     };
 
     window.addEventListener('mousemove', handleMouseMove);
-    
+
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
     };
-  }, [mouseX, mouseY]);
+  }, [isMobile, prefersReducedMotion, mouseX, mouseY]);
 
   return (
     <main className="relative w-full h-[100dvh] bg-[#080C16] overflow-hidden flex items-center justify-center font-sans">
@@ -94,37 +90,32 @@ export default function VisualsPage() {
         {t.enter}
       </Link>
 
-      {/* Mouse Follower Glow - Optimized for mobile */}
-      <motion.div
-        className="absolute w-[60vw] h-[60vw] md:w-[40vw] md:h-[40vw] rounded-full bg-teal-500/5 md:bg-teal-500/10 blur-[80px] md:blur-[100px] pointer-events-none z-0"
-        animate={isMobile ? {
-          x: [0, 20, -20, 0],
-          y: [0, -20, 20, 0],
-        } : undefined}
-        style={!isMobile ? {
-          x: springX,
-          y: springY,
-        } : undefined}
-        transition={isMobile ? {
-          duration: 10,
-          repeat: Infinity,
-          ease: "easeInOut"
-        } : undefined}
-      />
+      {/* Mouse Follower Glow — 手機／減動效：固定中心，避免 spring 與無限 keyframes */}
+      {landingLite ? (
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] md:w-[40vw] md:h-[40vw] rounded-full bg-teal-500/5 md:bg-teal-500/10 blur-[80px] md:blur-[100px] pointer-events-none z-0" />
+      ) : (
+        <motion.div
+          className="absolute w-[60vw] h-[60vw] md:w-[40vw] md:h-[40vw] rounded-full bg-teal-500/5 md:bg-teal-500/10 blur-[80px] md:blur-[100px] pointer-events-none z-0"
+          style={{
+            x: springX,
+            y: springY,
+          }}
+        />
+      )}
 
       {/* Central Quantum Core */}
       <div className="relative z-10 flex items-center justify-center">
         {/* Outer Orbit */}
         <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+          animate={landingLite ? { rotate: 0 } : { rotate: 360 }}
+          transition={landingLite ? { duration: 0 } : { duration: 40, repeat: Infinity, ease: 'linear' }}
           className="absolute w-[300px] h-[300px] md:w-[600px] md:h-[600px] border border-white/[0.03] rounded-full border-dashed"
         />
         
         {/* Middle Orbit */}
         <motion.div
-          animate={{ rotate: -360 }}
-          transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+          animate={landingLite ? { rotate: 0 } : { rotate: -360 }}
+          transition={landingLite ? { duration: 0 } : { duration: 30, repeat: Infinity, ease: 'linear' }}
           className="absolute w-[200px] h-[200px] md:w-[400px] md:h-[400px] border border-teal-500/20 rounded-full"
         >
           <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 md:w-3 md:h-3 bg-teal-400 rounded-full shadow-[0_0_15px_rgba(45,212,191,0.8)]" />
@@ -132,8 +123,8 @@ export default function VisualsPage() {
 
         {/* Inner Orbit */}
         <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+          animate={landingLite ? { rotate: 0 } : { rotate: 360 }}
+          transition={landingLite ? { duration: 0 } : { duration: 15, repeat: Infinity, ease: 'linear' }}
           className="absolute w-[120px] h-[120px] md:w-[200px] md:h-[200px] border border-amber-500/30 rounded-full"
         >
           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-3 h-3 md:w-4 md:h-4 bg-amber-400 rounded-full shadow-[0_0_20px_rgba(251,191,36,0.8)]" />
@@ -141,33 +132,45 @@ export default function VisualsPage() {
 
         {/* Core Glow */}
         <motion.div
-          animate={{ 
-            scale: [1, 1.2, 1], 
-            opacity: [0.6, 1, 0.6],
-            rotate: [0, 180, 360]
-          }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          animate={
+            landingLite
+              ? { scale: 1, opacity: 0.85, rotate: 0 }
+              : {
+                  scale: [1, 1.2, 1],
+                  opacity: [0.6, 1, 0.6],
+                  rotate: [0, 180, 360],
+                }
+          }
+          transition={
+            landingLite
+              ? { duration: 0.2 }
+              : { duration: 8, repeat: Infinity, ease: 'easeInOut' }
+          }
           className="w-24 h-24 md:w-40 md:h-40 bg-gradient-to-tr from-amber-500 to-teal-500 rounded-full blur-2xl opacity-80 mix-blend-screen"
         />
         
         {/* Core Text */}
         <div className="absolute text-white font-display text-base md:text-xl tracking-[0.3em] md:tracking-[0.5em] font-light uppercase text-center pointer-events-none flex flex-col items-center gap-2 md:gap-4 w-[90vw] md:w-[600px]">
           <motion.span 
-            animate={{ opacity: [0.5, 1, 0.5] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            animate={landingLite ? { opacity: 1 } : { opacity: [0.5, 1, 0.5] }}
+            transition={landingLite ? { duration: 0.2 } : { duration: 4, repeat: Infinity, ease: 'easeInOut' }}
             className="block text-teal-300/80 text-[10px] md:text-sm tracking-[0.2em] md:tracking-[0.3em]"
           >
             {t.name}
           </motion.span>
           <motion.span 
-            animate={{ 
-              textShadow: [
-                "0 0 10px rgba(251,191,36,0.3)",
-                "0 0 20px rgba(251,191,36,0.6)",
-                "0 0 10px rgba(251,191,36,0.3)"
-              ]
-            }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            animate={
+              landingLite
+                ? { textShadow: '0 0 14px rgba(251,191,36,0.45)' }
+                : {
+                    textShadow: [
+                      '0 0 10px rgba(251,191,36,0.3)',
+                      '0 0 20px rgba(251,191,36,0.6)',
+                      '0 0 10px rgba(251,191,36,0.3)',
+                    ],
+                  }
+            }
+            transition={landingLite ? { duration: 0.2 } : { duration: 3, repeat: Infinity, ease: 'easeInOut' }}
             className="block text-xl md:text-3xl font-bold tracking-[0.1em] md:tracking-[0.2em] text-amber-400"
           >
             {t.title}

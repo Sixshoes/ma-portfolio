@@ -60,7 +60,7 @@ function HeroStatsResearchSectionComponent({
   const [isImgLoaded, setIsImgLoaded] = useState(false);
 
   const profileParticles = useMemo(() => {
-    const count = isMobile ? 2 : 4;
+    const count = isMobile ? 0 : 4;
     return Array.from({ length: count }).map((_, i) => ({
       id: i,
       size: ((i * 13) % 4) + 2,
@@ -120,7 +120,7 @@ function HeroStatsResearchSectionComponent({
         </motion.div>
 
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1, delay: 0.2 }} className="relative aspect-[4/5] w-full max-w-md mx-auto">
-          <div className="absolute inset-0 bg-gradient-to-tr from-teal-500/20 to-amber-500/20 rounded-3xl blur-3xl animate-pulse" />
+          <div className="absolute inset-0 bg-gradient-to-tr from-teal-500/20 to-amber-500/20 rounded-3xl blur-3xl md:animate-pulse" />
           {!prefersReducedMotion && profileParticles.map((p) => (
             <motion.div
               key={`avatar-p-${p.id}`}
@@ -131,8 +131,8 @@ function HeroStatsResearchSectionComponent({
             />
           ))}
           <motion.div
-            animate={prefersReducedMotion ? { y: 0 } : { y: [0, -6, 0] }}
-            transition={prefersReducedMotion ? { duration: 0.2 } : { duration: isMobile ? 10 : 8, repeat: Infinity, ease: 'easeInOut' }}
+            animate={prefersReducedMotion || isMobile ? { y: 0 } : { y: [0, -6, 0] }}
+            transition={prefersReducedMotion || isMobile ? { duration: 0.2 } : { duration: 8, repeat: Infinity, ease: 'easeInOut' }}
             style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}
             className="relative w-full h-full bg-[#080C16] rounded-3xl overflow-hidden border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)] flex items-center justify-center"
           >
@@ -146,9 +146,9 @@ function HeroStatsResearchSectionComponent({
                 <rect width="100%" height="100%" fill="url(#hex)" />
               </svg>
             </div>
-            <div className="absolute top-1/4 left-1/4 w-40 h-40 bg-teal-500/30 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-amber-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-blue-500/20 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '2s' }} />
+            <div className="absolute top-1/4 left-1/4 w-40 h-40 bg-teal-500/30 rounded-full blur-3xl md:animate-pulse" />
+            <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-amber-500/20 rounded-full blur-3xl md:animate-pulse" style={{ animationDelay: '1s' }} />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-blue-500/20 rounded-full blur-2xl md:animate-pulse" style={{ animationDelay: '2s' }} />
             <div className="absolute inset-0 z-10 overflow-hidden rounded-3xl">
               <Image
                 src="https://sixshoes.github.io/Ma-Research-Portal/profile.jpg"
@@ -174,10 +174,18 @@ function HeroStatsResearchSectionComponent({
               />
             </div>
           </motion.div>
-          <motion.div animate={prefersReducedMotion ? { rotate: 0 } : { rotate: 360 }} transition={prefersReducedMotion ? { duration: 0.2 } : { duration: 28, repeat: Infinity, ease: 'linear' }} className="absolute -right-6 top-1/4 w-12 h-12 border border-amber-500/30 rounded-full flex items-center justify-center">
+          <motion.div
+            animate={prefersReducedMotion || isMobile ? { rotate: 0 } : { rotate: 360 }}
+            transition={prefersReducedMotion || isMobile ? { duration: 0.2 } : { duration: 28, repeat: Infinity, ease: 'linear' }}
+            className="hidden md:flex absolute -right-6 top-1/4 w-12 h-12 border border-amber-500/30 rounded-full items-center justify-center"
+          >
             <div className="w-1.5 h-1.5 bg-amber-400 rounded-full" />
           </motion.div>
-          <motion.div animate={prefersReducedMotion ? { rotate: 0 } : { rotate: -360 }} transition={prefersReducedMotion ? { duration: 0.2 } : { duration: 24, repeat: Infinity, ease: 'linear' }} className="absolute -left-6 bottom-1/4 w-16 h-16 border border-teal-500/30 rounded-full flex items-center justify-center">
+          <motion.div
+            animate={prefersReducedMotion || isMobile ? { rotate: 0 } : { rotate: -360 }}
+            transition={prefersReducedMotion || isMobile ? { duration: 0.2 } : { duration: 24, repeat: Infinity, ease: 'linear' }}
+            className="hidden md:flex absolute -left-6 bottom-1/4 w-16 h-16 border border-teal-500/30 rounded-full items-center justify-center"
+          >
             <div className="w-1 h-1 bg-teal-400 rounded-full" />
           </motion.div>
         </motion.div>
