@@ -41,6 +41,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${outfit.variable} ${mono.variable}`}>
+      <head>
+        <link rel="dns-prefetch" href="https://sixshoes.github.io" />
+        <link rel="preconnect" href="https://sixshoes.github.io" crossOrigin="anonymous" />
+      </head>
       <body suppressHydrationWarning className="bg-[#080C16] text-slate-300 font-sans antialiased selection:bg-amber-500/30">
         {/* Subtle noise texture overlay for premium material feel - Removed for performance */}
         {/* <div 

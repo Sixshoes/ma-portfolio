@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, startTransition } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { Publication, publications as fallbackPublications } from '@/lib/publications';
+import { PAPERS_JSON_URL, readCachedPapers, writeCachedPapers } from '@/lib/papersCache';
 import { useLanguage } from '../LanguageContext';
 import { BottomSections } from './sections/BottomSections';
 import { PublicationsSection } from './sections/PublicationsSection';
@@ -75,7 +76,11 @@ const dict = {
       benchmark: 'International benchmark',
       keyFocus: 'Highlighted',
       general: 'Research paper',
-      quantum: 'Quantum Mechanics'
+      quantum: 'Quantum Mechanics',
+      researchGate: 'ResearchGate',
+      linkFallback: 'Open link',
+      loadMore: 'Load more',
+      loadingPublications: 'Loading publications',
     },
     about: {
       title: 'Academic',
@@ -169,10 +174,11 @@ const dict = {
       vcardModal: {
         title: 'Save Contact',
         add: 'Add to Contacts',
-        click: 'Click to download'
+        click: 'Click to download',
+        downloadTooltip: 'Tap to download vCard',
       },
       footer: 'Copyright \u00A9 2026 Yuan-Ron Ma. All Rights Reserved.',
-      developer: 'Developed by Yiting Chen'
+      developer: 'Developed by Yiting Chen',
     }
   },
   zh: {
@@ -226,7 +232,11 @@ const dict = {
       benchmark: '國際標竿',
       keyFocus: '重點關注',
       general: '研究論文',
-      quantum: '量子力學'
+      quantum: '量子力學',
+      researchGate: 'ResearchGate',
+      linkFallback: '開啟連結',
+      loadMore: '載入更多',
+      loadingPublications: '載入著作中…',
     },
     about: {
       title: '學術',
@@ -320,10 +330,11 @@ const dict = {
       vcardModal: {
         title: '儲存聯絡資訊',
         add: '加入通訊錄',
-        click: '點擊下載'
+        click: '點擊下載',
+        downloadTooltip: '點擊下載電子名片',
       },
       footer: 'Copyright \u00A9 2026 馬遠榮 版權所有',
-      developer: '陳奕廷 開發'
+      developer: '陳奕廷 開發',
     }
   }
 };
@@ -348,9 +359,9 @@ export default function HomePage() {
   const [pubFilter, setPubFilter] = useState<string>('All');
   const [visibleCount, setVisibleCount] = useState<number>(PUB_PAGE_DESKTOP);
   const [publications, setPublications] = useState<Publication[]>(fallbackPublications);
+  /** 與 SSR 一致先為 true；掛載後若有 session 快取則立刻還原並關閉 loader，避免 hydration 不一致 */
   const [isLoading, setIsLoading] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [showPublications, setShowPublications] = useState(false);
   const prefersReducedMotion = useReducedMotion();
   const t = dict[lang];
   const isMobile = useIsMobile();
@@ -361,29 +372,43 @@ export default function HomePage() {
     }
   }, []);
 
-  useEffect(() => {
-    const id = window.setTimeout(() => setShowPublications(true), 250);
-    return () => window.clearTimeout(id);
+  React.useLayoutEffect(() => {
+    const cached = readCachedPapers();
+    if (cached && cached.length > 0) {
+      setPublications(cached);
+      setIsLoading(false);
+    }
   }, []);
 
   useEffect(() => {
-    fetch('https://sixshoes.github.io/Ma-Research-Portal/papers.json')
-      .then(res => {
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
+    let cancelled = false;
+
+    fetch(PAPERS_JSON_URL, { cache: 'default' })
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         return res.json();
       })
-      .then(data => {
+      .then((data: unknown) => {
+        if (cancelled) return;
         if (Array.isArray(data) && data.length > 0) {
-          setPublications(data);
+          writeCachedPapers(data as Publication[]);
+          startTransition(() => {
+            setPublications(data as Publication[]);
+            setIsLoading(false);
+          });
+        } else {
+          setIsLoading(false);
         }
-        setIsLoading(false);
       })
-      .catch(err => {
+      .catch((err) => {
+        if (cancelled) return;
         console.warn('Using fallback publications. Failed to fetch from GitHub:', err);
         setIsLoading(false);
       });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const uniqueYears = useMemo(() => {
@@ -598,10 +623,8 @@ export default function HomePage() {
 
       <PublicationsSection
         pubsText={t.pubs}
-        lang={lang}
         pubFilter={pubFilter}
         uniqueYears={uniqueYears}
-        showPublications={showPublications}
         isLoading={isLoading}
         visiblePublications={visiblePublications}
         filteredCount={filteredPublications.length}

@@ -1,13 +1,13 @@
 'use client';
 
 import React, { memo } from 'react';
-import Image from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
 import { ExternalLink, Quote, Star } from 'lucide-react';
 import { Publication } from '@/lib/publications';
 import { useRenderProfiler } from './useRenderProfiler';
 import { uiTokens } from './uiTokens';
 import { PublicationFigurePlaceholder } from './PublicationFigurePlaceholder';
+import { PublicationLazyImage } from './PublicationLazyImage';
 
 type PublicationsText = {
   title: string;
@@ -20,6 +20,8 @@ type PublicationsText = {
   citations: string;
   journal: string;
   doi: string;
+  scholar: string;
+  link: string;
   year: string;
   corresponding: string;
   coauthor: string;
@@ -29,14 +31,16 @@ type PublicationsText = {
   keyFocus: string;
   general: string;
   quantum: string;
+  researchGate: string;
+  linkFallback: string;
+  loadMore: string;
+  loadingPublications: string;
 };
 
 type PublicationsSectionProps = {
   pubsText: PublicationsText;
-  lang: 'en' | 'zh';
   pubFilter: string;
   uniqueYears: string[];
-  showPublications: boolean;
   isLoading: boolean;
   visiblePublications: Publication[];
   filteredCount: number;
@@ -46,15 +50,15 @@ type PublicationsSectionProps = {
   onLoadMore: () => void;
 };
 
-function getLinkDisplay(url: string): string {
+function getLinkDisplay(url: string, pubsText: PublicationsText): string {
   if (!url) return '';
   if (url.includes('doi.org/')) return url.split('doi.org/')[1];
-  if (url.includes('scholar.google')) return 'Google Scholar';
-  if (url.includes('researchgate.net')) return 'ResearchGate';
+  if (url.includes('scholar.google')) return pubsText.scholar;
+  if (url.includes('researchgate.net')) return pubsText.researchGate;
   try {
     return new URL(url).hostname.replace('www.', '');
   } catch {
-    return 'View Article';
+    return pubsText.linkFallback;
   }
 }
 
@@ -76,10 +80,8 @@ function getHighlightBadgeClass(highlight: string, pubsText: PublicationsText): 
 
 function PublicationsSectionComponent({
   pubsText,
-  lang,
   pubFilter,
   uniqueYears,
-  showPublications,
   isLoading,
   visiblePublications,
   filteredCount,
@@ -103,10 +105,10 @@ function PublicationsSectionComponent({
             <span className={uiTokens.titleLight}>{pubsText.title}</span> <br />
             <span className={uiTokens.titleBold}>{pubsText.subtitle}</span>
           </h2>
-          <p className="text-teal-400/80 font-mono uppercase text-[10px] tracking-[0.2em] mb-8 md:mb-10">{pubsText.desc}</p>
+          <p className={`${uiTokens.sectionDesc} mb-8 md:mb-10 max-w-2xl leading-relaxed`}>{pubsText.desc}</p>
 
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            <span className="text-xs font-mono uppercase tracking-widest text-slate-500">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <span className={uiTokens.metaMono}>
               {pubsText.filterBy}
               <span className="text-slate-600" aria-hidden>
                 :
@@ -136,15 +138,22 @@ function PublicationsSectionComponent({
         </div>
 
         <AnimatePresence mode="wait">
-          {!showPublications || isLoading ? (
+          {isLoading ? (
             <motion.div
               key="loader"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="h-72 md:h-80 flex items-center justify-center"
+              className="flex h-72 items-center justify-center md:h-80"
+              role="status"
+              aria-live="polite"
+              aria-busy="true"
+              aria-label={pubsText.loadingPublications}
             >
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-amber-500"></div>
+              <div
+                className="h-12 w-12 animate-spin rounded-full border-t-2 border-amber-500"
+                aria-hidden
+              />
             </motion.div>
           ) : (
             <motion.div
@@ -175,6 +184,8 @@ function PublicationsSectionComponent({
                 }
 
                 const showFigurePlaceholder = !mainImg;
+                const eagerMainCount = isMobile ? 1 : 2;
+                const eagerMain = i < eagerMainCount;
 
                 return (
                   <motion.div
@@ -194,18 +205,19 @@ function PublicationsSectionComponent({
                         {showFigurePlaceholder ? (
                           <PublicationFigurePlaceholder />
                         ) : mainImg ? (
-                          <Image
+                          <PublicationLazyImage
+                            eager={eagerMain}
                             src={mainImg}
                             alt={mainLabel || 'Publication Image'}
                             fill
-                            priority={!isMobile && i === 0}
-                            loading={!isMobile && i === 0 ? 'eager' : 'lazy'}
+                            priority={i === 0}
                             sizes={isMobile ? '100vw' : '(max-width: 1024px) 100vw, 33vw'}
                             className="object-contain p-2 transition-transform duration-500 group-hover/img:scale-[1.02]"
                             referrerPolicy="no-referrer"
+                            fetchPriority={i === 0 ? 'high' : eagerMain ? 'auto' : 'low'}
                           />
                         ) : null}
-                        <div className="absolute left-2 top-2 rounded border border-white/15 bg-[#080C16]/75 px-2 py-1 text-[10px] font-mono uppercase tracking-widest text-slate-200 backdrop-blur-md">
+                        <div className={`absolute left-2 top-2 px-2 py-1 text-[10px] ${uiTokens.pubBadgeOverlay}`}>
                           {mainLabel}
                         </div>
                       </div>
@@ -213,16 +225,17 @@ function PublicationsSectionComponent({
                         <div
                           className={`group/img relative flex aspect-[3/4] w-1/3 max-w-[120px] items-center justify-center overflow-hidden rounded-xl p-1 shadow-md ${uiTokens.pubFigureSurface}`}
                         >
-                          <Image
+                          <PublicationLazyImage
+                            eager={false}
                             src={secondaryImg}
                             alt={pubsText.cover || 'Journal Cover'}
                             fill
-                            loading="lazy"
                             sizes="120px"
                             className="object-contain p-1 transition-transform duration-500 group-hover/img:scale-[1.02]"
                             referrerPolicy="no-referrer"
+                            fetchPriority="low"
                           />
-                          <div className="absolute left-1 top-1 rounded border border-white/15 bg-[#080C16]/75 px-1.5 py-0.5 text-[8px] font-mono uppercase tracking-widest text-slate-200 backdrop-blur-md">
+                          <div className={`absolute left-1 top-1 px-1.5 py-0.5 text-[8px] ${uiTokens.pubBadgeOverlay}`}>
                             {pubsText.cover}
                           </div>
                         </div>
@@ -257,24 +270,25 @@ function PublicationsSectionComponent({
                       <div className="flex flex-col gap-3 mt-auto pt-5 border-t border-white/[0.05]">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                           <div>
-                            <div className="text-[10px] font-mono uppercase tracking-widest text-slate-500 mb-1.5">{pubsText.journal}</div>
+                            <div className={`${uiTokens.metaMono} mb-1.5`}>{pubsText.journal}</div>
                             <div className="text-sm text-slate-300 font-medium">{pub.journal}</div>
                           </div>
                           <div>
-                            <div className="text-[10px] font-mono uppercase tracking-widest text-slate-500 mb-1.5">{pubsText.citations}</div>
+                            <div className={`${uiTokens.metaMono} mb-1.5`}>{pubsText.citations}</div>
                             <div className="text-sm text-slate-300 flex items-center gap-2 font-mono">
                               <Quote className="w-3 h-3 text-teal-500/50" /> {pub.citations}
                             </div>
                           </div>
                           <div className="md:col-span-2">
-                            <div className="text-[10px] font-mono uppercase tracking-widest text-slate-500 mb-1.5">{pubsText.doi}</div>
+                            <div className={`${uiTokens.metaMono} mb-1.5`}>{pubsText.doi}</div>
                             <a
                               href={pub.doi}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-sm text-amber-300 hover:text-amber-200 flex items-center gap-2 break-all transition-colors"
                             >
-                              {getLinkDisplay(pub.doi)} <ExternalLink className="w-3 h-3 shrink-0" />
+                              {getLinkDisplay(pub.doi, pubsText)}{' '}
+                              <ExternalLink className="h-3 w-3 shrink-0" aria-hidden />
                             </a>
                           </div>
                         </div>
@@ -290,10 +304,11 @@ function PublicationsSectionComponent({
         {visiblePublications.length < filteredCount && (
           <div className="mt-12 md:mt-14 flex justify-center">
             <button
+              type="button"
               onClick={onLoadMore}
-              className={`${uiTokens.buttonGhost} px-8 py-3 rounded-full font-mono text-sm flex items-center gap-2 shadow-[0_8px_25px_rgba(0,0,0,0.25)]`}
+              className={`${uiTokens.buttonGhost} flex items-center gap-2 rounded-full px-8 py-3 font-mono text-sm shadow-[0_8px_25px_rgba(0,0,0,0.25)]`}
             >
-              {lang === 'zh' ? '載入更多' : 'Load More'}
+              {pubsText.loadMore}
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="6 9 12 15 18 9"></polyline>
               </svg>

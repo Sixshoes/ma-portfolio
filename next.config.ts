@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
-  // Allow access to remote image placeholder.
+  // Remote hosts for journal thumbnails, profile photo, and portal assets.
   images: {
     unoptimized: true, // Required for GitHub Pages static export
     remotePatterns: [
@@ -17,12 +17,6 @@ const nextConfig: NextConfig = {
         hostname: 'sixshoes.github.io',
         port: '',
         pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'picsum.photos',
-        port: '',
-        pathname: '/**', // This allows any path under the hostname
       },
       {
         protocol: 'https',
@@ -45,12 +39,6 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'advanced.onlinelibrary.wiley.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
         port: '',
         pathname: '/**',
       },

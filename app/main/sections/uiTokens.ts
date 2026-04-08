@@ -4,6 +4,9 @@ export const uiTokens = {
   titleBold: 'font-display font-bold tracking-tight',
   sectionEyebrow:
     'text-[10px] font-mono uppercase tracking-[0.2em] text-teal-300/80 border border-teal-400/20 bg-teal-500/5 rounded-full px-4 py-2',
+  /** 區塊副標（純文字、無邊框，與 sectionEyebrow 同字重） */
+  sectionDesc:
+    'font-mono text-[10px] uppercase tracking-[0.2em] text-teal-400/80',
   surfaceCard:
     'bg-gradient-to-b from-[#0D1528]/95 to-[#0A1223]/95 backdrop-blur-md border border-white/[0.08] rounded-3xl shadow-[0_12px_36px_rgba(0,0,0,0.3)]',
   surfaceCardHover:
@@ -26,4 +29,11 @@ export const uiTokens = {
   titleAccentBar: 'mx-auto h-1 w-24 rounded-full bg-gradient-to-r from-amber-500 to-teal-500 opacity-50',
   /** 表單／聯絡小標 */
   metaMono: 'font-mono text-xs uppercase tracking-widest text-slate-500',
+  /** 頁尾版權主行 */
+  footerLegal: 'text-[10px] font-mono uppercase tracking-[0.3em] text-slate-500',
+  /** 頁尾開發者／次行 */
+  footerCredit: 'mt-2 text-[10px] font-mono uppercase tracking-[0.3em] text-slate-600',
+  /** 論文圖卡左上角類型標籤 */
+  pubBadgeOverlay:
+    'rounded border border-white/15 bg-[#080C16]/75 font-mono uppercase tracking-widest text-slate-200 backdrop-blur-md',
 } as const;

@@ -43,6 +43,7 @@ type BottomSectionsProps = {
       vcardModal: {
         add: string;
         click: string;
+        downloadTooltip: string;
       };
       footer: string;
       developer: string;
@@ -63,7 +64,7 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
               <span className={uiTokens.titleLight}>{t.impact.title}</span> <br />
               <span className={uiTokens.titleBold}>{t.impact.subtitle}</span>
             </h2>
-            <p className="text-xs font-mono text-slate-500/80 mt-4">{t.impact.source}</p>
+            <p className={`${uiTokens.metaMono} mt-4 text-slate-500/80`}>{t.impact.source}</p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-7">
@@ -247,7 +248,7 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
                 <button
                   onClick={onDownloadVCard}
                   className={`group relative w-32 h-32 mb-6 rounded-full ${uiTokens.buttonPrimaryStrong} flex items-center justify-center hover:shadow-[0_0_40px_rgba(251,191,36,0.2)] hover:scale-105 transition-all duration-500`}
-                  title={lang === 'en' ? 'Tap to download' : '點擊下載'}
+                  title={t.contact.vcardModal.downloadTooltip}
                 >
                   <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-amber-500/20 to-teal-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl" />
                   <UserPlus className="w-12 h-12 text-[#0A0F1C] group-hover:text-[#080C16] transition-colors relative z-10" />
@@ -265,13 +266,9 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
             </div>
           </div>
 
-          <footer className="w-full py-8 mt-16 md:mt-20 text-center border-t border-white/10">
-            <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-slate-500">
-              {t.contact.footer}
-            </p>
-            <p className="mt-2 text-[10px] font-mono uppercase tracking-[0.3em] text-slate-600">
-              {t.contact.developer}
-            </p>
+          <footer className="mt-16 w-full border-t border-white/10 py-8 text-center md:mt-20">
+            <p className={uiTokens.footerLegal}>{t.contact.footer}</p>
+            <p className={uiTokens.footerCredit}>{t.contact.developer}</p>
           </footer>
         </motion.div>
       </section>

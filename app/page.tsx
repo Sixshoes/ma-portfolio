@@ -11,6 +11,7 @@ import {
 } from 'motion/react';
 import { useLanguage } from './LanguageContext';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { prefetchPapersJson } from '@/lib/papersCache';
 
 const dict = {
   en: {
@@ -69,6 +70,10 @@ export default function VisualsPage() {
       window.removeEventListener('mousemove', handleMouseMove);
     };
   }, [fullDesktop, mouseX, mouseY]);
+
+  useEffect(() => {
+    prefetchPapersJson();
+  }, []);
 
   const orbitOuter = noMotion ? 0 : fullDesktop ? 360 : 360;
   const orbitOuterDur = noMotion ? 0 : fullDesktop ? 38 : 95;
