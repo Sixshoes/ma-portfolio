@@ -48,10 +48,7 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
   const [isExpandedService, setIsExpandedService] = useState(false);
 
   return (
-    <section
-      id="about"
-      className="mx-auto max-w-7xl border-t border-white/[0.05] px-6 py-24 md:py-28"
-    >
+    <section id="about" className={`mx-auto max-w-7xl px-6 py-24 md:py-28 ${uiTokens.sectionDivider}`}>
       <div className="grid grid-cols-1 items-center gap-16 lg:grid-cols-2 lg:gap-20">
         <div className="relative">
           <div className="relative aspect-square overflow-hidden rounded-3xl border border-white/[0.06] bg-[#0B101E] shadow-[0_8px_32px_rgba(0,0,0,0.35)]">

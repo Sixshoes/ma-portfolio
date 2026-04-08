@@ -20,4 +20,10 @@ export const uiTokens = {
   /** 篩選下拉：與 ghost 鈕同系 */
   fieldSelect:
     'appearance-none bg-[#0B101E]/90 border border-white/[0.1] text-slate-200 px-6 py-3 pr-12 rounded-full text-sm font-mono focus:outline-none focus:border-teal-400/45 focus:ring-1 focus:ring-teal-400/35 transition-all cursor-pointer backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
+  /** 區塊與區塊之間的淡分隔（與 About 一致） */
+  sectionDivider: 'border-t border-white/[0.05]',
+  /** 標題下的琥珀—青綠裝飾線 */
+  titleAccentBar: 'mx-auto h-1 w-24 rounded-full bg-gradient-to-r from-amber-500 to-teal-500 opacity-50',
+  /** 表單／聯絡小標 */
+  metaMono: 'font-mono text-xs uppercase tracking-widest text-slate-500',
 } as const;

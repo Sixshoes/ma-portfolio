@@ -34,6 +34,9 @@ type BottomSectionsProps = {
     contact: {
       title: string;
       subtitle: string;
+      labelEmail: string;
+      labelPhone: string;
+      labelFax: string;
       email: string;
       phone: string;
       fax: string;
@@ -200,7 +203,7 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
               <span className={uiTokens.titleLight}>{t.contact.title}</span> <br />
               <span className={uiTokens.titleBold}>{t.contact.subtitle}</span>
             </h2>
-            <div className="w-24 h-1 bg-gradient-to-r from-amber-500 to-teal-500 mx-auto rounded-full opacity-50"></div>
+            <div className={uiTokens.titleAccentBar} />
           </div>
 
           <div className="bg-gradient-to-b from-white/[0.05] to-white/[0.02] border border-white/[0.08] rounded-3xl p-7 md:p-10 backdrop-blur-md shadow-2xl relative overflow-hidden">
@@ -214,7 +217,7 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
                     <Mail className="w-5 h-5 text-amber-400 stroke-1" />
                   </div>
                   <div>
-                    <div className="text-xs font-mono uppercase tracking-widest text-slate-500 mb-1">Email</div>
+                    <div className={`${uiTokens.metaMono} mb-1`}>{t.contact.labelEmail}</div>
                     <div className="text-lg text-slate-200 group-hover:text-amber-400 transition-colors">{t.contact.email}</div>
                   </div>
                 </a>
@@ -224,7 +227,7 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
                     <Phone className="w-5 h-5 text-teal-400 stroke-1" />
                   </div>
                   <div>
-                    <div className="text-xs font-mono uppercase tracking-widest text-slate-500 mb-1">Phone</div>
+                    <div className={`${uiTokens.metaMono} mb-1`}>{t.contact.labelPhone}</div>
                     <div className="text-lg text-slate-200 group-hover:text-teal-400 transition-colors">{t.contact.phone}</div>
                   </div>
                 </a>
@@ -234,7 +237,7 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
                     <Printer className="h-5 w-5 stroke-1 text-slate-400" />
                   </div>
                   <div>
-                    <div className="mb-1 font-mono text-xs uppercase tracking-widest text-slate-500">Fax</div>
+                    <div className={`${uiTokens.metaMono} mb-1`}>{t.contact.labelFax}</div>
                     <div className="text-lg text-slate-200 transition-colors group-hover:text-slate-100">{t.contact.fax}</div>
                   </div>
                 </div>

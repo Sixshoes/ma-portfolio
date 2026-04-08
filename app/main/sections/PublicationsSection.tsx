@@ -7,6 +7,7 @@ import { ExternalLink, Quote, Star } from 'lucide-react';
 import { Publication } from '@/lib/publications';
 import { useRenderProfiler } from './useRenderProfiler';
 import { uiTokens } from './uiTokens';
+import { PublicationFigurePlaceholder } from './PublicationFigurePlaceholder';
 
 type PublicationsText = {
   title: string;
@@ -92,7 +93,10 @@ function PublicationsSectionComponent({
   const cardStaggerDelay = (i: number) => (litePub ? 0 : Math.min(i, 10) * 0.04);
 
   return (
-    <section id="publications" className="py-24 md:py-28 bg-gradient-to-b from-[#0B101E]/40 to-[#0A0F1C]/40 border-y border-white/[0.06] relative">
+    <section
+      id="publications"
+      className={`relative border-b border-white/[0.06] bg-gradient-to-b from-[#0B101E]/40 to-[#0A0F1C]/40 py-24 md:py-28 ${uiTokens.sectionDivider}`}
+    >
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         <div className="mb-14 md:mb-16">
           <h2 className={`${uiTokens.sectionTitle} mb-4`}>
@@ -158,17 +162,19 @@ function PublicationsSectionComponent({
                 const hasJournal = !!journalImg;
                 const isSameImg = abstractImg === journalImg;
 
-                let mainImg = abstractImg;
+                let mainImg: string | undefined = abstractImg || undefined;
                 let mainLabel = pubsText.abstract;
                 let secondaryImg = (!isSameImg && hasJournal) ? journalImg : null;
 
                 if (!hasAbstract && hasJournal) {
-                  mainImg = journalImg;
+                  mainImg = journalImg || undefined;
                   mainLabel = pubsText.cover;
                 } else if (!hasAbstract && !hasJournal) {
-                  mainImg = 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?q=80&w=800&auto=format&fit=crop';
+                  mainImg = undefined;
                   mainLabel = pubsText.quantum;
                 }
+
+                const showFigurePlaceholder = !mainImg;
 
                 return (
                   <motion.div
@@ -185,16 +191,20 @@ function PublicationsSectionComponent({
                       <div
                         className={`relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] group/img ${uiTokens.pubFigureSurface}`}
                       >
-                        <Image
-                          src={mainImg}
-                          alt={mainLabel || 'Publication Image'}
-                          fill
-                          priority={!isMobile && i === 0}
-                          loading={!isMobile && i === 0 ? 'eager' : 'lazy'}
-                          sizes={isMobile ? '100vw' : '(max-width: 1024px) 100vw, 33vw'}
-                          className="object-contain p-2 transition-transform duration-500 group-hover/img:scale-[1.02]"
-                          referrerPolicy="no-referrer"
-                        />
+                        {showFigurePlaceholder ? (
+                          <PublicationFigurePlaceholder />
+                        ) : mainImg ? (
+                          <Image
+                            src={mainImg}
+                            alt={mainLabel || 'Publication Image'}
+                            fill
+                            priority={!isMobile && i === 0}
+                            loading={!isMobile && i === 0 ? 'eager' : 'lazy'}
+                            sizes={isMobile ? '100vw' : '(max-width: 1024px) 100vw, 33vw'}
+                            className="object-contain p-2 transition-transform duration-500 group-hover/img:scale-[1.02]"
+                            referrerPolicy="no-referrer"
+                          />
+                        ) : null}
                         <div className="absolute left-2 top-2 rounded border border-white/15 bg-[#080C16]/75 px-2 py-1 text-[10px] font-mono uppercase tracking-widest text-slate-200 backdrop-blur-md">
                           {mainLabel}
                         </div>

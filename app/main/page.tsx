@@ -159,6 +159,9 @@ const dict = {
     contact: {
       title: 'Get in',
       subtitle: 'Touch',
+      labelEmail: 'Email',
+      labelPhone: 'Phone',
+      labelFax: 'Fax',
       email: 'yrma@mail.fgu.edu.tw',
       phone: '+886-3-9871000 ext. 11010',
       fax: '+886-3-9874815',
@@ -307,6 +310,9 @@ const dict = {
     contact: {
       title: '聯絡',
       subtitle: '方式',
+      labelEmail: '電子郵件',
+      labelPhone: '電話',
+      labelFax: '傳真',
       email: 'yrma@mail.fgu.edu.tw',
       phone: '(03)9871000 分機 11010',
       fax: '(03)9874815',
