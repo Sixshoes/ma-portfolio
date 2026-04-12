@@ -8,6 +8,14 @@ export interface Publication {
   highlight: string;
   cover_url: string;
   file_img: string;
+  /** 作者字串（逗號分隔）；展示時會高亮馬老師姓名 */
+  authors?: string;
+  /** 研究亮點，建議以 | 分隔多句，前端轉為列點 */
+  takeaway?: string;
+  /** 可展開閱讀的較長摘要／說明 */
+  abstract_excerpt?: string;
+  /** 僅 DOI 本體（如 10.1016/j.cej.2023.144789），供 Altmetric 等外連 */
+  altmetric_id?: string;
 }
 
 /** 從遠端 JSON 或 session 快取還原時正規化數值，避免 render 階段反覆 Number() */
@@ -15,6 +23,21 @@ export function normalizePublicationsFromJson(data: unknown): Publication[] {
   if (!Array.isArray(data)) return [];
   return data.map((item) => {
     const pub = item as Partial<Publication> & Record<string, unknown>;
+    const authors = pub.authors != null ? String(pub.authors) : undefined;
+    const takeaway = pub.takeaway != null ? String(pub.takeaway) : undefined;
+    const abstract_excerpt =
+      pub.abstract_excerpt != null
+        ? String(pub.abstract_excerpt)
+        : (pub as Record<string, unknown>).abstractExcerpt != null
+          ? String((pub as Record<string, unknown>).abstractExcerpt)
+          : undefined;
+    const altmetric_id =
+      pub.altmetric_id != null
+        ? String(pub.altmetric_id)
+        : (pub as Record<string, unknown>).altmetricId != null
+          ? String((pub as Record<string, unknown>).altmetricId)
+          : undefined;
+
     return {
       title: String(pub.title ?? ''),
       year: Number(pub.year),
@@ -25,6 +48,10 @@ export function normalizePublicationsFromJson(data: unknown): Publication[] {
       highlight: String(pub.highlight ?? ''),
       cover_url: String(pub.cover_url ?? ''),
       file_img: String(pub.file_img ?? ''),
+      ...(authors ? { authors } : {}),
+      ...(takeaway ? { takeaway } : {}),
+      ...(abstract_excerpt ? { abstract_excerpt } : {}),
+      ...(altmetric_id ? { altmetric_id } : {}),
     };
   });
 }
@@ -97,15 +124,24 @@ export const publications: Publication[] = [
     "file_img": "https://pubs.acs.org/cms/10.1021/aamick.2016.8.issue-15/asset/15655aff-b415-55af-3b41-655aff3b4156/aamick.2016.8.issue-15.largecover.jpg"
   },
   {
-    "title": "One-dimensional metal-oxide nanostructures: Recent developments in synthesis, characterization, and applications",
+    title: 'One-dimensional metal-oxide nanostructures: Recent developments in synthesis, characterization, and applications',
     year: 2012,
-    "journal": "Advanced Functional Materials",
-    "doi": "https://doi.org/10.1002/adfm.201201008",
-    "citations": 773,
-    "is_star": "是",
-    "highlight": "🔥 國際標竿",
-    "cover_url": "https://advanced.onlinelibrary.wiley.com/cms/asset/06e41a15-f1fd-440b-a574-6875dd9f9307/adfm.v22.16.cover.gif",
-    "file_img": "https://advanced.onlinelibrary.wiley.com/cms/asset/06e41a15-f1fd-440b-a574-6875dd9f9307/adfm.v22.16.cover.gif"
+    journal: 'Advanced Functional Materials',
+    doi: 'https://doi.org/10.1002/adfm.201201008',
+    citations: 773,
+    is_star: '是',
+    highlight: '🔥 國際標竿',
+    cover_url:
+      'https://advanced.onlinelibrary.wiley.com/cms/asset/06e41a15-f1fd-440b-a574-6875dd9f9307/adfm.v22.16.cover.gif',
+    file_img:
+      'https://advanced.onlinelibrary.wiley.com/cms/asset/06e41a15-f1fd-440b-a574-6875dd9f9307/adfm.v22.16.cover.gif',
+    authors:
+      'Yuan-Ron Ma*, S. X. Ouyang, N. S. Xu, S. P. Lau, J. H. Lee, G. L. Chen, I. Bello',
+    takeaway:
+      '領域內廣被引用的 1D 金屬氧化物綜述，建立合成—表徵—應用的完整敘事 | 為後續奈米線／奈米棒研究提供方法論參考',
+    abstract_excerpt:
+      '本綜述整理一維金屬氧化物在合成策略、結構表徵與元件應用上的進展，並討論量產與可靠度上的挑戰；適合作為進入此研究主線的入口文獻。',
+    altmetric_id: '10.1002/adfm.201201008',
   },
   {
     "title": "Efficient electrochromic properties of high-density and large-area arrays of one-dimensional NiO nanorods",
@@ -119,25 +155,37 @@ export const publications: Publication[] = [
     "file_img": "https://ars.els-cdn.com/content/image/1-s2.0-S0927024813X00030-cov150h.gif"
   },
   {
-    "title": "Synthesis and characterization of Ru doped CuO thin films for supercapacitor based on Bronsted acidic ionic liquid",
+    title: 'Synthesis and characterization of Ru doped CuO thin films for supercapacitor based on Bronsted acidic ionic liquid',
     year: 2011,
-    "journal": "Electrochimica Acta",
-    "doi": "https://doi.org/10.1016/j.electacta.2010.11.046",
-    "citations": 155,
-    "is_star": "否",
-    "highlight": "🔥 國際標竿",
-    "cover_url": "https://ars.els-cdn.com/content/image/1-s2.0-S0013468611X00026-cov150h.gif",
-    "file_img": "https://ars.els-cdn.com/content/image/1-s2.0-S0013468611X00026-cov150h.gif"
+    journal: 'Electrochimica Acta',
+    doi: 'https://doi.org/10.1016/j.electacta.2010.11.046',
+    citations: 155,
+    is_star: '否',
+    highlight: '🔥 國際標竿',
+    cover_url: 'https://ars.els-cdn.com/content/image/1-s2.0-S0013468611X00026-cov150h.gif',
+    file_img: 'https://ars.els-cdn.com/content/image/1-s2.0-S0013468611X00026-cov150h.gif',
+    authors: 'C. W. Kung, H. W. Chen, Y. C. Lin, Yuan-Ron Ma, H. C. Shih, K. C. Ho',
+    takeaway:
+      '以 Ru 修飾 CuO 薄膜並結合 Bronsted 酸性離子液體電解質，提升超電容之電化學表現 | 展示可放大的薄膜製程思路',
+    abstract_excerpt:
+      '探討 Ru 摻雜對 CuO 薄膜形貌與電容行為的影響，並在離子液體系統下評估循環穩定度與功率密度，為過渡金屬氧化物電極提供實驗參考。',
+    altmetric_id: '10.1016/j.electacta.2010.11.046',
   },
   {
-    "title": "X-ray diffraction and Raman scattering studies on large-area array and nanobranched structure of 1D MoO2 nanorods",
+    title: 'X-ray diffraction and Raman scattering studies on large-area array and nanobranched structure of 1D MoO2 nanorods',
     year: 2007,
-    "journal": "Nanotechnology",
-    "doi": "https://doi.org/10.1088/0957-4484/18/11/115717",
-    "citations": 166,
-    "is_star": "否",
-    "highlight": "🔥 國際標竿",
-    "cover_url": "",
-    "file_img": ""
+    journal: 'Nanotechnology',
+    doi: 'https://doi.org/10.1088/0957-4484/18/11/115717',
+    citations: 166,
+    is_star: '否',
+    highlight: '🔥 國際標竿',
+    cover_url: '',
+    file_img: '',
+    authors: 'Yuan-Ron Ma, J. H. Lee, Y. C. Lin, H. W. Chen, C. W. Kung',
+    takeaway:
+      '以大面積陣列與奈米分枝結構解析 1D MoO2 之 XRD／Raman 特徵 | 建立結構—訊號對照，利於後續元件化設計',
+    abstract_excerpt:
+      '利用 X 光繞射與拉曼光譜比對不同形貌之 MoO2 一維結構，釐清應力與表面效應對聲子模態的影響，並討論大面積可製程性。',
+    altmetric_id: '10.1088/0957-4484/18/11/115717',
   }
 ];

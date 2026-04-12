@@ -3,7 +3,12 @@
 import React, { useState, useMemo, useEffect, startTransition } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
-import { Publication, publications as fallbackPublications } from '@/lib/publications';
+import {
+  Publication,
+  normalizePublicationsFromJson,
+  publications as fallbackPublications,
+} from '@/lib/publications';
+import { computeFeaturedPublications } from '@/lib/publicationDisplay';
 import { PAPERS_JSON_URL, readCachedPapers, writeCachedPapers } from '@/lib/papersCache';
 import { useLanguage } from '../LanguageContext';
 import { BottomSections } from './sections/BottomSections';
@@ -83,6 +88,13 @@ const dict = {
       loadingPublications: 'Loading publications',
       emptyPublications:
         'No publications match these filters. Try another year, switch to “All publications”, or clear “Selected / highlighted”.',
+      featuredSpotlight: 'Featured spotlight',
+      takeawayLabel: 'Research highlights',
+      readAbstract: 'Read summary',
+      collapseAbstract: 'Collapse',
+      altmetricLink: 'Altmetric attention',
+      allInFeaturedNote:
+        'All matching items are already shown in the featured spotlight above. Switch filter to browse the full list.',
     },
     about: {
       title: 'Academic',
@@ -242,6 +254,12 @@ const dict = {
       loadingPublications: '載入著作中…',
       emptyPublications:
         '目前沒有符合此篩選條件的著作。請改選其他年份、改為「全部著作」，或關閉「精選／高引用」。',
+      featuredSpotlight: '精選代表作',
+      takeawayLabel: '研究亮點',
+      readAbstract: '閱讀摘要',
+      collapseAbstract: '收合',
+      altmetricLink: 'Altmetric 關注度',
+      allInFeaturedNote: '符合條件的項目皆已列於上方精選區，請切換篩選以瀏覽完整清單。',
     },
     about: {
       title: '學術',
@@ -397,11 +415,7 @@ export default function HomePage() {
       .then((data: unknown) => {
         if (cancelled) return;
         if (Array.isArray(data) && data.length > 0) {
-          const parsedData = (data as Publication[]).map((pub) => ({
-            ...pub,
-            year: Number(pub.year),
-            citations: Number(pub.citations || 0),
-          })) as unknown as Publication[];
+          const parsedData = normalizePublicationsFromJson(data);
 
           writeCachedPapers(parsedData);
           startTransition(() => {
@@ -456,10 +470,21 @@ export default function HomePage() {
     return result;
   }, [pubFilter, publications]);
 
-  // Remove the useEffect that resets visibleCount
+  const featuredPublications = useMemo(
+    () => computeFeaturedPublications(publications, 3),
+    [publications]
+  );
+  const featuredDois = useMemo(
+    () => new Set(featuredPublications.map((p) => p.doi)),
+    [featuredPublications]
+  );
+  const publicationsRows = useMemo(() => {
+    return filteredPublications.filter((p) => !featuredDois.has(p.doi));
+  }, [filteredPublications, featuredDois]);
+
   const visiblePublications = useMemo(() => {
-    return filteredPublications.slice(0, visibleCount);
-  }, [filteredPublications, visibleCount]);
+    return publicationsRows.slice(0, visibleCount);
+  }, [publicationsRows, visibleCount]);
 
   const totalPubs = publications.length > 0 ? publications.length : '200+';
   const totalCitations = publications.length > 0 ? publications.reduce((sum, p) => sum + p.citations, 0) : '5000+';
@@ -658,11 +683,17 @@ export default function HomePage() {
 
       <PublicationsSection
         pubsText={t.pubs}
+        lang={lang}
         pubFilter={pubFilter}
         uniqueYears={uniqueYears}
         isLoading={isLoading}
+        featuredPublications={featuredPublications}
         visiblePublications={visiblePublications}
         filteredCount={filteredPublications.length}
+        listRowCount={publicationsRows.length}
+        listAllInFeatured={
+          filteredPublications.length > 0 && publicationsRows.length === 0
+        }
         isMobile={isMobile}
         prefersReducedMotion={prefersReducedMotion}
         onFilterChange={handlePubFilterChange}
