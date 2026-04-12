@@ -1,6 +1,8 @@
 'use client';
 
+import React, { useState } from 'react';
 import Image, { type ImageProps } from 'next/image';
+import { PublicationFigurePlaceholder } from './PublicationFigurePlaceholder';
 
 type PublicationLazyImageProps = Omit<ImageProps, 'src'> & {
   src: string;
@@ -17,10 +19,18 @@ export function PublicationLazyImage({
   priority,
   ...rest
 }: PublicationLazyImageProps) {
-  // 直接交給 Next.js 處理，完全移除 useState 與 useEffect 監聽
+  const [hasError, setHasError] = useState(false);
+
+  if (hasError || !src) {
+    return <PublicationFigurePlaceholder />;
+  }
+
+  const isExternal = src.startsWith('http');
+
   return (
     <div className={fill ? 'absolute inset-0' : 'relative size-full min-h-0'}>
       <Image
+        key={src}
         src={src}
         alt={alt}
         fill={fill}
@@ -29,6 +39,11 @@ export function PublicationLazyImage({
         priority={eager || priority}
         loading={eager || priority ? 'eager' : 'lazy'}
         decoding="async"
+        unoptimized={isExternal}
+        onError={() => {
+          console.warn(`圖片載入失敗，切換為預設圖: ${src}`);
+          setHasError(true);
+        }}
         {...rest}
       />
     </div>

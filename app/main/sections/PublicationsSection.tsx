@@ -248,6 +248,7 @@ function PublicationCard({
             <PublicationFigurePlaceholder />
           ) : mainImg ? (
             <PublicationLazyImage
+              key={`main-${mainImg}`}
               eager={eagerMain}
               src={mainImg}
               alt={mainLabel || 'Publication Image'}
@@ -268,6 +269,7 @@ function PublicationCard({
             className={`group/img relative flex aspect-[3/4] w-1/3 max-w-[120px] items-center justify-center overflow-hidden rounded-xl p-1 ${uiTokens.pubFigureSurface}`}
           >
             <PublicationLazyImage
+              key={`sec-${secondaryImg}`}
               eager={false}
               src={secondaryImg}
               alt={pubsText.cover || 'Journal Cover'}
