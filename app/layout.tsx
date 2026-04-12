@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter, Outfit, JetBrains_Mono } from 'next/font/google';
+import { Inter, JetBrains_Mono, Noto_Serif_TC, Outfit, Playfair_Display } from 'next/font/google';
 import './globals.css';
 import { LanguageProvider } from './LanguageContext';
 import SmoothScroll from './SmoothScroll';
@@ -18,6 +18,19 @@ const outfit = Outfit({
 const mono = JetBrains_Mono({
   subsets: ['latin'],
   variable: '--font-mono',
+});
+
+const playfair = Playfair_Display({
+  subsets: ['latin'],
+  variable: '--font-playfair',
+  display: 'swap',
+});
+
+const notoSerifTc = Noto_Serif_TC({
+  weight: ['400', '600', '700'],
+  subsets: ['latin'],
+  variable: '--font-noto-serif-tc',
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -40,12 +53,18 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${outfit.variable} ${mono.variable}`}>
+    <html
+      lang="en"
+      className={`${inter.variable} ${outfit.variable} ${mono.variable} ${playfair.variable} ${notoSerifTc.variable}`}
+    >
       <head>
         <link rel="dns-prefetch" href="https://sixshoes.github.io" />
         <link rel="preconnect" href="https://sixshoes.github.io" crossOrigin="anonymous" />
       </head>
-      <body suppressHydrationWarning className="bg-[#080C16] text-slate-300 font-sans antialiased selection:bg-amber-500/30">
+      <body
+        suppressHydrationWarning
+        className="bg-slate-950 text-slate-400 font-sans antialiased selection:bg-amber-200/20 selection:text-stone-100"
+      >
         {/* Subtle noise texture overlay for premium material feel - Removed for performance */}
         {/* <div 
           className="fixed inset-0 opacity-[0.02] pointer-events-none z-50 mix-blend-overlay" 

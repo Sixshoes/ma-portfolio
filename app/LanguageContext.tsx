@@ -63,7 +63,7 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
       const angle = (i / 16) * Math.PI * 2;
       const distance = 120 + ((i * 137) % 80);
       const duration = 0.45 + ((i * 11) % 5) * 0.06;
-      const hue = i % 2 === 0 ? 'bg-teal-400/70' : 'bg-amber-400/65';
+      const hue = i % 2 === 0 ? 'bg-slate-400/55' : 'bg-[#c4a77d]/50';
       return { angle, distance, duration, hue, delay: i * 0.025 };
     });
   }, []);
@@ -89,14 +89,14 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-[#080C16]/72 backdrop-blur-md"
+              className="absolute inset-0 bg-slate-950/75 backdrop-blur-md"
             />
             <motion.div
               initial={{ scale: 0.85, opacity: 0 }}
               animate={{ scale: [0.85, 1.08, 1], opacity: [0, 0.35, 0.2] }}
               exit={{ scale: 1.05, opacity: 0 }}
               transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-              className="absolute w-[min(90vw,420px)] h-[min(90vw,420px)] rounded-full bg-gradient-to-tr from-teal-500/25 via-amber-500/15 to-transparent blur-3xl"
+              className="absolute h-[min(90vw,420px)] w-[min(90vw,420px)] rounded-full bg-gradient-to-tr from-slate-600/20 via-[#6b5429]/12 to-transparent blur-3xl"
             />
             {particles.map((p, i) => (
               <motion.div
@@ -113,7 +113,7 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
                   delay: p.delay,
                   ease: [0.22, 1, 0.36, 1],
                 }}
-                className={`absolute w-2 h-2 rounded-full ${p.hue} shadow-[0_0_12px_rgba(45,212,191,0.5)]`}
+                className={`absolute h-2 w-2 rounded-full ${p.hue} shadow-[0_0_10px_rgba(196,167,125,0.35)]`}
                 style={{
                   left: '50%',
                   top: '50%',
@@ -127,7 +127,7 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1.35, opacity: [0, 0.45, 0] }}
               transition={{ duration: 0.5, ease: 'easeOut' }}
-              className="absolute w-32 h-32 rounded-full border border-teal-400/40 shadow-[0_0_40px_rgba(45,212,191,0.25)]"
+              className="absolute h-32 w-32 rounded-full border border-stone-500/35 shadow-[0_0_40px_rgba(0,0,0,0.25)]"
             />
           </motion.div>
         )}

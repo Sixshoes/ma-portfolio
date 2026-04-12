@@ -71,12 +71,12 @@ function getHighlightText(citations: number, pubsText: PublicationsText): string
 
 function getHighlightBadgeClass(highlight: string, pubsText: PublicationsText): string {
   if (highlight === pubsText.benchmark) {
-    return 'border-amber-400/35 bg-amber-500/[0.12] text-amber-200/95';
+    return 'border-[#9a8260]/40 bg-[#6b5429]/20 text-[#e8dcc4]';
   }
   if (highlight === pubsText.keyFocus) {
-    return 'border-teal-400/35 bg-teal-500/[0.1] text-teal-200/95';
+    return 'border-stone-600/50 bg-stone-800/40 text-stone-200';
   }
-  return 'border-white/[0.1] bg-white/[0.04] text-slate-400';
+  return 'border-stone-700/50 bg-stone-900/50 text-stone-500';
 }
 
 function PublicationsListSkeleton({
@@ -98,7 +98,7 @@ function PublicationsListSkeleton({
       {[0, 1, 2].map((i) => (
         <div
           key={i}
-          className={`flex flex-col gap-5 rounded-3xl border border-white/[0.08] bg-gradient-to-b from-[#0D1528]/80 to-[#0A1223]/60 p-5 md:flex-row md:gap-7 md:p-6 ${pulse}`}
+          className={`flex flex-col gap-5 rounded-3xl border border-stone-800/50 bg-slate-900/30 p-6 md:flex-row md:gap-8 md:p-8 ${pulse}`}
         >
           <div className="w-full shrink-0 md:w-1/3">
             <div className="aspect-video w-full rounded-xl bg-white/[0.06]" />
@@ -113,7 +113,7 @@ function PublicationsListSkeleton({
               <div className="h-4 w-[78%] rounded bg-white/[0.06]" />
               <div className="h-4 w-[64%] rounded bg-white/[0.05]" />
             </div>
-            <div className="mt-auto grid gap-4 border-t border-white/[0.05] pt-5 md:grid-cols-2">
+            <div className="mt-auto grid gap-4 border-t border-stone-800/50 pt-5 md:grid-cols-2">
               <div className="h-3 w-20 rounded bg-white/[0.06]" />
               <div className="h-3 w-24 rounded bg-white/[0.06]" />
               <div className="h-3 w-full rounded bg-white/[0.05] md:col-span-2" />
@@ -144,7 +144,7 @@ function PublicationsSectionComponent({
   return (
     <section
       id="publications"
-      className={`relative border-b border-white/[0.06] bg-gradient-to-b from-[#0B101E]/40 to-[#0A0F1C]/40 py-24 md:py-28 ${uiTokens.sectionDivider}`}
+      className={`relative border-b border-stone-800/50 bg-gradient-to-b from-slate-950/80 to-slate-950 py-24 md:py-28 ${uiTokens.sectionDivider}`}
     >
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         <div className="mb-14 md:mb-16">
@@ -152,12 +152,16 @@ function PublicationsSectionComponent({
             <span className={uiTokens.titleLight}>{pubsText.title}</span> <br />
             <span className={uiTokens.titleBold}>{pubsText.subtitle}</span>
           </h2>
-          <p className={`${uiTokens.sectionDesc} mb-8 md:mb-10 max-w-2xl leading-relaxed`}>{pubsText.desc}</p>
+          <p
+            className={`${uiTokens.sectionDesc} mb-8 md:mb-10 max-w-2xl leading-relaxed text-stone-500 normal-case tracking-normal font-sans text-sm md:text-base`}
+          >
+            {pubsText.desc}
+          </p>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <span className={uiTokens.metaMono}>
               {pubsText.filterBy}
-              <span className="text-slate-600" aria-hidden>
+              <span className="text-stone-600" aria-hidden>
                 :
               </span>
             </span>
@@ -175,7 +179,7 @@ function PublicationsSectionComponent({
                   ))}
                 </optgroup>
               </select>
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-teal-500/50">
+              <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-stone-500">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="6 9 12 15 18 9"></polyline>
                 </svg>
@@ -205,12 +209,12 @@ function PublicationsSectionComponent({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.35 }}
-              className="flex flex-col items-center justify-center rounded-3xl border border-white/[0.08] bg-gradient-to-b from-[#0D1528]/50 to-[#0A1223]/40 px-6 py-16 text-center md:py-20"
+              className="flex flex-col items-center justify-center rounded-3xl border border-stone-800/50 bg-slate-900/30 px-6 py-16 text-center md:py-20"
               role="status"
               aria-live="polite"
             >
-              <FolderOpen className="mb-5 h-12 w-12 text-slate-600" aria-hidden />
-              <p className="max-w-md text-sm leading-relaxed text-slate-400 md:text-base">
+              <FolderOpen className="mb-5 h-12 w-12 text-stone-600" aria-hidden />
+              <p className="max-w-md text-sm leading-relaxed text-stone-500 md:text-base">
                 {pubsText.emptyPublications}
               </p>
             </motion.div>
@@ -255,13 +259,13 @@ function PublicationsSectionComponent({
                       litePub ? undefined : { once: true, margin: '0px 0px -50px 0px', amount: 'some' }
                     }
                     transition={{ delay: cardStaggerDelay(i), duration: litePub ? 0 : 0.35 }}
-                    whileHover={litePub ? {} : { y: -3, scale: 1.005 }}
+                    whileHover={litePub ? {} : { y: -2 }}
                     style={{ transform: 'translateZ(0)' }}
-                    className={`flex flex-col lg:flex-row gap-6 md:gap-7 p-5 md:p-6 ${uiTokens.surfaceCard} ${uiTokens.surfaceCardHover} group`}
+                    className={`group flex flex-col gap-8 p-8 md:flex-row md:gap-10 md:p-10 ${uiTokens.surfaceCard} ${uiTokens.surfaceCardHover}`}
                   >
                       <div className="w-full lg:w-1/3 flex flex-col gap-3 shrink-0">
                       <div
-                        className={`relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] group/img ${uiTokens.pubFigureSurface}`}
+                        className={`group/img relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl p-2 ${uiTokens.pubFigureSurface}`}
                       >
                         {showFigurePlaceholder ? (
                           <PublicationFigurePlaceholder />
@@ -273,7 +277,7 @@ function PublicationsSectionComponent({
                             fill
                             priority={i === 0}
                             sizes={isMobile ? '100vw' : '(max-width: 1024px) 100vw, 33vw'}
-                            className="object-contain p-2 transition-transform duration-500 group-hover/img:scale-[1.02]"
+                            className="object-contain p-2 transition-transform duration-500 group-hover/img:scale-[1.01]"
                             referrerPolicy="no-referrer"
                             fetchPriority={i === 0 ? 'high' : eagerMain ? 'auto' : 'low'}
                           />
@@ -284,7 +288,7 @@ function PublicationsSectionComponent({
                       </div>
                       {secondaryImg && (
                         <div
-                          className={`group/img relative flex aspect-[3/4] w-1/3 max-w-[120px] items-center justify-center overflow-hidden rounded-xl p-1 shadow-md ${uiTokens.pubFigureSurface}`}
+                          className={`group/img relative flex aspect-[3/4] w-1/3 max-w-[120px] items-center justify-center overflow-hidden rounded-xl p-1 ${uiTokens.pubFigureSurface}`}
                         >
                           <PublicationLazyImage
                             eager={false}
@@ -304,31 +308,30 @@ function PublicationsSectionComponent({
                     </div>
 
                     <div className="w-full lg:w-2/3 flex flex-col">
-                      <div className="flex flex-wrap items-center gap-2.5 mb-5">
+                      <div className="mb-6 flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-stone-800/50 pb-5">
                         <span
                           className={`rounded-full border px-3 py-1 text-xs font-mono ${getHighlightBadgeClass(highlightLabel, pubsText)}`}
                         >
                           {highlightLabel}
                         </span>
                         {pub.is_star === '是' ? (
-                          <span className="bg-teal-500/10 border border-teal-500/20 px-3 py-1 rounded-full text-xs font-mono text-teal-300 flex items-center gap-1.5">
-                            <Star className="w-3 h-3 fill-teal-400/50" /> {pubsText.corresponding}
+                          <span className="flex items-center gap-1.5 text-xs text-stone-500">
+                            <Star className="h-3 w-3 fill-[#b6a178]/35 text-[#b6a178]" aria-hidden />
+                            {pubsText.corresponding}
                           </span>
                         ) : (
-                          <span className="bg-white/[0.02] border border-white/[0.05] px-3 py-1 rounded-full text-xs font-mono text-slate-400">
-                            {pubsText.coauthor}
-                          </span>
+                          <span className="text-xs text-stone-600">{pubsText.coauthor}</span>
                         )}
-                        <span className="bg-white/[0.02] border border-white/[0.05] px-3 py-1 rounded-full text-xs font-mono text-slate-300">
+                        <span className="font-mono text-xs text-stone-600">
                           {pubsText.year}: {pub.year}
                         </span>
                       </div>
 
-                      <h3 className="mb-5 font-display text-xl font-medium leading-snug text-white transition-colors group-hover:text-amber-200 md:text-2xl md:font-semibold">
+                      <h3 className="font-heading-serif mb-6 text-xl font-semibold leading-snug text-stone-100 transition-colors group-hover:text-[#e8dcc4] md:text-2xl">
                         {pub.title}
                       </h3>
 
-                      <div className="flex flex-col gap-3 mt-auto pt-5 border-t border-white/[0.05]">
+                      <div className="mt-auto flex flex-col gap-3 border-t border-stone-800/50 pt-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                           <div>
                             <div className={`${uiTokens.metaMono} mb-1.5`}>{pubsText.journal}</div>
@@ -336,8 +339,8 @@ function PublicationsSectionComponent({
                           </div>
                           <div>
                             <div className={`${uiTokens.metaMono} mb-1.5`}>{pubsText.citations}</div>
-                            <div className="text-sm text-slate-300 flex items-center gap-2 font-mono">
-                              <Quote className="w-3 h-3 text-teal-500/50" /> {pub.citations}
+                            <div className="flex items-center gap-2 font-mono text-sm text-stone-400">
+                              <Quote className="h-3 w-3 text-stone-600" aria-hidden /> {pub.citations}
                             </div>
                           </div>
                           <div className="md:col-span-2">
@@ -346,7 +349,7 @@ function PublicationsSectionComponent({
                               href={pub.doi}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex items-center gap-2 break-all text-sm text-slate-500 transition-colors hover:text-amber-300"
+                              className="flex items-center gap-2 break-all text-sm text-stone-500 transition-colors hover:text-[#c4a77d]"
                             >
                               {getLinkDisplay(pub.doi, pubsText)}{' '}
                               <ExternalLink className="h-3 w-3 shrink-0" aria-hidden />

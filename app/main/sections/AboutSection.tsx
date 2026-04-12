@@ -34,15 +34,15 @@ function renderListItem(text: string) {
   const match = text.match(/(.*?)\s*\(([^)]+)\)$/);
   if (match) {
     return (
-      <div className="flex flex-col gap-2 border-b border-white/[0.04] py-3 transition-colors last:border-0 sm:flex-row sm:items-start sm:justify-between group-hover:border-white/[0.07]">
-        <span className="font-medium leading-relaxed text-slate-300">{match[1]}</span>
-        <span className="mt-1 whitespace-nowrap rounded border border-teal-500/15 bg-teal-500/[0.06] px-2 py-1 font-mono text-[10px] text-teal-200/70 sm:mt-0">
+      <div className="flex flex-col gap-2 border-b border-stone-800/50 py-3 transition-colors last:border-0 sm:flex-row sm:items-start sm:justify-between group-hover:border-stone-700/60">
+        <span className="font-medium leading-relaxed text-stone-300">{match[1]}</span>
+        <span className="mt-1 whitespace-nowrap rounded border border-stone-700/50 bg-stone-900/40 px-2 py-1 font-mono text-[10px] text-stone-500 sm:mt-0">
           {match[2]}
         </span>
       </div>
     );
   }
-  return <div className="py-2 leading-relaxed text-slate-300">{text}</div>;
+  return <div className="py-2 leading-relaxed text-stone-300">{text}</div>;
 }
 
 function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
@@ -54,42 +54,42 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
 
   return (
     <section id="about" className={`mx-auto max-w-7xl px-6 py-24 md:py-28 ${uiTokens.sectionDivider}`}>
-      <div className="grid grid-cols-1 items-center gap-16 lg:grid-cols-2 lg:gap-20">
-        <div className="relative">
-          <div className="relative aspect-square overflow-hidden rounded-3xl border border-white/[0.06] bg-[#0B101E] shadow-[0_8px_32px_rgba(0,0,0,0.35)]">
+      <div className="grid grid-cols-1 items-start gap-14 lg:grid-cols-3 lg:gap-16">
+        <div className="relative lg:col-span-1">
+          <div className="relative aspect-[4/5] overflow-hidden rounded-3xl border border-stone-800/60 bg-slate-900 shadow-[0_8px_32px_rgba(0,0,0,0.3)] lg:aspect-square lg:sticky lg:top-28">
             <div
-              className="absolute inset-0 bg-gradient-to-br from-[#0d1528] via-[#080C16] to-[#0a1620]"
+              className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-950 to-[#1a1612]"
               aria-hidden
             />
             <div
               className="absolute inset-0 opacity-90"
               style={{
                 backgroundImage: `
-                  radial-gradient(ellipse 80% 60% at 30% 40%, rgba(45, 212, 191, 0.14), transparent 55%),
-                  radial-gradient(ellipse 70% 50% at 75% 65%, rgba(251, 191, 36, 0.1), transparent 50%),
-                  linear-gradient(180deg, transparent 40%, #080c16 100%)
+                  radial-gradient(ellipse 80% 60% at 30% 40%, rgba(148, 163, 184, 0.12), transparent 55%),
+                  radial-gradient(ellipse 70% 50% at 75% 65%, rgba(196, 167, 125, 0.08), transparent 50%),
+                  linear-gradient(180deg, transparent 40%, #0c0a09 100%)
                 `,
               }}
               aria-hidden
             />
             <div
-              className="absolute inset-0 opacity-[0.07]"
+              className="absolute inset-0 opacity-[0.06]"
               style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%232dd4bf' stroke-width='0.4' d='M12 1v22M1 12h22'/%3E%3C/svg%3E")`,
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%2378716c' stroke-width='0.35' d='M12 1v22M1 12h22'/%3E%3C/svg%3E")`,
                 backgroundSize: '24px 24px',
               }}
               aria-hidden
             />
           </div>
-          <div className="absolute -bottom-12 -right-6 max-w-xs rounded-2xl border border-amber-500/25 bg-[#0B101E]/92 p-8 shadow-[0_20px_48px_rgba(0,0,0,0.55)] backdrop-blur-md md:-right-12 md:p-10">
-            <GraduationCap className="mb-4 h-8 w-8 stroke-1 text-amber-400" />
-            <h4 className="mb-3 font-display text-xl font-light tracking-wide text-white">
+          <div className="absolute -bottom-12 -right-6 max-w-xs rounded-2xl border border-stone-700/50 bg-slate-950/95 p-8 shadow-[0_20px_48px_rgba(0,0,0,0.45)] backdrop-blur-md md:-right-12 md:p-10">
+            <GraduationCap className="mb-4 h-8 w-8 stroke-1 text-[#c4a77d]" />
+            <h4 className="font-heading-serif mb-3 text-xl font-normal tracking-wide text-stone-100">
               {aboutText.leadership}
             </h4>
-            <p className="text-sm font-light leading-relaxed text-slate-400">{aboutText.leadershipDesc}</p>
+            <p className="text-sm font-light leading-relaxed text-stone-500">{aboutText.leadershipDesc}</p>
           </div>
         </div>
-        <div>
+        <div className="lg:col-span-2">
           <h2 className={`${uiTokens.sectionTitle} mb-8 md:mb-10`}>
             <span className={uiTokens.titleLight}>{aboutText.title}</span> <br />
             <span className={uiTokens.titleBold}>{aboutText.subtitle}</span>
@@ -98,7 +98,7 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
           <div
             role="tablist"
             aria-label={tablistLabel}
-            className="mb-8 flex flex-wrap gap-2 border-b border-white/[0.08] pb-4"
+            className="mb-8 flex flex-wrap gap-2 border-b border-stone-800/60 pb-4"
           >
             {(
               [
@@ -118,10 +118,10 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                   id={`about-tab-${id}`}
                   aria-controls={`about-panel-${id}`}
                   onClick={() => setTab(id)}
-                  className={`rounded-full px-3.5 py-2 text-left font-mono text-[10px] uppercase tracking-[0.18em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#080C16] md:px-4 ${
+                  className={`rounded-full px-3.5 py-2 text-left font-mono text-[10px] uppercase tracking-[0.18em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9a8260]/45 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 md:px-4 ${
                     selected
-                      ? 'border border-amber-400/35 bg-amber-500/[0.12] text-amber-100'
-                      : 'border border-transparent text-slate-500 hover:border-white/[0.08] hover:bg-white/[0.03] hover:text-slate-300'
+                      ? 'border border-[#8f7038]/45 bg-[#2a241c]/60 text-[#e8dcc4]'
+                      : 'border border-transparent text-stone-500 hover:border-stone-700/60 hover:bg-stone-900/40 hover:text-stone-300'
                   }`}
                 >
                   {label}
@@ -139,9 +139,9 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                 className="space-y-7 md:space-y-8"
               >
                 <div className="group flex gap-6">
-                  <div className="h-full min-h-[48px] w-px bg-white/10 transition-colors group-hover:bg-amber-400/70" />
+                  <div className="h-full min-h-[48px] w-px bg-stone-800/80 transition-colors group-hover:bg-[#9a8260]/50" />
                   <div className="flex-1">
-                    <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-amber-400/85">
+                    <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-[#b08d52]/90">
                       {aboutText.roleLabel}
                     </div>
                     <div className="space-y-1">
@@ -152,9 +152,9 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                   </div>
                 </div>
                 <div className="group flex gap-6">
-                  <div className="h-full min-h-[48px] w-px bg-white/10 transition-colors group-hover:bg-teal-400/70" />
+                  <div className="h-full min-h-[48px] w-px bg-stone-800/80 transition-colors group-hover:bg-stone-600/70" />
                   <div className="flex-1">
-                    <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-teal-400/85">
+                    <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-stone-500">
                       {aboutText.eduLabel}
                     </div>
                     <div className="space-y-1">
@@ -174,9 +174,9 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                 aria-labelledby="about-tab-admin"
                 className="group flex gap-6"
               >
-                <div className="h-full min-h-[48px] w-px bg-white/10 transition-colors group-hover:bg-amber-400/50" />
+                <div className="h-full min-h-[48px] w-px bg-stone-800/80 transition-colors group-hover:bg-[#9a8260]/45" />
                 <div className="flex-1">
-                  <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-amber-400/75">
+                  <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-stone-500">
                     {aboutText.adminLabel}
                   </div>
                   <div className="space-y-1">
@@ -188,7 +188,7 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                     <button
                       type="button"
                       onClick={() => setIsExpandedAdmin(!isExpandedAdmin)}
-                      className="mt-3 flex items-center gap-1 font-mono text-[10px] text-teal-400/90 transition-colors hover:text-teal-300"
+                      className="mt-3 flex items-center gap-1 font-mono text-[10px] text-[#a8906a] transition-colors hover:text-[#d4c4a8]"
                     >
                       {isExpandedAdmin
                         ? lang === 'zh'
@@ -210,9 +210,9 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                 aria-labelledby="about-tab-service"
                 className="group flex gap-6"
               >
-                <div className="h-full min-h-[48px] w-px bg-white/10 transition-colors group-hover:bg-teal-400/50" />
+                <div className="h-full min-h-[48px] w-px bg-stone-800/80 transition-colors group-hover:bg-stone-600/60" />
                 <div className="flex-1">
-                  <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-teal-400/75">
+                  <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-stone-500">
                     {aboutText.serviceLabel}
                   </div>
                   <div className="space-y-1">
@@ -224,7 +224,7 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                     <button
                       type="button"
                       onClick={() => setIsExpandedService(!isExpandedService)}
-                      className="mt-3 flex items-center gap-1 font-mono text-[10px] text-teal-400/90 transition-colors hover:text-teal-300"
+                      className="mt-3 flex items-center gap-1 font-mono text-[10px] text-[#a8906a] transition-colors hover:text-[#d4c4a8]"
                     >
                       {isExpandedService
                         ? lang === 'zh'
@@ -246,9 +246,9 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                 aria-labelledby="about-tab-awards"
                 className="group flex gap-6"
               >
-                <div className="h-full min-h-[48px] w-px bg-white/10 transition-colors group-hover:bg-amber-400/60" />
+                <div className="h-full min-h-[48px] w-px bg-stone-800/80 transition-colors group-hover:bg-[#9a8260]/45" />
                 <div className="flex-1">
-                  <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-amber-400/80">
+                  <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-[#b08d52]/90">
                     {aboutText.awardsLabel}
                   </div>
                   <div className="space-y-1">

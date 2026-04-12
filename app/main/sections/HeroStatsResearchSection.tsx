@@ -68,7 +68,7 @@ function HeroStatsResearchSectionComponent({
       y: ((i * 23) % 120) - 10,
       duration: ((i * 7) % 10) + 10,
       delay: (i * 0.25) % 5,
-      color: i % 2 === 0 ? 'bg-teal-400' : 'bg-amber-400',
+      color: i % 2 === 0 ? 'bg-slate-400' : 'bg-[#c4a77d]',
     }));
   }, [isMobile]);
 
@@ -85,7 +85,7 @@ function HeroStatsResearchSectionComponent({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="inline-block border border-amber-500/20 bg-amber-500/5 text-amber-400/90 px-4 py-1.5 rounded-full text-[10px] font-mono uppercase tracking-[0.2em] mb-6"
+            className="mb-6 inline-block rounded-full border border-stone-600/50 bg-stone-900/50 px-4 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-[#d4c4a8]"
           >
             {heroText.role}
           </motion.div>
@@ -93,23 +93,31 @@ function HeroStatsResearchSectionComponent({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="text-4xl md:text-6xl lg:text-7xl leading-[1.06] mb-7 text-white drop-shadow-[0_6px_30px_rgba(8,12,22,0.75)]"
+            className="font-heading-serif mb-7 text-4xl leading-[1.08] text-stone-100 drop-shadow-[0_4px_24px_rgba(0,0,0,0.35)] md:text-6xl lg:text-7xl"
           >
-            <span className="font-display font-light text-amber-500/90 tracking-wide inline-block hover:scale-105 transition-transform origin-left">{heroText.title1}</span> <br />
-            <span className="font-display font-bold tracking-tight inline-block hover:scale-105 transition-transform origin-left">{heroText.title2}</span> {heroText.title3} <br />
-            <span className="font-display font-light text-teal-400/80 inline-block hover:scale-105 transition-transform origin-left">{heroText.title4}</span>
+            <span className="inline-block origin-left font-normal tracking-wide text-[#c4a77d] transition-transform hover:scale-[1.02]">
+              {heroText.title1}
+            </span>{' '}
+            <br />
+            <span className="inline-block origin-left font-semibold tracking-tight text-stone-100 transition-transform hover:scale-[1.02]">
+              {heroText.title2}
+            </span>{' '}
+            {heroText.title3} <br />
+            <span className="inline-block origin-left font-normal tracking-wide text-stone-400 transition-transform hover:scale-[1.02]">
+              {heroText.title4}
+            </span>
           </motion.h1>
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6, duration: 1 }}
-            className="text-base md:text-lg text-slate-400/95 max-w-xl leading-relaxed mb-8 font-light"
+            className="mb-8 max-w-xl text-base font-light leading-relaxed text-stone-500 md:text-lg"
           >
             {heroText.desc}
           </motion.p>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }} className="flex space-x-4 pt-1">
             <motion.a
-              whileHover={prefersReducedMotion ? {} : { scale: 1.03, boxShadow: '0 0 18px rgba(251,191,36,0.28)' }}
+              whileHover={prefersReducedMotion ? {} : { scale: 1.02, boxShadow: '0 0 20px rgba(196,167,125,0.18)' }}
               whileTap={{ scale: 0.95 }}
               href="#publications"
               className={`${uiTokens.buttonPrimaryStrong} px-7 py-3.5 rounded-full text-xs font-display font-bold uppercase tracking-[0.2em] transition-all inline-block`}
@@ -120,7 +128,7 @@ function HeroStatsResearchSectionComponent({
         </motion.div>
 
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1, delay: 0.2 }} className="relative aspect-[4/5] w-full max-w-md mx-auto">
-          <div className="absolute inset-0 bg-gradient-to-tr from-teal-500/20 to-amber-500/20 rounded-3xl blur-3xl md:animate-pulse" />
+          <div className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-slate-600/15 to-[#5c4a32]/20 blur-3xl md:animate-pulse" />
           {!prefersReducedMotion && profileParticles.map((p) => (
             <motion.div
               key={`avatar-p-${p.id}`}
@@ -134,21 +142,27 @@ function HeroStatsResearchSectionComponent({
             animate={prefersReducedMotion || isMobile ? { y: 0 } : { y: [0, -6, 0] }}
             transition={prefersReducedMotion || isMobile ? { duration: 0.2 } : { duration: 8, repeat: Infinity, ease: 'easeInOut' }}
             style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}
-            className="relative w-full h-full bg-[#080C16] rounded-3xl overflow-hidden border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)] flex items-center justify-center"
+            className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-3xl border border-stone-800/60 bg-slate-950 shadow-[0_8px_32px_rgba(0,0,0,0.45)]"
           >
             <div className="absolute inset-0 opacity-40">
               <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
                 <defs>
                   <pattern id="hex" width="40" height="69.282" patternUnits="userSpaceOnUse" patternTransform="scale(1.5)">
-                    <path d="M40 17.32l-20 11.547L0 17.32V-5.774l20-11.547L40-5.774V17.32zm0 46.188l-20 11.548-20-11.548V40.414L20 28.867l20 11.547v23.094z" fill="none" stroke="rgba(20, 184, 166, 0.3)" strokeWidth="1" />
+                    <path d="M40 17.32l-20 11.547L0 17.32V-5.774l20-11.547L40-5.774V17.32zm0 46.188l-20 11.548-20-11.548V40.414L20 28.867l20 11.547v23.094z" fill="none" stroke="rgba(148, 163, 184, 0.22)" strokeWidth="1" />
                   </pattern>
                 </defs>
                 <rect width="100%" height="100%" fill="url(#hex)" />
               </svg>
             </div>
-            <div className="absolute top-1/4 left-1/4 w-40 h-40 bg-teal-500/30 rounded-full blur-3xl md:animate-pulse" />
-            <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-amber-500/20 rounded-full blur-3xl md:animate-pulse" style={{ animationDelay: '1s' }} />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-blue-500/20 rounded-full blur-2xl md:animate-pulse" style={{ animationDelay: '2s' }} />
+            <div className="absolute left-1/4 top-1/4 h-40 w-40 rounded-full bg-slate-600/20 blur-3xl md:animate-pulse" />
+            <div
+              className="absolute bottom-1/4 right-1/4 h-48 w-48 rounded-full bg-[#6b5429]/25 blur-3xl md:animate-pulse"
+              style={{ animationDelay: '1s' }}
+            />
+            <div
+              className="absolute left-1/2 top-1/2 h-32 w-32 -translate-x-1/2 -translate-y-1/2 rounded-full bg-slate-700/20 blur-2xl md:animate-pulse"
+              style={{ animationDelay: '2s' }}
+            />
             <div className="absolute inset-0 z-10 overflow-hidden rounded-3xl">
               <Image
                 src="https://sixshoes.github.io/Ma-Research-Portal/profile.jpg"
@@ -159,54 +173,54 @@ function HeroStatsResearchSectionComponent({
                 className={`object-cover object-top transition-all duration-1000 hover:scale-105 ${isImgLoaded ? 'opacity-100' : 'opacity-0'}`}
                 referrerPolicy="no-referrer"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#080C16] via-[#080C16]/20 to-transparent pointer-events-none" />
-              <div className="absolute inset-0 bg-gradient-to-r from-[#080C16] via-transparent to-[#080C16] opacity-50 pointer-events-none" />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/25 to-transparent" />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-slate-950 via-transparent to-slate-950 opacity-50" />
             </div>
             <div className="absolute inset-0 z-20 pointer-events-none">
-              <div className="absolute top-4 left-4 w-8 h-8 border-t-2 border-l-2 border-teal-500/50 rounded-tl-lg" />
-              <div className="absolute top-4 right-4 w-8 h-8 border-t-2 border-r-2 border-teal-500/50 rounded-tr-lg" />
-              <div className="absolute bottom-4 left-4 w-8 h-8 border-b-2 border-l-2 border-teal-500/50 rounded-bl-lg" />
-              <div className="absolute bottom-4 right-4 w-8 h-8 border-b-2 border-r-2 border-teal-500/50 rounded-br-lg" />
+              <div className="absolute left-4 top-4 h-8 w-8 rounded-tl-lg border-l-2 border-t-2 border-stone-600/40" />
+              <div className="absolute right-4 top-4 h-8 w-8 rounded-tr-lg border-r-2 border-t-2 border-stone-600/40" />
+              <div className="absolute bottom-4 left-4 h-8 w-8 rounded-bl-lg border-b-2 border-l-2 border-stone-600/40" />
+              <div className="absolute bottom-4 right-4 h-8 w-8 rounded-br-lg border-b-2 border-r-2 border-stone-600/40" />
               <motion.div
                 animate={prefersReducedMotion ? { opacity: 0.5 } : { top: ['0%', '100%', '0%'] }}
                 transition={prefersReducedMotion ? { duration: 0.2 } : { duration: 12, repeat: Infinity, ease: 'linear' }}
-                className="hidden md:block absolute left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-teal-400/50 to-transparent"
+                className="absolute left-0 hidden h-px w-full bg-gradient-to-r from-transparent via-stone-500/35 to-transparent md:block"
               />
             </div>
           </motion.div>
           <motion.div
             animate={prefersReducedMotion || isMobile ? { rotate: 0 } : { rotate: 360 }}
             transition={prefersReducedMotion || isMobile ? { duration: 0.2 } : { duration: 28, repeat: Infinity, ease: 'linear' }}
-            className="hidden md:flex absolute -right-6 top-1/4 w-12 h-12 border border-amber-500/30 rounded-full items-center justify-center"
+            className="absolute -right-6 top-1/4 hidden h-12 w-12 items-center justify-center rounded-full border border-stone-600/40 md:flex"
           >
-            <div className="w-1.5 h-1.5 bg-amber-400 rounded-full" />
+            <div className="h-1.5 w-1.5 rounded-full bg-[#b08d52]" />
           </motion.div>
           <motion.div
             animate={prefersReducedMotion || isMobile ? { rotate: 0 } : { rotate: -360 }}
             transition={prefersReducedMotion || isMobile ? { duration: 0.2 } : { duration: 24, repeat: Infinity, ease: 'linear' }}
-            className="hidden md:flex absolute -left-6 bottom-1/4 w-16 h-16 border border-teal-500/30 rounded-full items-center justify-center"
+            className="absolute -left-6 bottom-1/4 hidden h-16 w-16 items-center justify-center rounded-full border border-stone-600/35 md:flex"
           >
-            <div className="w-1 h-1 bg-teal-400 rounded-full" />
+            <div className="h-1 w-1 rounded-full bg-stone-500" />
           </motion.div>
         </motion.div>
       </section>
 
-      <section className="border-y border-white/[0.05] bg-white/[0.01] py-14 md:py-16 backdrop-blur-sm">
+      <section className="border-y border-stone-800/50 bg-slate-900/20 py-14 backdrop-blur-sm md:py-16">
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-3 gap-6 md:gap-10 text-center">
           {[{ label: statsText.pubs, value: totalPubs }, { label: statsText.citations, value: totalCitations }, { label: statsText.exp, value: statsText.expValue }].map((stat, i) => (
             <motion.div key={i} initial={{ opacity: 0, scale: 0.8 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.1, duration: 0.5 }}>
-              <div className="font-display font-light text-3xl md:text-5xl text-white mb-2">{stat.value}</div>
-              <div className="text-[10px] uppercase tracking-[0.2em] font-mono text-amber-400/80">{stat.label}</div>
+              <div className="font-heading-serif mb-2 text-3xl font-light text-stone-100 md:text-5xl">{stat.value}</div>
+              <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-stone-500">{stat.label}</div>
             </motion.div>
           ))}
         </div>
         <div className="mt-8 text-center">
-          <p className="text-xs font-mono text-slate-500/80">{statsText.scopusNote}</p>
+          <p className="font-mono text-xs text-stone-600">{statsText.scopusNote}</p>
         </div>
       </section>
 
       <section id="research" className="py-20 md:py-28 px-6 max-w-7xl mx-auto relative">
-        <div className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[800px] h-[300px] md:h-[800px] bg-teal-500/5 rounded-full blur-[80px] md:blur-[120px] pointer-events-none" />
+        <div className="pointer-events-none absolute left-1/2 top-1/2 hidden h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-slate-700/10 blur-[80px] md:block md:h-[800px] md:w-[800px] md:blur-[120px]" />
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 md:mb-16 relative z-10">
           <h2 className={uiTokens.sectionTitle}>
             <span className={uiTokens.titleLight}>{researchText.title}</span> <br />
@@ -227,13 +241,17 @@ function HeroStatsResearchSectionComponent({
               whileHover={prefersReducedMotion ? {} : { y: -6, scale: 1.01 }}
               className={`${uiTokens.surfaceCard} ${uiTokens.surfaceCardHover} p-8 md:p-9 group relative overflow-hidden`}
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="absolute inset-0 bg-gradient-to-br from-stone-800/0 to-[#3d3428]/0 opacity-0 transition-opacity duration-500 group-hover:from-stone-800/30 group-hover:to-[#3d3428]/20 group-hover:opacity-100" />
               <div className="relative z-10">
-                <div className="w-14 h-14 bg-white/[0.02] rounded-xl flex items-center justify-center mb-8 group-hover:bg-amber-500/10 group-hover:text-amber-400 transition-colors duration-500 border border-white/[0.05] group-hover:border-amber-500/20 group-hover:rotate-6">
-                  <item.icon className="w-6 h-6 stroke-1" />
+                <div className="mb-8 flex h-14 w-14 items-center justify-center rounded-xl border border-stone-800/60 bg-slate-900/40 text-stone-400 transition-all duration-500 group-hover:border-[#8f7038]/35 group-hover:bg-[#2a241c]/50 group-hover:text-[#d4c4a8] group-hover:rotate-3">
+                  <item.icon className="h-6 w-6 stroke-1" />
                 </div>
-                <h3 className="font-display text-2xl font-medium text-white mb-4 group-hover:text-amber-400 transition-colors">{item.title}</h3>
-                <p className="text-sm leading-relaxed text-slate-400 group-hover:text-slate-300 transition-colors font-light">{item.desc}</p>
+                <h3 className="font-heading-serif mb-4 text-2xl font-medium text-stone-100 transition-colors group-hover:text-[#e8dcc4]">
+                  {item.title}
+                </h3>
+                <p className="text-sm font-light leading-relaxed text-stone-500 transition-colors group-hover:text-stone-400">
+                  {item.desc}
+                </p>
               </div>
             </motion.div>
           ))}

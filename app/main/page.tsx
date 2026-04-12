@@ -487,7 +487,7 @@ export default function HomePage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#080C16] text-slate-300 font-sans overflow-x-hidden relative bg-[radial-gradient(circle_at_top,rgba(45,212,191,0.08),transparent_45%),radial-gradient(circle_at_80%_20%,rgba(251,191,36,0.08),transparent_35%)]">
+    <main className="relative min-h-screen overflow-x-hidden bg-slate-950 bg-[radial-gradient(ellipse_120%_80%_at_50%_-20%,rgba(148,163,184,0.08),transparent_50%),radial-gradient(circle_at_90%_15%,rgba(196,167,125,0.06),transparent_42%)] font-sans text-stone-400">
       {/* Dynamic Animated Background */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
         {/* Background 1 */}
@@ -507,7 +507,7 @@ export default function HomePage() {
               ? { duration: 0.2 }
               : { duration: 28, repeat: Infinity, ease: 'linear' }
           }
-          className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full bg-gradient-to-br from-teal-900/20 to-transparent blur-[80px] md:blur-[100px] transform-gpu"
+          className="absolute -left-[10%] -top-[20%] h-[70vw] w-[70vw] rounded-full bg-gradient-to-br from-slate-700/25 to-transparent blur-[80px] transform-gpu md:blur-[100px]"
         />
         {/* Background 2 */}
         <motion.div
@@ -527,9 +527,9 @@ export default function HomePage() {
               ? { duration: 0.2 }
               : { duration: 32, repeat: Infinity, ease: 'easeInOut' }
           }
-          className="absolute top-[40%] -right-[20%] w-[60vw] h-[60vw] rounded-full bg-gradient-to-tl from-amber-900/20 to-transparent blur-[120px] transform-gpu"
+          className="absolute -right-[20%] top-[40%] h-[60vw] w-[60vw] rounded-full bg-gradient-to-tl from-[#5c4a32]/25 to-transparent blur-[120px] transform-gpu"
         />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
+        <div className="pointer-events-none absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.12] mix-blend-overlay" />
       </div>
 
       {/* Navigation */}
@@ -537,31 +537,31 @@ export default function HomePage() {
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-        className="fixed top-0 left-0 w-full z-50 bg-[#080C16]/75 backdrop-blur-xl border-b border-white/[0.08] shadow-[0_10px_30px_rgba(0,0,0,0.35)]"
+        className="fixed left-0 top-0 z-50 w-full border-b border-stone-800/60 bg-slate-950/80 shadow-[0_8px_30px_rgba(0,0,0,0.25)] backdrop-blur-xl"
       >
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="font-display text-xl font-bold tracking-[0.25em] text-white flex items-center gap-2 hover:scale-105 transition-transform cursor-pointer">
-            <span className="text-amber-400">Y.R.</span> MA
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+          <div className="flex cursor-pointer items-center gap-2 font-display text-xl font-bold tracking-[0.25em] text-stone-100 transition-transform hover:scale-[1.02]">
+            <span className="text-[#c4a77d]">Y.R.</span> MA
           </div>
           <div className="flex items-center gap-4 md:gap-8">
-            <div className="hidden md:flex space-x-8 text-xs uppercase tracking-[0.2em] font-display text-slate-400">
-              <motion.a 
-                href="/" 
-                whileHover={{ y: -2, color: '#2dd4bf' }}
-                className="transition-colors relative group text-teal-500/80"
+            <div className="hidden space-x-8 font-display text-xs uppercase tracking-[0.2em] text-stone-500 md:flex">
+              <motion.a
+                href="/"
+                whileHover={{ y: -2, color: '#d4c4a8' }}
+                className="group relative text-stone-400 transition-colors"
               >
                 {t.nav.home}
-                <span className="absolute -bottom-2 left-0 w-0 h-[1px] bg-teal-400 transition-all duration-300 group-hover:w-full"></span>
+                <span className="absolute -bottom-2 left-0 h-[1px] w-0 bg-[#b08d52]/80 transition-all duration-300 group-hover:w-full" />
               </motion.a>
               {['about', 'research', 'publications', 'contact'].map((item, i) => (
-                <motion.a 
+                <motion.a
                   key={item}
-                  href={`#${item}`} 
-                  whileHover={{ y: -2, color: '#fbbf24' }}
-                  className="transition-colors relative group"
+                  href={`#${item}`}
+                  whileHover={{ y: -2, color: '#e8dcc4' }}
+                  className="group relative transition-colors"
                 >
                   {t.nav[item as keyof typeof t.nav]}
-                  <span className="absolute -bottom-2 left-0 w-0 h-[1px] bg-amber-400 transition-all duration-300 group-hover:w-full"></span>
+                  <span className="absolute -bottom-2 left-0 h-[1px] w-0 bg-[#b08d52]/70 transition-all duration-300 group-hover:w-full" />
                 </motion.a>
               ))}
             </div>
@@ -572,7 +572,7 @@ export default function HomePage() {
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setLang(lang === 'en' ? 'zh' : 'en')}
                 animate={{
-                  borderColor: isTransitioning ? 'rgba(251, 191, 36, 0.45)' : 'rgba(255,255,255,0.12)',
+                  borderColor: isTransitioning ? 'rgba(196, 167, 125, 0.45)' : 'rgba(120, 113, 108, 0.35)',
                 }}
                 transition={{ duration: 0.28 }}
                 className={`flex items-center gap-2 text-[10px] uppercase tracking-widest font-mono px-3 py-1.5 rounded-full ${uiTokens.buttonGhost}`}
@@ -584,7 +584,7 @@ export default function HomePage() {
                   }}
                   transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
                 >
-                  <Globe className="w-3 h-3 text-teal-400/90" />
+                  <Globe className="h-3 w-3 text-[#a8906a]" />
                 </motion.span>
                 <span className="relative inline-flex min-h-[1em] min-w-[2.25rem] items-center justify-center">
                   <AnimatePresence mode="wait" initial={false}>
@@ -602,8 +602,9 @@ export default function HomePage() {
                 </span>
               </motion.button>
 
-              <button 
-                className="md:hidden p-2 text-slate-300 hover:text-amber-400 transition-colors"
+              <button
+                type="button"
+                className="p-2 text-stone-400 transition-colors hover:text-[#d4c4a8] md:hidden"
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
               >
                 {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -619,22 +620,22 @@ export default function HomePage() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="md:hidden bg-[#0B101E]/95 backdrop-blur-xl border-b border-white/[0.08] overflow-hidden"
+              className="overflow-hidden border-b border-stone-800/60 bg-slate-950/95 backdrop-blur-xl md:hidden"
             >
-              <div className="flex flex-col p-6 space-y-4 text-xs uppercase tracking-[0.2em] font-display text-slate-400">
-                <Link 
-                  href="/" 
+              <div className="flex flex-col space-y-4 p-6 font-display text-xs uppercase tracking-[0.2em] text-stone-500">
+                <Link
+                  href="/"
                   onClick={() => setIsMenuOpen(false)}
-                  className="hover:text-teal-400 transition-colors py-2"
+                  className="py-2 transition-colors hover:text-[#d4c4a8]"
                 >
                   {t.nav.home}
                 </Link>
                 {['about', 'research', 'publications', 'contact'].map((item) => (
-                  <a 
+                  <a
                     key={item}
-                    href={`#${item}`} 
+                    href={`#${item}`}
                     onClick={() => setIsMenuOpen(false)}
-                    className="hover:text-amber-400 transition-colors py-2"
+                    className="py-2 transition-colors hover:text-[#e8dcc4]"
                   >
                     {t.nav[item as keyof typeof t.nav]}
                   </a>
