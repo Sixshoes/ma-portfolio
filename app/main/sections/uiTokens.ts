@@ -1,4 +1,4 @@
-/** 學術沉穩主題：深灰藍底、香檳金點綴、襯線標題（見 globals .font-heading-serif） */
+/** 牛津深藍底 (#050A18)、香檳金點綴、襯線標題（globals .font-heading-serif） */
 export const uiTokens = {
   sectionTitle:
     'font-heading-serif text-4xl md:text-6xl lg:text-7xl text-stone-100 tracking-tight',
@@ -9,9 +9,9 @@ export const uiTokens = {
   sectionDesc: 'font-mono text-[10px] uppercase tracking-[0.2em] text-stone-500',
   /** 通透卡片：弱邊框、少漸層 */
   surfaceCard:
-    'rounded-3xl border border-stone-800/60 bg-slate-900/25 shadow-[0_12px_40px_rgba(0,0,0,0.2)]',
+    'rounded-3xl border border-white/[0.06] bg-white/[0.025] shadow-[0_12px_40px_rgba(0,0,0,0.25)]',
   surfaceCardHover:
-    'hover:border-stone-700/80 hover:bg-slate-900/40 hover:shadow-[0_16px_48px_rgba(0,0,0,0.28)] transition-all duration-300',
+    'hover:border-[rgba(212,175,55,0.18)] hover:bg-white/[0.04] hover:shadow-[0_16px_48px_rgba(0,0,0,0.3)] transition-all duration-500',
   buttonPrimary:
     'bg-gradient-to-r from-[#c9a86c] to-[#b08d52] text-stone-950 border border-[#a67c3d]/40 shadow-[0_8px_24px_rgba(0,0,0,0.25)]',
   buttonPrimaryStrong:

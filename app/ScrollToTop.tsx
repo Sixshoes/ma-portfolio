@@ -29,7 +29,7 @@ function ScrollTopFab({ showScrollTop }: { showScrollTop: boolean }) {
           whileTap={{ scale: 0.95 }}
           onClick={scrollToTop}
           type="button"
-          className="group fixed bottom-4 right-4 z-[99999] flex min-h-11 min-w-11 flex-col items-center justify-center gap-0.5 rounded-xl border border-stone-700/60 bg-slate-950/90 p-2 text-stone-400 shadow-[0_0_28px_rgba(0,0,0,0.45)] backdrop-blur-xl transition-all duration-300 hover:border-[#9a8260]/45 hover:text-[#d4c4a8] md:bottom-10 md:right-10 md:min-h-0 md:min-w-0 md:rounded-2xl md:p-4"
+          className="group fixed bottom-4 right-4 z-[99999] flex min-h-11 min-w-11 flex-col items-center justify-center gap-0.5 rounded-xl border border-white/[0.08] bg-[#050A18]/92 p-2 text-stone-400 shadow-[0_0_28px_rgba(0,0,0,0.5)] backdrop-blur-xl transition-all duration-300 hover:border-[rgba(212,175,55,0.35)] hover:text-[#e8dcc4] md:bottom-10 md:right-10 md:min-h-0 md:min-w-0 md:rounded-2xl md:p-4"
           aria-label={ariaTop}
         >
           <ArrowUp className="h-4 w-4 transition-transform duration-300 group-hover:-translate-y-1 md:h-5 md:w-5" />

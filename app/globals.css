@@ -2,6 +2,7 @@
 
 :root {
   color-scheme: dark;
+  background-color: #050a18;
 }
 
 /* 重要標題：襯線（由 layout 注入 --font-playfair、--font-noto-serif-tc） */

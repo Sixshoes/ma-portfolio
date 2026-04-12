@@ -11,7 +11,7 @@ import {
   Mail,
   Phone,
   Printer,
-  UserPlus,
+  ChevronDown,
   Download,
 } from 'lucide-react';
 
@@ -40,6 +40,7 @@ type BottomSectionsProps = {
       email: string;
       phone: string;
       fax: string;
+      vcard: string;
       vcardModal: {
         add: string;
         click: string;
@@ -53,11 +54,11 @@ type BottomSectionsProps = {
   onDownloadVCard: () => void;
 };
 
-function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsProps) {
+function BottomSectionsComponent({ t, lang: _lang, onDownloadVCard }: BottomSectionsProps) {
   useRenderProfiler('BottomSections');
   return (
     <>
-      <section id="impact" className="py-24 md:py-28 relative overflow-hidden">
+      <section id="impact" className="relative overflow-hidden py-28 md:py-32">
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="text-center mb-14 md:mb-16">
             <h2 className={`${uiTokens.sectionTitle} mb-6`}>
@@ -192,85 +193,99 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
 
       <section
         id="contact"
-        className="relative overflow-hidden border-t border-stone-800/50 bg-gradient-to-b from-slate-950 to-slate-950 py-24 md:py-28"
+        className="relative overflow-hidden border-t border-white/[0.06] bg-[#050A18] py-28 md:py-36"
       >
-        <div className="absolute left-1/2 top-0 h-px w-full max-w-3xl -translate-x-1/2 bg-gradient-to-r from-transparent via-[#8f7038]/35 to-transparent" />
+        <div
+          className="pointer-events-none absolute left-1/2 top-0 h-full w-full max-w-5xl -translate-x-1/2 bg-[radial-gradient(circle_at_50%_42%,rgba(212,175,55,0.035),transparent_68%)]"
+          aria-hidden
+        />
+        <div className="absolute left-1/2 top-0 h-px w-full max-w-3xl -translate-x-1/2 bg-gradient-to-r from-transparent via-[#d4af37]/25 to-transparent" />
 
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="max-w-4xl mx-auto px-6 relative z-10"
+          viewport={{ once: true, margin: '-60px' }}
+          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+          className="relative z-10 mx-auto max-w-6xl px-6"
         >
-          <div className="text-center mb-10 md:mb-12">
-            <h2 className={`${uiTokens.sectionTitle} mb-6`}>
-              <span className={uiTokens.titleLight}>{t.contact.title}</span> <br />
-              <span className={uiTokens.titleBold}>{t.contact.subtitle}</span>
+          <div className="mb-14 text-center md:mb-16">
+            <h2 className="font-heading-serif mb-5 text-4xl tracking-tight text-stone-100 md:text-5xl">
+              <span className="font-normal italic text-[#e8dcc4]/95">{t.contact.title}</span>{' '}
+              <span className="font-semibold not-italic text-stone-100">{t.contact.subtitle}</span>
             </h2>
-            <div className={uiTokens.titleAccentBar} />
+            <div className="mx-auto h-px w-20 bg-gradient-to-r from-transparent via-[#d4af37]/45 to-transparent" />
           </div>
 
-          <div className="relative overflow-hidden rounded-3xl border border-stone-800/50 bg-slate-900/35 p-7 shadow-2xl backdrop-blur-md md:p-10">
-            <div className="pointer-events-none absolute right-0 top-0 h-64 w-64 -translate-y-1/2 translate-x-1/3 rounded-full bg-[#5c4a32]/10 blur-3xl" />
-            <div className="pointer-events-none absolute bottom-0 left-0 h-64 w-64 -translate-x-1/3 translate-y-1/3 rounded-full bg-slate-600/10 blur-3xl" />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center relative z-10">
-              <div className="space-y-6">
-                <a href={`mailto:${t.contact.email}`} className="group flex items-start gap-5">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[#8f7038]/30 bg-[#2a241c]/30 transition-all duration-300 group-hover:scale-105 group-hover:bg-[#2a241c]/50">
-                    <Mail className="h-5 w-5 stroke-1 text-[#c4a77d]" />
-                  </div>
-                  <div>
-                    <div className={`${uiTokens.metaMono} mb-1`}>{t.contact.labelEmail}</div>
-                    <div className="text-lg text-stone-300 transition-colors group-hover:text-[#e8dcc4]">{t.contact.email}</div>
-                  </div>
-                </a>
-
-                <a href={`tel:${t.contact.phone.replace(/[^0-9+]/g, '')}`} className="group flex items-start gap-5">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-stone-700/60 bg-slate-900/50 transition-all duration-300 group-hover:scale-105 group-hover:border-stone-600">
-                    <Phone className="h-5 w-5 stroke-1 text-stone-400" />
-                  </div>
-                  <div>
-                    <div className={`${uiTokens.metaMono} mb-1`}>{t.contact.labelPhone}</div>
-                    <div className="text-lg text-stone-300 transition-colors group-hover:text-stone-100">{t.contact.phone}</div>
-                  </div>
-                </a>
-
-                <div className="group flex items-start gap-5">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-stone-800/80 bg-slate-900/40 transition-all duration-300 group-hover:scale-105 group-hover:border-stone-700">
-                    <Printer className="h-5 w-5 stroke-1 text-stone-500" />
-                  </div>
-                  <div>
-                    <div className={`${uiTokens.metaMono} mb-1`}>{t.contact.labelFax}</div>
-                    <div className="text-lg text-stone-300 transition-colors group-hover:text-stone-100">{t.contact.fax}</div>
-                  </div>
+          <div className="mb-14 grid grid-cols-1 gap-8 md:mb-16 md:grid-cols-3">
+            {(
+              [
+                {
+                  label: t.contact.labelEmail,
+                  value: t.contact.email,
+                  href: `mailto:${t.contact.email}`,
+                  Icon: Mail,
+                },
+                {
+                  label: t.contact.labelPhone,
+                  value: t.contact.phone,
+                  href: `tel:${t.contact.phone.replace(/[^0-9+]/g, '')}`,
+                  Icon: Phone,
+                },
+                {
+                  label: t.contact.labelFax,
+                  value: t.contact.fax,
+                  href: null as string | null,
+                  Icon: Printer,
+                },
+              ] as const
+            ).map(({ label, value, href, Icon }) => (
+              <div
+                key={label}
+                className="group relative rounded-2xl border border-[rgba(212,175,55,0.12)] bg-[rgba(255,255,255,0.02)] p-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-all duration-500 hover:border-[rgba(212,175,55,0.22)] hover:bg-[rgba(255,255,255,0.035)]"
+              >
+                <div className="mb-5 flex items-center gap-2.5 text-[#c4a77d]/85 transition-colors group-hover:text-[#e8dcc4]">
+                  <Icon className="h-5 w-5 shrink-0 stroke-[1.25]" aria-hidden />
+                  <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-stone-500 group-hover:text-stone-400">
+                    {label}
+                  </span>
                 </div>
+                {href ? (
+                  <a
+                    href={href}
+                    className="break-words text-lg font-medium leading-snug text-stone-200 transition-colors hover:text-stone-50"
+                  >
+                    {value}
+                  </a>
+                ) : (
+                  <p className="text-lg font-medium leading-snug text-stone-200">{value}</p>
+                )}
               </div>
-
-              <div className="flex flex-col items-center justify-center border-t border-stone-800/50 p-6 md:border-l md:border-t-0 md:p-8">
-                <button
-                  onClick={onDownloadVCard}
-                  type="button"
-                  className={`group relative mb-6 flex h-32 w-32 items-center justify-center rounded-full ${uiTokens.buttonPrimaryStrong} transition-all duration-500 hover:scale-105 hover:shadow-[0_0_36px_rgba(196,167,125,0.18)]`}
-                  title={t.contact.vcardModal.downloadTooltip}
-                >
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-[#c4a77d]/15 to-slate-600/15 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
-                  <UserPlus className="relative z-10 h-12 w-12 text-stone-950 transition-colors group-hover:text-stone-900" />
-                </button>
-                <div className="text-center">
-                  <div className="mb-2 font-display text-sm uppercase tracking-widest text-stone-200">
-                    {t.contact.vcardModal.add}
-                  </div>
-                  <div className="mx-auto flex items-center justify-center gap-1 text-xs text-stone-600">
-                    <Download className="w-3 h-3" />
-                    {t.contact.vcardModal.click}
-                  </div>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
 
-          <footer className="mt-16 w-full border-t border-stone-800/50 py-8 text-center md:mt-20">
+          <div className="flex flex-col items-center gap-3">
+            <button
+              type="button"
+              onClick={onDownloadVCard}
+              title={t.contact.vcardModal.downloadTooltip}
+              className="group relative overflow-hidden rounded-full border border-[rgba(212,175,55,0.28)] bg-transparent px-10 py-4 transition-all duration-300 hover:border-[rgba(212,175,55,0.48)]"
+            >
+              <span
+                className="absolute inset-0 translate-y-full bg-[rgba(212,175,55,0.08)] transition-transform duration-300 ease-out group-hover:translate-y-0"
+                aria-hidden
+              />
+              <span className="relative flex items-center gap-3 font-heading-serif text-base tracking-wide text-[#e8dcc4]">
+                {t.contact.vcard}
+                <ChevronDown className="h-4 w-4 transition-transform duration-300 group-hover:translate-y-0.5" aria-hidden />
+              </span>
+            </button>
+            <p className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-stone-600">
+              <Download className="h-3 w-3 shrink-0 opacity-80" aria-hidden />
+              {t.contact.vcardModal.click}
+            </p>
+          </div>
+
+          <footer className="mt-20 w-full border-t border-white/[0.06] py-10 text-center md:mt-24">
             <p className={uiTokens.footerLegal}>{t.contact.footer}</p>
             <p className={uiTokens.footerCredit}>{t.contact.developer}</p>
           </footer>

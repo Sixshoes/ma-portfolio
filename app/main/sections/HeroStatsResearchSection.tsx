@@ -74,7 +74,7 @@ function HeroStatsResearchSectionComponent({
 
   return (
     <>
-      <section className="pt-32 md:pt-36 pb-20 md:pb-24 px-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center min-h-[86vh] relative z-10">
+      <section className="relative z-10 mx-auto grid min-h-[86vh] max-w-7xl grid-cols-1 items-center gap-12 px-6 pb-24 pt-36 md:grid-cols-2 md:gap-16 md:pb-28 md:pt-40 lg:gap-16">
         <motion.div
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -205,7 +205,7 @@ function HeroStatsResearchSectionComponent({
         </motion.div>
       </section>
 
-      <section className="border-y border-stone-800/50 bg-slate-900/20 py-14 backdrop-blur-sm md:py-16">
+      <section className="border-y border-white/[0.05] bg-white/[0.02] py-16 backdrop-blur-sm md:py-20">
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-3 gap-6 md:gap-10 text-center">
           {[{ label: statsText.pubs, value: totalPubs }, { label: statsText.citations, value: totalCitations }, { label: statsText.exp, value: statsText.expValue }].map((stat, i) => (
             <motion.div key={i} initial={{ opacity: 0, scale: 0.8 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.1, duration: 0.5 }}>
@@ -219,7 +219,7 @@ function HeroStatsResearchSectionComponent({
         </div>
       </section>
 
-      <section id="research" className="py-20 md:py-28 px-6 max-w-7xl mx-auto relative">
+      <section id="research" className="relative mx-auto max-w-7xl px-6 py-28 md:py-32">
         <div className="pointer-events-none absolute left-1/2 top-1/2 hidden h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-slate-700/10 blur-[80px] md:block md:h-[800px] md:w-[800px] md:blur-[120px]" />
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 md:mb-16 relative z-10">
           <h2 className={uiTokens.sectionTitle}>

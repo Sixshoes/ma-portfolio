@@ -53,7 +53,7 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
   const tablistLabel = lang === 'zh' ? '學術履歷分類' : 'Resume categories';
 
   return (
-    <section id="about" className={`mx-auto max-w-7xl px-6 py-24 md:py-28 ${uiTokens.sectionDivider}`}>
+    <section id="about" className={`mx-auto max-w-7xl px-6 py-28 md:py-32 ${uiTokens.sectionDivider}`}>
       <div className="grid grid-cols-1 items-start gap-14 lg:grid-cols-3 lg:gap-16">
         <div className="relative lg:col-span-1">
           <div className="relative aspect-[4/5] overflow-hidden rounded-3xl border border-stone-800/60 bg-slate-900 shadow-[0_8px_32px_rgba(0,0,0,0.3)] lg:aspect-square lg:sticky lg:top-28">

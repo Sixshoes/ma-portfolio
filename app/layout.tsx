@@ -63,7 +63,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body
         suppressHydrationWarning
-        className="bg-slate-950 text-slate-400 font-sans antialiased selection:bg-amber-200/20 selection:text-stone-100"
+        className="bg-[#050A18] text-stone-400 font-sans antialiased selection:bg-[#d4af37]/20 selection:text-stone-100"
       >
         {/* Subtle noise texture overlay for premium material feel - Removed for performance */}
         {/* <div 

@@ -487,7 +487,7 @@ export default function HomePage() {
   };
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden bg-slate-950 bg-[radial-gradient(ellipse_120%_80%_at_50%_-20%,rgba(148,163,184,0.08),transparent_50%),radial-gradient(circle_at_90%_15%,rgba(196,167,125,0.06),transparent_42%)] font-sans text-stone-400">
+    <main className="relative min-h-screen overflow-x-hidden bg-[#050A18] bg-[radial-gradient(ellipse_120%_80%_at_50%_-18%,rgba(100,116,139,0.06),transparent_52%),radial-gradient(circle_at_88%_12%,rgba(212,175,55,0.04),transparent_45%)] font-sans text-stone-400">
       {/* Dynamic Animated Background */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
         {/* Background 1 */}
@@ -495,10 +495,10 @@ export default function HomePage() {
           style={{ willChange: 'transform, opacity' }}
           animate={
             prefersReducedMotion
-              ? { opacity: 0.1 }
+              ? { opacity: 0.06 }
               : {
                   scale: [1, 1.1, 1],
-                  opacity: [0.08, 0.12, 0.08],
+                  opacity: [0.04, 0.06, 0.04],
                   rotate: [0, 60, 0],
                 }
           }
@@ -507,17 +507,17 @@ export default function HomePage() {
               ? { duration: 0.2 }
               : { duration: 28, repeat: Infinity, ease: 'linear' }
           }
-          className="absolute -left-[10%] -top-[20%] h-[70vw] w-[70vw] rounded-full bg-gradient-to-br from-slate-700/25 to-transparent blur-[80px] transform-gpu md:blur-[100px]"
+          className="absolute -left-[10%] -top-[20%] h-[70vw] w-[70vw] rounded-full bg-gradient-to-br from-slate-700/14 to-transparent blur-[80px] transform-gpu md:blur-[100px]"
         />
         {/* Background 2 */}
         <motion.div
           style={{ willChange: 'transform, opacity' }}
           animate={
             prefersReducedMotion
-              ? { opacity: 0.06 }
+              ? { opacity: 0.04 }
               : {
                   scale: [1, 1.25, 1],
-                  opacity: [0.04, 0.08, 0.04],
+                  opacity: [0.025, 0.045, 0.025],
                   x: [0, 60, 0],
                   y: [0, -30, 0],
                 }
@@ -527,9 +527,9 @@ export default function HomePage() {
               ? { duration: 0.2 }
               : { duration: 32, repeat: Infinity, ease: 'easeInOut' }
           }
-          className="absolute -right-[20%] top-[40%] h-[60vw] w-[60vw] rounded-full bg-gradient-to-tl from-[#5c4a32]/25 to-transparent blur-[120px] transform-gpu"
+          className="absolute -right-[20%] top-[40%] h-[60vw] w-[60vw] rounded-full bg-gradient-to-tl from-[#5c4a32]/14 to-transparent blur-[120px] transform-gpu"
         />
-        <div className="pointer-events-none absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.12] mix-blend-overlay" />
+        <div className="pointer-events-none absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.07] mix-blend-overlay" />
       </div>
 
       {/* Navigation */}
@@ -537,7 +537,7 @@ export default function HomePage() {
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-        className="fixed left-0 top-0 z-50 w-full border-b border-stone-800/60 bg-slate-950/80 shadow-[0_8px_30px_rgba(0,0,0,0.25)] backdrop-blur-xl"
+        className="fixed left-0 top-0 z-50 w-full border-b border-white/[0.06] bg-[#050A18]/82 shadow-[0_8px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl"
       >
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex cursor-pointer items-center gap-2 font-display text-xl font-bold tracking-[0.25em] text-stone-100 transition-transform hover:scale-[1.02]">
@@ -620,7 +620,7 @@ export default function HomePage() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="overflow-hidden border-b border-stone-800/60 bg-slate-950/95 backdrop-blur-xl md:hidden"
+              className="overflow-hidden border-b border-white/[0.06] bg-[#050A18]/95 backdrop-blur-xl md:hidden"
             >
               <div className="flex flex-col space-y-4 p-6 font-display text-xs uppercase tracking-[0.2em] text-stone-500">
                 <Link

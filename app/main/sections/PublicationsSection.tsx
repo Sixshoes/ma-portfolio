@@ -144,7 +144,7 @@ function PublicationsSectionComponent({
   return (
     <section
       id="publications"
-      className={`relative border-b border-stone-800/50 bg-gradient-to-b from-slate-950/80 to-slate-950 py-24 md:py-28 ${uiTokens.sectionDivider}`}
+      className={`relative border-b border-white/[0.05] bg-gradient-to-b from-[#050A18] to-[#050A18] py-28 md:py-32 ${uiTokens.sectionDivider}`}
     >
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         <div className="mb-14 md:mb-16">
