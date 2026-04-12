@@ -192,8 +192,8 @@ const dict = {
         click: 'Click to download',
         downloadTooltip: 'Tap to download vCard',
       },
-      footer: 'Copyright \u00A9 2026 Yuan-Ron Ma. All Rights Reserved.',
-      developer: 'Developed by Yiting Chen',
+      footer: '\u00A9 {year} Yuan-Ron Ma. All Rights Reserved.',
+      developer: 'Designed & Developed by Yiting Chen',
     }
   },
   zh: {
@@ -357,8 +357,8 @@ const dict = {
         click: '點擊下載',
         downloadTooltip: '點擊下載電子名片',
       },
-      footer: 'Copyright \u00A9 2026 馬遠榮 版權所有',
-      developer: '陳奕廷 開發',
+      footer: '\u00A9 {year} 馬遠榮。版權所有。',
+      developer: '網頁設計與開發：陳奕廷',
     }
   }
 };
@@ -512,7 +512,7 @@ export default function HomePage() {
   };
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden bg-[#050A18] bg-[radial-gradient(ellipse_120%_80%_at_50%_-18%,rgba(100,116,139,0.06),transparent_52%),radial-gradient(circle_at_88%_12%,rgba(212,175,55,0.04),transparent_45%)] font-sans text-stone-400">
+    <main className="relative min-h-screen overflow-x-hidden bg-[var(--app-bg)] bg-[radial-gradient(ellipse_120%_80%_at_50%_-18%,rgba(100,116,139,0.07),transparent_52%),radial-gradient(circle_at_88%_12%,rgba(212,175,55,0.055),transparent_45%)] font-sans text-stone-400">
       {/* Dynamic Animated Background */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
         {/* Background 1 */}
@@ -562,7 +562,7 @@ export default function HomePage() {
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-        className="fixed left-0 top-0 z-50 w-full border-b border-white/[0.06] bg-[#050A18]/82 shadow-[0_8px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl"
+        className="fixed left-0 top-0 z-50 w-full border-b border-white/[0.06] bg-[#0c0a09]/82 shadow-[0_8px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl"
       >
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex cursor-pointer items-center gap-2 font-display text-xl font-bold tracking-[0.25em] text-stone-100 transition-transform hover:scale-[1.02]">
@@ -615,7 +615,7 @@ export default function HomePage() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="overflow-hidden border-b border-white/[0.06] bg-[#050A18]/95 backdrop-blur-xl md:hidden"
+              className="overflow-hidden border-b border-white/[0.06] bg-[#0c0a09]/95 backdrop-blur-xl md:hidden"
             >
               <div className="flex flex-col space-y-4 p-6 font-display text-xs uppercase tracking-[0.2em] text-stone-500">
                 <Link

@@ -520,7 +520,7 @@ function PublicationsSectionComponent({
   return (
     <section
       id="publications"
-      className={`relative border-b border-white/[0.05] bg-gradient-to-b from-[#050A18] to-[#050A18] py-28 md:py-32 ${uiTokens.sectionDivider}`}
+      className={`relative border-b border-white/[0.05] bg-gradient-to-b from-[var(--app-bg)] to-[var(--app-bg)] py-28 md:py-32 ${uiTokens.sectionDivider}`}
     >
       <div className="relative z-10 mx-auto max-w-7xl px-6">
         <div className="mb-14 md:mb-16">
@@ -613,7 +613,7 @@ function PublicationsSectionComponent({
                   <div className="mb-5 md:mb-6">
                     <p className={`${uiTokens.metaMono} text-[#c4a77d]`}>{pubsText.featuredSpotlight}</p>
                   </div>
-                  <div className="rounded-[2rem] border border-[#9a8260]/20 bg-gradient-to-br from-[#14101c] via-[#080c18] to-[#050a12] p-5 shadow-[0_0_80px_rgba(154,130,96,0.06)] md:p-9">
+                  <div className="rounded-[2rem] border border-[#9a8260]/20 bg-gradient-to-br from-[#14101c] via-[#100e10] to-[#0c0a09] p-5 shadow-[0_0_80px_rgba(154,130,96,0.06)] md:p-9">
                     <div className="grid gap-8 lg:grid-cols-3">
                       {featuredPublications.map((pub, fi) => (
                         <PublicationCard

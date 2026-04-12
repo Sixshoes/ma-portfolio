@@ -193,7 +193,7 @@ function BottomSectionsComponent({ t, lang: _lang, onDownloadVCard }: BottomSect
 
       <section
         id="contact"
-        className="relative overflow-hidden border-t border-white/[0.06] bg-[#050A18] py-28 md:py-36"
+        className="relative overflow-hidden border-t border-white/[0.06] bg-[var(--app-bg)] py-28 md:py-36"
       >
         <div
           className="pointer-events-none absolute left-1/2 top-0 h-full w-full max-w-5xl -translate-x-1/2 bg-[radial-gradient(circle_at_50%_42%,rgba(212,175,55,0.035),transparent_68%)]"
@@ -285,9 +285,13 @@ function BottomSectionsComponent({ t, lang: _lang, onDownloadVCard }: BottomSect
             </p>
           </div>
 
-          <footer className="mt-20 w-full border-t border-white/[0.06] py-10 text-center md:mt-24">
-            <p className={uiTokens.footerLegal}>{t.contact.footer}</p>
-            <p className={uiTokens.footerCredit}>{t.contact.developer}</p>
+          <footer className="mt-20 w-full border-t border-white/[0.06] py-10 md:mt-24">
+            <div className="flex flex-col items-center text-center">
+              <p className={uiTokens.footerLegal}>
+                {t.contact.footer.replace(/\{year\}/g, String(new Date().getFullYear()))}
+              </p>
+              <p className={uiTokens.footerCredit}>{t.contact.developer}</p>
+            </div>
           </footer>
         </motion.div>
       </section>

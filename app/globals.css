@@ -2,7 +2,9 @@
 
 :root {
   color-scheme: dark;
-  background-color: #050a18;
+  /* 曜石黑底：襯托香檳金、減少藍調混濁感 */
+  --app-bg: #0c0a09;
+  background-color: var(--app-bg);
 }
 
 /* 重要標題：襯線（由 layout 注入 --font-playfair、--font-noto-serif-tc） */

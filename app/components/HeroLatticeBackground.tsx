@@ -167,7 +167,7 @@ export function HeroLatticeBackground({
           );
         })}
       </div>
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(5,10,24,0.35)_55%,#050a18_92%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(12,10,9,0.38)_55%,#0c0a09_92%)]" />
     </div>
   );
 }

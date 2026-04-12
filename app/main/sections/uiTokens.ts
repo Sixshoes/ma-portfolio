@@ -1,4 +1,4 @@
-/** 牛津深藍底 (#050A18)、香檳金點綴、襯線標題（globals .font-heading-serif） */
+/** 曜石黑底 (#0C0A09)、香檳金點綴、襯線標題（globals .font-heading-serif） */
 export const uiTokens = {
   sectionTitle:
     'font-heading-serif text-4xl md:text-6xl lg:text-7xl text-stone-100 tracking-tight',
@@ -6,14 +6,14 @@ export const uiTokens = {
   titleBold: 'font-heading-serif font-semibold text-stone-100',
   sectionEyebrow:
     'text-[10px] font-mono uppercase tracking-[0.2em] text-stone-500 border border-stone-700/60 bg-stone-900/40 rounded-full px-4 py-2',
-  sectionDesc: 'font-mono text-[10px] uppercase tracking-[0.2em] text-stone-500',
-  /** 通透卡片：弱邊框、少漸層 */
+  sectionDesc: 'font-mono text-[10px] uppercase tracking-[0.2em] text-stone-400',
+  /** 玻璃擬物卡片：略提亮、細邊框與內發光感 */
   surfaceCard:
-    'rounded-3xl border border-white/[0.06] bg-white/[0.025] shadow-[0_12px_40px_rgba(0,0,0,0.25)]',
+    'rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-md shadow-[0_8px_30px_rgba(0,0,0,0.4)]',
   surfaceCardHover:
-    'hover:border-[rgba(212,175,55,0.18)] hover:bg-white/[0.04] hover:shadow-[0_16px_48px_rgba(0,0,0,0.3)] transition-all duration-500',
+    'hover:border-[#c4a77d]/40 hover:bg-white/[0.06] hover:shadow-[0_16px_40px_rgba(196,167,125,0.1)] transition-all duration-500',
   buttonPrimary:
-    'bg-gradient-to-r from-[#c9a86c] to-[#b08d52] text-stone-950 border border-[#a67c3d]/40 shadow-[0_8px_24px_rgba(0,0,0,0.25)]',
+    'bg-gradient-to-r from-[#D4AF37] to-[#AA8036] text-stone-950 font-medium border border-[#F3E5AB]/40 shadow-[0_0_20px_rgba(212,175,55,0.2)]',
   buttonPrimaryStrong:
     'bg-gradient-to-r from-[#d4b27f] via-[#b9975a] to-[#c9a86c] text-stone-950 border border-[#8f7038]/35 shadow-[0_10px_28px_rgba(0,0,0,0.3)]',
   buttonGhost:
@@ -25,8 +25,9 @@ export const uiTokens = {
   sectionDivider: 'border-t border-stone-800/60',
   titleAccentBar: 'mx-auto h-px w-24 rounded-full bg-gradient-to-r from-[#b08d52]/70 via-stone-500/40 to-stone-600/50',
   metaMono: 'font-mono text-xs uppercase tracking-widest text-stone-500',
-  footerLegal: 'text-[10px] font-mono uppercase tracking-[0.3em] text-stone-500',
-  footerCredit: 'mt-2 text-[10px] font-mono uppercase tracking-[0.3em] text-stone-600',
+  footerLegal:
+    'text-[11px] font-mono tracking-[0.18em] text-stone-400 [font-variant-numeric:lining-nums]',
+  footerCredit: 'mt-2.5 text-[10px] font-mono tracking-[0.14em] text-stone-600',
   pubBadgeOverlay:
     'rounded border border-stone-700/50 bg-slate-950/80 font-mono uppercase tracking-widest text-stone-300 backdrop-blur-sm',
 } as const;
