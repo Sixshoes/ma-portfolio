@@ -8,6 +8,7 @@ import { uiTokens } from './uiTokens';
 type AboutText = {
   title: string;
   subtitle: string;
+  rolesEduTab: string;
   leadership: string;
   leadershipDesc: string;
   roleLabel: string;
@@ -27,6 +28,8 @@ type AboutSectionProps = {
   lang: 'en' | 'zh';
 };
 
+type AboutTab = 'roles' | 'admin' | 'service' | 'awards';
+
 function renderListItem(text: string) {
   const match = text.match(/(.*?)\s*\(([^)]+)\)$/);
   if (match) {
@@ -44,8 +47,10 @@ function renderListItem(text: string) {
 
 function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
   useRenderProfiler('AboutSection');
+  const [tab, setTab] = useState<AboutTab>('roles');
   const [isExpandedAdmin, setIsExpandedAdmin] = useState(false);
   const [isExpandedService, setIsExpandedService] = useState(false);
+  const tablistLabel = lang === 'zh' ? '學術履歷分類' : 'Resume categories';
 
   return (
     <section id="about" className={`mx-auto max-w-7xl px-6 py-24 md:py-28 ${uiTokens.sectionDivider}`}>
@@ -85,106 +90,175 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
           </div>
         </div>
         <div>
-          <h2 className={`${uiTokens.sectionTitle} mb-12 md:mb-14`}>
+          <h2 className={`${uiTokens.sectionTitle} mb-8 md:mb-10`}>
             <span className={uiTokens.titleLight}>{aboutText.title}</span> <br />
             <span className={uiTokens.titleBold}>{aboutText.subtitle}</span>
           </h2>
-          <div className="space-y-7 md:space-y-8">
-            <div className="group flex gap-6">
-              <div className="h-full min-h-[48px] w-px bg-white/10 transition-colors group-hover:bg-amber-400/70" />
-              <div className="flex-1">
-                <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-amber-400/85">
-                  {aboutText.roleLabel}
+
+          <div
+            role="tablist"
+            aria-label={tablistLabel}
+            className="mb-8 flex flex-wrap gap-2 border-b border-white/[0.08] pb-4"
+          >
+            {(
+              [
+                ['roles', aboutText.rolesEduTab],
+                ['admin', aboutText.adminLabel],
+                ['service', aboutText.serviceLabel],
+                ['awards', aboutText.awardsLabel],
+              ] as const
+            ).map(([id, label]) => {
+              const selected = tab === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  role="tab"
+                  aria-selected={selected}
+                  id={`about-tab-${id}`}
+                  aria-controls={`about-panel-${id}`}
+                  onClick={() => setTab(id)}
+                  className={`rounded-full px-3.5 py-2 text-left font-mono text-[10px] uppercase tracking-[0.18em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#080C16] md:px-4 ${
+                    selected
+                      ? 'border border-amber-400/35 bg-amber-500/[0.12] text-amber-100'
+                      : 'border border-transparent text-slate-500 hover:border-white/[0.08] hover:bg-white/[0.03] hover:text-slate-300'
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="min-h-[12rem]">
+            {tab === 'roles' && (
+              <div
+                role="tabpanel"
+                id="about-panel-roles"
+                aria-labelledby="about-tab-roles"
+                className="space-y-7 md:space-y-8"
+              >
+                <div className="group flex gap-6">
+                  <div className="h-full min-h-[48px] w-px bg-white/10 transition-colors group-hover:bg-amber-400/70" />
+                  <div className="flex-1">
+                    <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-amber-400/85">
+                      {aboutText.roleLabel}
+                    </div>
+                    <div className="space-y-1">
+                      {aboutText.roles.map((role, idx) => (
+                        <div key={idx}>{renderListItem(role)}</div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  {aboutText.roles.map((role, idx) => (
-                    <div key={idx}>{renderListItem(role)}</div>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div className="group flex gap-6">
-              <div className="h-full min-h-[48px] w-px bg-white/10 transition-colors group-hover:bg-teal-400/70" />
-              <div className="flex-1">
-                <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-teal-400/85">
-                  {aboutText.eduLabel}
-                </div>
-                <div className="space-y-1">
-                  {aboutText.edu.map((eduItem, idx) => (
-                    <div key={idx}>{renderListItem(eduItem)}</div>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div className="group flex gap-6">
-              <div className="h-full min-h-[48px] w-px bg-white/10 transition-colors group-hover:bg-amber-400/50" />
-              <div className="flex-1">
-                <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-amber-400/75">
-                  {aboutText.adminLabel}
-                </div>
-                <div className="space-y-1">
-                  {(isExpandedAdmin ? aboutText.admin : aboutText.admin.slice(0, 5)).map((item, idx) => (
-                    <div key={idx}>{renderListItem(item)}</div>
-                  ))}
-                </div>
-                {aboutText.admin.length > 5 && (
-                  <button
-                    type="button"
-                    onClick={() => setIsExpandedAdmin(!isExpandedAdmin)}
-                    className="mt-3 flex items-center gap-1 font-mono text-[10px] text-teal-400/90 transition-colors hover:text-teal-300"
-                  >
-                    {isExpandedAdmin
-                      ? lang === 'zh'
-                        ? '收起'
-                        : 'Show less'
-                      : lang === 'zh'
-                        ? `顯示更多 (${aboutText.admin.length - 5})`
-                        : `Show more (${aboutText.admin.length - 5})`}
-                  </button>
-                )}
-              </div>
-            </div>
-            <div className="group flex gap-6">
-              <div className="h-full min-h-[48px] w-px bg-white/10 transition-colors group-hover:bg-teal-400/50" />
-              <div className="flex-1">
-                <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-teal-400/75">
-                  {aboutText.serviceLabel}
-                </div>
-                <div className="space-y-1">
-                  {(isExpandedService ? aboutText.service : aboutText.service.slice(0, 5)).map((item, idx) => (
-                    <div key={idx}>{renderListItem(item)}</div>
-                  ))}
-                </div>
-                {aboutText.service.length > 5 && (
-                  <button
-                    type="button"
-                    onClick={() => setIsExpandedService(!isExpandedService)}
-                    className="mt-3 flex items-center gap-1 font-mono text-[10px] text-teal-400/90 transition-colors hover:text-teal-300"
-                  >
-                    {isExpandedService
-                      ? lang === 'zh'
-                        ? '收起'
-                        : 'Show less'
-                      : lang === 'zh'
-                        ? `顯示更多 (${aboutText.service.length - 5})`
-                        : `Show more (${aboutText.service.length - 5})`}
-                  </button>
-                )}
-              </div>
-            </div>
-            <div className="group flex gap-6">
-              <div className="h-full min-h-[48px] w-px bg-white/10 transition-colors group-hover:bg-amber-400/60" />
-              <div className="flex-1">
-                <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-amber-400/80">
-                  {aboutText.awardsLabel}
-                </div>
-                <div className="space-y-1">
-                  {aboutText.awards.map((item, idx) => (
-                    <div key={idx}>{renderListItem(item)}</div>
-                  ))}
+                <div className="group flex gap-6">
+                  <div className="h-full min-h-[48px] w-px bg-white/10 transition-colors group-hover:bg-teal-400/70" />
+                  <div className="flex-1">
+                    <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-teal-400/85">
+                      {aboutText.eduLabel}
+                    </div>
+                    <div className="space-y-1">
+                      {aboutText.edu.map((eduItem, idx) => (
+                        <div key={idx}>{renderListItem(eduItem)}</div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
+
+            {tab === 'admin' && (
+              <div
+                role="tabpanel"
+                id="about-panel-admin"
+                aria-labelledby="about-tab-admin"
+                className="group flex gap-6"
+              >
+                <div className="h-full min-h-[48px] w-px bg-white/10 transition-colors group-hover:bg-amber-400/50" />
+                <div className="flex-1">
+                  <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-amber-400/75">
+                    {aboutText.adminLabel}
+                  </div>
+                  <div className="space-y-1">
+                    {(isExpandedAdmin ? aboutText.admin : aboutText.admin.slice(0, 5)).map((item, idx) => (
+                      <div key={idx}>{renderListItem(item)}</div>
+                    ))}
+                  </div>
+                  {aboutText.admin.length > 5 && (
+                    <button
+                      type="button"
+                      onClick={() => setIsExpandedAdmin(!isExpandedAdmin)}
+                      className="mt-3 flex items-center gap-1 font-mono text-[10px] text-teal-400/90 transition-colors hover:text-teal-300"
+                    >
+                      {isExpandedAdmin
+                        ? lang === 'zh'
+                          ? '收起'
+                          : 'Show less'
+                        : lang === 'zh'
+                          ? `顯示更多 (${aboutText.admin.length - 5})`
+                          : `Show more (${aboutText.admin.length - 5})`}
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {tab === 'service' && (
+              <div
+                role="tabpanel"
+                id="about-panel-service"
+                aria-labelledby="about-tab-service"
+                className="group flex gap-6"
+              >
+                <div className="h-full min-h-[48px] w-px bg-white/10 transition-colors group-hover:bg-teal-400/50" />
+                <div className="flex-1">
+                  <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-teal-400/75">
+                    {aboutText.serviceLabel}
+                  </div>
+                  <div className="space-y-1">
+                    {(isExpandedService ? aboutText.service : aboutText.service.slice(0, 5)).map((item, idx) => (
+                      <div key={idx}>{renderListItem(item)}</div>
+                    ))}
+                  </div>
+                  {aboutText.service.length > 5 && (
+                    <button
+                      type="button"
+                      onClick={() => setIsExpandedService(!isExpandedService)}
+                      className="mt-3 flex items-center gap-1 font-mono text-[10px] text-teal-400/90 transition-colors hover:text-teal-300"
+                    >
+                      {isExpandedService
+                        ? lang === 'zh'
+                          ? '收起'
+                          : 'Show less'
+                        : lang === 'zh'
+                          ? `顯示更多 (${aboutText.service.length - 5})`
+                          : `Show more (${aboutText.service.length - 5})`}
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {tab === 'awards' && (
+              <div
+                role="tabpanel"
+                id="about-panel-awards"
+                aria-labelledby="about-tab-awards"
+                className="group flex gap-6"
+              >
+                <div className="h-full min-h-[48px] w-px bg-white/10 transition-colors group-hover:bg-amber-400/60" />
+                <div className="flex-1">
+                  <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-amber-400/80">
+                    {aboutText.awardsLabel}
+                  </div>
+                  <div className="space-y-1">
+                    {aboutText.awards.map((item, idx) => (
+                      <div key={idx}>{renderListItem(item)}</div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

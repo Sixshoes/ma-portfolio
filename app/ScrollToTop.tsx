@@ -6,9 +6,13 @@ import { ArrowUp } from 'lucide-react';
 import { useLenis } from 'lenis/react';
 import { usePathname } from 'next/navigation';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useLanguage } from './LanguageContext';
 
 function ScrollTopFab({ showScrollTop }: { showScrollTop: boolean }) {
   const pathname = usePathname();
+  const { lang } = useLanguage();
+  const ariaTop = lang === 'zh' ? '回到頂部' : 'Scroll to top';
+  const labelTop = lang === 'zh' ? '頂部' : 'TOP';
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -24,11 +28,14 @@ function ScrollTopFab({ showScrollTop }: { showScrollTop: boolean }) {
           whileHover={{ scale: 1.05, backgroundColor: 'rgba(251, 191, 36, 0.1)' }}
           whileTap={{ scale: 0.95 }}
           onClick={scrollToTop}
-          className="fixed bottom-4 right-4 md:bottom-10 md:right-10 z-[99999] flex flex-col items-center gap-0.5 p-2 md:p-4 rounded-xl md:rounded-2xl bg-[#0B101E]/90 border border-white/10 text-slate-300 backdrop-blur-xl shadow-[0_0_30px_rgba(0,0,0,0.5)] hover:border-amber-500/40 hover:text-amber-400 transition-all duration-300 group"
-          aria-label="Scroll to top"
+          type="button"
+          className="fixed bottom-4 right-4 z-[99999] flex min-h-11 min-w-11 flex-col items-center justify-center gap-0.5 rounded-xl border border-white/10 bg-[#0B101E]/90 p-2 text-slate-300 shadow-[0_0_30px_rgba(0,0,0,0.5)] backdrop-blur-xl transition-all duration-300 hover:border-amber-500/40 hover:text-amber-400 md:bottom-10 md:right-10 md:min-h-0 md:min-w-0 md:rounded-2xl md:p-4 group"
+          aria-label={ariaTop}
         >
-          <ArrowUp className="w-4 h-4 md:w-5 md:h-5 group-hover:-translate-y-1 transition-transform duration-300" />
-          <span className="text-[8px] md:text-[10px] font-mono font-bold tracking-tighter uppercase opacity-60 group-hover:opacity-100">TOP</span>
+          <ArrowUp className="h-4 w-4 transition-transform duration-300 group-hover:-translate-y-1 md:h-5 md:w-5" />
+          <span className="text-[8px] font-mono font-bold uppercase tracking-tighter opacity-60 group-hover:opacity-100 md:text-[10px]">
+            {labelTop}
+          </span>
         </motion.button>
       )}
     </AnimatePresence>

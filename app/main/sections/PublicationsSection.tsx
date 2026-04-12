@@ -2,7 +2,7 @@
 
 import React, { memo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ExternalLink, Quote, Star } from 'lucide-react';
+import { ExternalLink, FolderOpen, Quote, Star } from 'lucide-react';
 import { Publication } from '@/lib/publications';
 import { useRenderProfiler } from './useRenderProfiler';
 import { uiTokens } from './uiTokens';
@@ -35,6 +35,7 @@ type PublicationsText = {
   linkFallback: string;
   loadMore: string;
   loadingPublications: string;
+  emptyPublications: string;
 };
 
 type PublicationsSectionProps = {
@@ -76,6 +77,52 @@ function getHighlightBadgeClass(highlight: string, pubsText: PublicationsText): 
     return 'border-teal-400/35 bg-teal-500/[0.1] text-teal-200/95';
   }
   return 'border-white/[0.1] bg-white/[0.04] text-slate-400';
+}
+
+function PublicationsListSkeleton({
+  prefersReducedMotion,
+  pubsText,
+}: {
+  prefersReducedMotion: boolean | null;
+  pubsText: PublicationsText;
+}) {
+  const pulse = prefersReducedMotion ? '' : 'animate-pulse';
+  return (
+    <div
+      className="flex flex-col gap-6 md:gap-7"
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+      aria-label={pubsText.loadingPublications}
+    >
+      {[0, 1, 2].map((i) => (
+        <div
+          key={i}
+          className={`flex flex-col gap-5 rounded-3xl border border-white/[0.08] bg-gradient-to-b from-[#0D1528]/80 to-[#0A1223]/60 p-5 md:flex-row md:gap-7 md:p-6 ${pulse}`}
+        >
+          <div className="w-full shrink-0 md:w-1/3">
+            <div className="aspect-video w-full rounded-xl bg-white/[0.06]" />
+          </div>
+          <div className="flex flex-1 flex-col gap-4 pt-2 md:pt-0">
+            <div className="flex flex-wrap gap-2">
+              <div className="h-7 w-24 rounded-full bg-white/[0.06]" />
+              <div className="h-7 w-28 rounded-full bg-white/[0.05]" />
+            </div>
+            <div className="space-y-2">
+              <div className="h-4 w-[92%] rounded bg-white/[0.07]" />
+              <div className="h-4 w-[78%] rounded bg-white/[0.06]" />
+              <div className="h-4 w-[64%] rounded bg-white/[0.05]" />
+            </div>
+            <div className="mt-auto grid gap-4 border-t border-white/[0.05] pt-5 md:grid-cols-2">
+              <div className="h-3 w-20 rounded bg-white/[0.06]" />
+              <div className="h-3 w-24 rounded bg-white/[0.06]" />
+              <div className="h-3 w-full rounded bg-white/[0.05] md:col-span-2" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function PublicationsSectionComponent({
@@ -144,16 +191,28 @@ function PublicationsSectionComponent({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex h-72 items-center justify-center md:h-80"
+              transition={{ duration: 0.25 }}
+            >
+              <PublicationsListSkeleton
+                prefersReducedMotion={prefersReducedMotion}
+                pubsText={pubsText}
+              />
+            </motion.div>
+          ) : filteredCount === 0 ? (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.35 }}
+              className="flex flex-col items-center justify-center rounded-3xl border border-white/[0.08] bg-gradient-to-b from-[#0D1528]/50 to-[#0A1223]/40 px-6 py-16 text-center md:py-20"
               role="status"
               aria-live="polite"
-              aria-busy="true"
-              aria-label={pubsText.loadingPublications}
             >
-              <div
-                className="h-12 w-12 animate-spin rounded-full border-t-2 border-amber-500"
-                aria-hidden
-              />
+              <FolderOpen className="mb-5 h-12 w-12 text-slate-600" aria-hidden />
+              <p className="max-w-md text-sm leading-relaxed text-slate-400 md:text-base">
+                {pubsText.emptyPublications}
+              </p>
             </motion.div>
           ) : (
             <motion.div
@@ -265,7 +324,7 @@ function PublicationsSectionComponent({
                         </span>
                       </div>
 
-                      <h3 className="font-display text-xl md:text-2xl text-slate-100 mb-5 group-hover:text-amber-300 transition-colors leading-snug">
+                      <h3 className="mb-5 font-display text-xl font-medium leading-snug text-white transition-colors group-hover:text-amber-200 md:text-2xl md:font-semibold">
                         {pub.title}
                       </h3>
 
@@ -273,7 +332,7 @@ function PublicationsSectionComponent({
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                           <div>
                             <div className={`${uiTokens.metaMono} mb-1.5`}>{pubsText.journal}</div>
-                            <div className="text-sm text-slate-300 font-medium">{pub.journal}</div>
+                            <div className="text-sm font-medium text-slate-400">{pub.journal}</div>
                           </div>
                           <div>
                             <div className={`${uiTokens.metaMono} mb-1.5`}>{pubsText.citations}</div>
@@ -287,7 +346,7 @@ function PublicationsSectionComponent({
                               href={pub.doi}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-sm text-amber-300 hover:text-amber-200 flex items-center gap-2 break-all transition-colors"
+                              className="flex items-center gap-2 break-all text-sm text-slate-500 transition-colors hover:text-amber-300"
                             >
                               {getLinkDisplay(pub.doi, pubsText)}{' '}
                               <ExternalLink className="h-3 w-3 shrink-0" aria-hidden />
@@ -303,7 +362,7 @@ function PublicationsSectionComponent({
           )}
         </AnimatePresence>
 
-        {visiblePublications.length < filteredCount && (
+        {!isLoading && filteredCount > 0 && visiblePublications.length < filteredCount && (
           <div className="mt-12 md:mt-14 flex justify-center">
             <button
               type="button"

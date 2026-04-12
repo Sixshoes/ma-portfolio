@@ -81,10 +81,13 @@ const dict = {
       linkFallback: 'Open link',
       loadMore: 'Load more',
       loadingPublications: 'Loading publications',
+      emptyPublications:
+        'No publications match these filters. Try another year, switch to “All publications”, or clear “Selected / highlighted”.',
     },
     about: {
       title: 'Academic',
       subtitle: 'Journey',
+      rolesEduTab: 'Roles & Education',
       leadership: 'Academic Leadership',
       leadershipDesc: 'Serving as the Vice President of Fo Guang University, fostering academic excellence, interdisciplinary research, and innovation in higher education.',
       roleLabel: 'Current Positions',
@@ -237,10 +240,13 @@ const dict = {
       linkFallback: '開啟連結',
       loadMore: '載入更多',
       loadingPublications: '載入著作中…',
+      emptyPublications:
+        '目前沒有符合此篩選條件的著作。請改選其他年份、改為「全部著作」，或關閉「精選／高引用」。',
     },
     about: {
       title: '學術',
       subtitle: '歷程',
+      rolesEduTab: '現職與學歷',
       leadership: '學術領導',
       leadershipDesc: '擔任佛光大學副校長，致力於推動高等教育的學術卓越、跨領域研究與創新發展。',
       roleLabel: '現職',
