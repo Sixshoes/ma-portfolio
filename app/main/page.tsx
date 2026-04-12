@@ -3,11 +3,7 @@
 import React, { useState, useMemo, useEffect, startTransition } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
-import {
-  Publication,
-  normalizePublicationsFromJson,
-  publications as fallbackPublications,
-} from '@/lib/publications';
+import { Publication, publications as fallbackPublications } from '@/lib/publications';
 import { PAPERS_JSON_URL, readCachedPapers, writeCachedPapers } from '@/lib/papersCache';
 import { useLanguage } from '../LanguageContext';
 import { BottomSections } from './sections/BottomSections';
@@ -395,7 +391,12 @@ export default function HomePage() {
       .then((data: unknown) => {
         if (cancelled) return;
         if (Array.isArray(data) && data.length > 0) {
-          const parsedData = normalizePublicationsFromJson(data);
+          const parsedData = (data as Publication[]).map((pub) => ({
+            ...pub,
+            year: Number(pub.year),
+            citations: Number(pub.citations || 0),
+          })) as unknown as Publication[];
+
           writeCachedPapers(parsedData);
           startTransition(() => {
             setPublications(parsedData);
@@ -467,8 +468,6 @@ export default function HomePage() {
     setVisibleCount((prev) => prev + step);
   }, [isMobile]);
 
-  const blurMotionActive = !prefersReducedMotion && !isMobile;
-
   const handleDownloadVCard = () => {
     const blob = new Blob([vcardData], { type: 'text/vcard' });
     const url = URL.createObjectURL(blob);
@@ -485,43 +484,41 @@ export default function HomePage() {
     <main className="min-h-screen bg-[#080C16] text-slate-300 font-sans overflow-x-hidden relative bg-[radial-gradient(circle_at_top,rgba(45,212,191,0.08),transparent_45%),radial-gradient(circle_at_80%_20%,rgba(251,191,36,0.08),transparent_35%)]">
       {/* Dynamic Animated Background */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+        {/* Background 1 */}
         <motion.div
           style={{ willChange: 'transform, opacity' }}
           animate={
             prefersReducedMotion
               ? { opacity: 0.1 }
-              : blurMotionActive
-                ? {
-                    scale: [1, 1.1, 1],
-                    opacity: [0.08, 0.12, 0.08],
-                    rotate: [0, 60, 0],
-                  }
-                : { scale: 1, opacity: 0.1, rotate: 0 }
+              : {
+                  scale: [1, 1.1, 1],
+                  opacity: [0.08, 0.12, 0.08],
+                  rotate: [0, 60, 0],
+                }
           }
           transition={
-            prefersReducedMotion || !blurMotionActive
-              ? { duration: 0.35 }
+            prefersReducedMotion
+              ? { duration: 0.2 }
               : { duration: 28, repeat: Infinity, ease: 'linear' }
           }
           className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full bg-gradient-to-br from-teal-900/20 to-transparent blur-[80px] md:blur-[100px] transform-gpu"
         />
+        {/* Background 2 */}
         <motion.div
           style={{ willChange: 'transform, opacity' }}
           animate={
             prefersReducedMotion
               ? { opacity: 0.06 }
-              : blurMotionActive
-                ? {
-                    scale: [1, 1.25, 1],
-                    opacity: [0.04, 0.08, 0.04],
-                    x: [0, 60, 0],
-                    y: [0, -30, 0],
-                  }
-                : { scale: 1, opacity: 0.07, x: 0, y: 0 }
+              : {
+                  scale: [1, 1.25, 1],
+                  opacity: [0.04, 0.08, 0.04],
+                  x: [0, 60, 0],
+                  y: [0, -30, 0],
+                }
           }
           transition={
-            prefersReducedMotion || !blurMotionActive
-              ? { duration: 0.35 }
+            prefersReducedMotion
+              ? { duration: 0.2 }
               : { duration: 32, repeat: Infinity, ease: 'easeInOut' }
           }
           className="absolute top-[40%] -right-[20%] w-[60vw] h-[60vw] rounded-full bg-gradient-to-tl from-amber-900/20 to-transparent blur-[120px] transform-gpu"
