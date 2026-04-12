@@ -1,4 +1,4 @@
-import type { Publication } from '@/lib/publications';
+import { normalizePublicationsFromJson, type Publication } from '@/lib/publications';
 
 export const PAPERS_JSON_URL =
   'https://sixshoes.github.io/Ma-Research-Portal/papers.json';
@@ -12,7 +12,7 @@ export function readCachedPapers(): Publication[] | null {
     if (!raw) return null;
     const data = JSON.parse(raw) as unknown;
     if (!Array.isArray(data) || data.length === 0) return null;
-    return data as Publication[];
+    return normalizePublicationsFromJson(data);
   } catch {
     return null;
   }
@@ -37,7 +37,7 @@ export function prefetchPapersJson(): void {
     .then((res) => (res.ok ? res.json() : Promise.reject(new Error(String(res.status)))))
     .then((data: unknown) => {
       if (Array.isArray(data) && data.length > 0) {
-        writeCachedPapers(data as Publication[]);
+        writeCachedPapers(normalizePublicationsFromJson(data));
       }
     })
     .catch(() => {

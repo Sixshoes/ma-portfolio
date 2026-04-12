@@ -192,7 +192,9 @@ function PublicationsSectionComponent({
                     key={i}
                     initial={litePub ? false : { opacity: 0, y: 20 }}
                     whileInView={litePub ? undefined : { opacity: 1, y: 0 }}
-                    viewport={litePub ? undefined : { once: true, margin: '-12% 0px -8% 0px' }}
+                    viewport={
+                      litePub ? undefined : { once: true, margin: '0px 0px -50px 0px', amount: 'some' }
+                    }
                     transition={{ delay: cardStaggerDelay(i), duration: litePub ? 0 : 0.35 }}
                     whileHover={litePub ? {} : { y: -3, scale: 1.005 }}
                     style={{ transform: 'translateZ(0)' }}

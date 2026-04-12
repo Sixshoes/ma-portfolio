@@ -3,7 +3,11 @@
 import React, { useState, useMemo, useEffect, startTransition } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
-import { Publication, publications as fallbackPublications } from '@/lib/publications';
+import {
+  Publication,
+  normalizePublicationsFromJson,
+  publications as fallbackPublications,
+} from '@/lib/publications';
 import { PAPERS_JSON_URL, readCachedPapers, writeCachedPapers } from '@/lib/papersCache';
 import { useLanguage } from '../LanguageContext';
 import { BottomSections } from './sections/BottomSections';
@@ -391,9 +395,10 @@ export default function HomePage() {
       .then((data: unknown) => {
         if (cancelled) return;
         if (Array.isArray(data) && data.length > 0) {
-          writeCachedPapers(data as Publication[]);
+          const parsedData = normalizePublicationsFromJson(data);
+          writeCachedPapers(parsedData);
           startTransition(() => {
-            setPublications(data as Publication[]);
+            setPublications(parsedData);
             setIsLoading(false);
           });
         } else {
@@ -412,16 +417,18 @@ export default function HomePage() {
   }, []);
 
   const uniqueYears = useMemo(() => {
-    return Array.from(new Set(publications.map(p => p.year))).sort((a, b) => Number(b) - Number(a));
+    return Array.from(new Set(publications.map((p) => String(p.year)))).sort(
+      (a, b) => Number(b) - Number(a)
+    );
   }, [publications]);
 
   const filteredPublications = useMemo(() => {
     let result = [...publications];
     
     if (pubFilter === 'Selected') {
-      result = result.filter(p => Number(p.citations) >= 50);
+      result = result.filter((p) => p.citations >= 50);
     } else if (pubFilter !== 'All') {
-      result = result.filter(p => p.year === pubFilter);
+      result = result.filter((p) => String(p.year) === pubFilter);
     }
 
     // Sort by corresponding author (is_star === '是') first, then year descending, then citations
@@ -429,14 +436,14 @@ export default function HomePage() {
       // 1. Global priority: Corresponding author
       if (a.is_star === '是' && b.is_star !== '是') return -1;
       if (a.is_star !== '是' && b.is_star === '是') return 1;
-      
+
       // 2. Secondary priority: Year descending
-      if (Number(b.year) !== Number(a.year)) {
-        return Number(b.year) - Number(a.year);
+      if (b.year !== a.year) {
+        return b.year - a.year;
       }
-      
+
       // 3. Tertiary priority: Citations descending
-      return Number(b.citations) - Number(a.citations);
+      return b.citations - a.citations;
     });
 
     return result;
@@ -448,7 +455,7 @@ export default function HomePage() {
   }, [filteredPublications, visibleCount]);
 
   const totalPubs = publications.length > 0 ? publications.length : '200+';
-  const totalCitations = publications.length > 0 ? publications.reduce((sum, p) => sum + (p.citations || 0), 0) : '5000+';
+  const totalCitations = publications.length > 0 ? publications.reduce((sum, p) => sum + p.citations, 0) : '5000+';
 
   const handlePubFilterChange = React.useCallback((value: string) => {
     setPubFilter(value);
@@ -459,6 +466,8 @@ export default function HomePage() {
     const step = isMobile ? PUB_PAGE_MOBILE : PUB_PAGE_DESKTOP;
     setVisibleCount((prev) => prev + step);
   }, [isMobile]);
+
+  const blurMotionActive = !prefersReducedMotion && !isMobile;
 
   const handleDownloadVCard = () => {
     const blob = new Blob([vcardData], { type: 'text/vcard' });
@@ -476,24 +485,46 @@ export default function HomePage() {
     <main className="min-h-screen bg-[#080C16] text-slate-300 font-sans overflow-x-hidden relative bg-[radial-gradient(circle_at_top,rgba(45,212,191,0.08),transparent_45%),radial-gradient(circle_at_80%_20%,rgba(251,191,36,0.08),transparent_35%)]">
       {/* Dynamic Animated Background */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        <motion.div 
-          animate={prefersReducedMotion ? { opacity: 0.1 } : {
-            scale: [1, 1.1, 1],
-            opacity: [0.08, 0.12, 0.08],
-            rotate: [0, 60, 0]
-          }}
-          transition={prefersReducedMotion ? { duration: 0.2 } : { duration: 28, repeat: Infinity, ease: "linear" }}
-          className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full bg-gradient-to-br from-teal-900/20 to-transparent blur-[80px] md:blur-[100px]"
+        <motion.div
+          style={{ willChange: 'transform, opacity' }}
+          animate={
+            prefersReducedMotion
+              ? { opacity: 0.1 }
+              : blurMotionActive
+                ? {
+                    scale: [1, 1.1, 1],
+                    opacity: [0.08, 0.12, 0.08],
+                    rotate: [0, 60, 0],
+                  }
+                : { scale: 1, opacity: 0.1, rotate: 0 }
+          }
+          transition={
+            prefersReducedMotion || !blurMotionActive
+              ? { duration: 0.35 }
+              : { duration: 28, repeat: Infinity, ease: 'linear' }
+          }
+          className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full bg-gradient-to-br from-teal-900/20 to-transparent blur-[80px] md:blur-[100px] transform-gpu"
         />
-        <motion.div 
-          animate={prefersReducedMotion ? { opacity: 0.06 } : { 
-            scale: [1, 1.25, 1],
-            opacity: [0.04, 0.08, 0.04],
-            x: [0, 60, 0],
-            y: [0, -30, 0]
-          }}
-          transition={prefersReducedMotion ? { duration: 0.2 } : { duration: 32, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-[40%] -right-[20%] w-[60vw] h-[60vw] rounded-full bg-gradient-to-tl from-amber-900/20 to-transparent blur-[120px]"
+        <motion.div
+          style={{ willChange: 'transform, opacity' }}
+          animate={
+            prefersReducedMotion
+              ? { opacity: 0.06 }
+              : blurMotionActive
+                ? {
+                    scale: [1, 1.25, 1],
+                    opacity: [0.04, 0.08, 0.04],
+                    x: [0, 60, 0],
+                    y: [0, -30, 0],
+                  }
+                : { scale: 1, opacity: 0.07, x: 0, y: 0 }
+          }
+          transition={
+            prefersReducedMotion || !blurMotionActive
+              ? { duration: 0.35 }
+              : { duration: 32, repeat: Infinity, ease: 'easeInOut' }
+          }
+          className="absolute top-[40%] -right-[20%] w-[60vw] h-[60vw] rounded-full bg-gradient-to-tl from-amber-900/20 to-transparent blur-[120px] transform-gpu"
         />
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
       </div>
