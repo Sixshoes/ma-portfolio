@@ -10,6 +10,7 @@ import {
   AnimatePresence,
 } from 'motion/react';
 import { useLanguage } from './LanguageContext';
+import { LanguageSwitcher } from '@/app/components/LanguageSwitcher';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { prefetchPapersJson } from '@/lib/papersCache';
 
@@ -29,7 +30,7 @@ const dict = {
 };
 
 export default function VisualsPage() {
-  const { lang, setLang } = useLanguage();
+  const { lang } = useLanguage();
   const t = dict[lang];
   const isMobile = useIsMobile();
   const prefersReducedMotion = useReducedMotion();
@@ -94,29 +95,8 @@ export default function VisualsPage() {
         />
       )}
 
-      {/* Language Toggle — 滑動高亮 + spring */}
-      <div className="absolute top-6 right-6 md:top-8 md:right-8 z-50 flex gap-2">
-        <div className="relative flex rounded-full border border-stone-800/70 bg-slate-950/50 p-1 shadow-[0_8px_28px_rgba(0,0,0,0.35)] backdrop-blur-md">
-          {(['en', 'zh'] as const).map((code) => (
-            <button
-              key={code}
-              type="button"
-              onClick={() => setLang(code)}
-              className={`relative z-10 min-w-[3rem] px-3 py-1.5 rounded-full text-[10px] md:text-xs font-mono transition-colors ${
-                lang === code ? 'text-stone-950' : 'text-stone-500 hover:text-stone-200'
-              }`}
-            >
-              {lang === code && (
-                <motion.span
-                  layoutId="landing-lang-pill"
-                  className="absolute inset-0 -z-10 rounded-full bg-[#d4c4a8] shadow-[0_0_18px_rgba(196,167,125,0.35)]"
-                  transition={{ type: 'spring', stiffness: 420, damping: 34 }}
-                />
-              )}
-              <span className="relative">{code === 'en' ? 'EN' : '中文'}</span>
-            </button>
-          ))}
-        </div>
+      <div className="absolute right-6 top-6 z-50 md:right-8 md:top-8">
+        <LanguageSwitcher layoutId="hetero-landing" />
       </div>
 
       {/* Enter Site */}

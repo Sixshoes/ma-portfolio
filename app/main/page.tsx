@@ -11,6 +11,7 @@ import {
 import { computeFeaturedPublications } from '@/lib/publicationDisplay';
 import { PAPERS_JSON_URL, readCachedPapers, writeCachedPapers } from '@/lib/papersCache';
 import { useLanguage } from '../LanguageContext';
+import { LanguageSwitcher } from '@/app/components/LanguageSwitcher';
 import { BottomSections } from './sections/BottomSections';
 import { PublicationsSection } from './sections/PublicationsSection';
 import { AboutSection } from './sections/AboutSection';
@@ -24,7 +25,6 @@ import {
   Atom, 
   Contrast, 
   Network,
-  Globe,
   X,
   Menu
 } from 'lucide-react';
@@ -379,7 +379,7 @@ const PUB_PAGE_MOBILE = 6;
 
 export default function HomePage() {
   useRenderProfiler('MainPage');
-  const { lang, setLang, isTransitioning } = useLanguage();
+  const { lang } = useLanguage();
   const [pubFilter, setPubFilter] = useState<string>('All');
   const [visibleCount, setVisibleCount] = useState<number>(PUB_PAGE_DESKTOP);
   const [publications, setPublications] = useState<Publication[]>(fallbackPublications);
@@ -592,40 +592,10 @@ export default function HomePage() {
             </div>
             
             <div className="flex items-center gap-3">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setLang(lang === 'en' ? 'zh' : 'en')}
-                animate={{
-                  borderColor: isTransitioning ? 'rgba(196, 167, 125, 0.45)' : 'rgba(120, 113, 108, 0.35)',
-                }}
-                transition={{ duration: 0.28 }}
-                className={`flex items-center gap-2 text-[10px] uppercase tracking-widest font-mono px-3 py-1.5 rounded-full ${uiTokens.buttonGhost}`}
-              >
-                <motion.span
-                  className="inline-flex"
-                  animate={{
-                    rotate: isTransitioning ? [0, -14, 14, 0] : 0,
-                  }}
-                  transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-                >
-                  <Globe className="h-3 w-3 text-[#a8906a]" />
-                </motion.span>
-                <span className="relative inline-flex min-h-[1em] min-w-[2.25rem] items-center justify-center">
-                  <AnimatePresence mode="wait" initial={false}>
-                    <motion.span
-                      key={lang}
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -5 }}
-                      transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                      className="absolute whitespace-nowrap"
-                    >
-                      {lang === 'en' ? '中文' : 'EN'}
-                    </motion.span>
-                  </AnimatePresence>
-                </span>
-              </motion.button>
+              <LanguageSwitcher
+                layoutId="hetero-main-nav"
+                className="[&_button]:px-3 [&_button]:py-1.5 [&_button]:text-[11px] md:[&_button]:px-4 md:[&_button]:text-sm"
+              />
 
               <button
                 type="button"

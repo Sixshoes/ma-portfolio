@@ -116,6 +116,42 @@ function resolvePublicationMedia(pub: Publication, pubsText: PublicationsText) {
   return { mainImg, mainLabel, secondaryImg, showFigurePlaceholder };
 }
 
+function CitationCountUpAnimated({
+  value,
+  large,
+  locale,
+}: {
+  value: number;
+  large?: boolean;
+  locale: string;
+}) {
+  const [display, setDisplay] = useState(0);
+
+  useEffect(() => {
+    let raf = 0;
+    let cancelled = false;
+    const t0 = performance.now();
+    const d = 950;
+    const step = (now: number) => {
+      if (cancelled) return;
+      const p = Math.min(1, (now - t0) / d);
+      const e = 1 - (1 - p) ** 3;
+      setDisplay(Math.round(value * e));
+      if (p < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(raf);
+    };
+  }, [value]);
+
+  const cls = large
+    ? 'font-mono text-4xl font-bold tracking-tight text-[#e8dcc4] md:text-5xl'
+    : 'font-mono text-sm text-stone-400';
+  return <span className={cls}>{display.toLocaleString(locale)}</span>;
+}
+
 function CitationCountUp({
   value,
   litePub,
@@ -128,31 +164,15 @@ function CitationCountUp({
   locale: string;
 }) {
   const animate = !litePub && value >= 100;
-  const [display, setDisplay] = useState(() => (animate ? 0 : value));
-
-  useEffect(() => {
-    if (!animate) {
-      setDisplay(value);
-      return;
-    }
-    setDisplay(0);
-    let id = 0;
-    const t0 = performance.now();
-    const d = 950;
-    const step = (t: number) => {
-      const p = Math.min(1, (t - t0) / d);
-      const e = 1 - (1 - p) ** 3;
-      setDisplay(Math.round(value * e));
-      if (p < 1) id = requestAnimationFrame(step);
-    };
-    id = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(id);
-  }, [value, animate]);
-
   const cls = large
     ? 'font-mono text-4xl font-bold tracking-tight text-[#e8dcc4] md:text-5xl'
     : 'font-mono text-sm text-stone-400';
-  return <span className={cls}>{display.toLocaleString(locale)}</span>;
+
+  if (!animate) {
+    return <span className={cls}>{value.toLocaleString(locale)}</span>;
+  }
+
+  return <CitationCountUpAnimated key={value} value={value} large={large} locale={locale} />;
 }
 
 type PublicationCardProps = {

@@ -3,6 +3,7 @@
 import React, { memo, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'motion/react';
+import { HeroLatticeBackground } from '@/app/components/HeroLatticeBackground';
 import { useRenderProfiler } from './useRenderProfiler';
 import { uiTokens } from './uiTokens';
 
@@ -74,7 +75,9 @@ function HeroStatsResearchSectionComponent({
 
   return (
     <>
-      <section className="relative z-10 mx-auto grid min-h-[86vh] max-w-7xl grid-cols-1 items-center gap-12 px-6 pb-24 pt-36 md:grid-cols-2 md:gap-16 md:pb-28 md:pt-40 lg:gap-16">
+      <section className="relative z-10 mx-auto min-h-[86vh] max-w-7xl overflow-hidden px-6 pb-24 pt-36 md:pb-28 md:pt-40">
+        <HeroLatticeBackground isMobile={isMobile} prefersReducedMotion={prefersReducedMotion} />
+        <div className="relative z-10 grid grid-cols-1 items-center gap-12 md:grid-cols-2 md:gap-16 lg:gap-16">
         <motion.div
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -203,6 +206,7 @@ function HeroStatsResearchSectionComponent({
             <div className="h-1 w-1 rounded-full bg-stone-500" />
           </motion.div>
         </motion.div>
+        </div>
       </section>
 
       <section className="border-y border-white/[0.05] bg-white/[0.02] py-16 backdrop-blur-sm md:py-20">
