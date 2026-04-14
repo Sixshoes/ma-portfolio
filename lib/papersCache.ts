@@ -33,7 +33,7 @@ export function writeCachedPapers(papers: Publication[]): void {
  */
 export function prefetchPapersJson(): void {
   if (typeof window === 'undefined') return;
-  fetch(PAPERS_JSON_URL, { cache: 'default' })
+  fetch(PAPERS_JSON_URL, { cache: 'force-cache' })
     .then((res) => (res.ok ? res.json() : Promise.reject(new Error(String(res.status)))))
     .then((data: unknown) => {
       if (Array.isArray(data) && data.length > 0) {

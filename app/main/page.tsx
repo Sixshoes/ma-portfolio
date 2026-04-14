@@ -2,23 +2,21 @@
 
 import React, { useState, useMemo, useEffect, startTransition } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import {
   Publication,
   normalizePublicationsFromJson,
-  publications as fallbackPublications,
 } from '@/lib/publications';
 import { computeFeaturedPublications } from '@/lib/publicationDisplay';
 import { PAPERS_JSON_URL, readCachedPapers, writeCachedPapers } from '@/lib/papersCache';
 import { useLanguage } from '../LanguageContext';
 import { LanguageSwitcher } from '@/app/components/LanguageSwitcher';
-import { BottomSections } from './sections/BottomSections';
-import { PublicationsSection } from './sections/PublicationsSection';
-import { AboutSection } from './sections/AboutSection';
 import { HeroStatsResearchSection } from './sections/HeroStatsResearchSection';
 import { useRenderProfiler } from './sections/useRenderProfiler';
 import { uiTokens } from './sections/uiTokens';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useLowPowerMode } from '@/hooks/use-low-power-mode';
 import { 
   Magnet, 
   BatteryCharging, 
@@ -376,25 +374,37 @@ END:VCARD`;
 
 const PUB_PAGE_DESKTOP = 10;
 const PUB_PAGE_MOBILE = 6;
+const PublicationsSection = dynamic(
+  () => import('./sections/PublicationsSection').then((mod) => mod.PublicationsSection),
+  {
+    loading: () => <section className="mx-auto max-w-7xl px-6 py-16 text-sm text-stone-500">Loading publications...</section>,
+  }
+);
+const AboutSection = dynamic(
+  () => import('./sections/AboutSection').then((mod) => mod.AboutSection)
+);
+const BottomSections = dynamic(
+  () => import('./sections/BottomSections').then((mod) => mod.BottomSections)
+);
 
 export default function HomePage() {
   useRenderProfiler('MainPage');
   const { lang } = useLanguage();
   const [pubFilter, setPubFilter] = useState<string>('All');
   const [visibleCount, setVisibleCount] = useState<number>(PUB_PAGE_DESKTOP);
-  const [publications, setPublications] = useState<Publication[]>(fallbackPublications);
+  const [publications, setPublications] = useState<Publication[]>([]);
   /** 與 SSR 一致先為 true；掛載後若有 session 快取則立刻還原並關閉 loader，避免 hydration 不一致 */
   const [isLoading, setIsLoading] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const prefersReducedMotion = useReducedMotion();
+  const isLowPowerMode = useLowPowerMode();
+  const noMotion = prefersReducedMotion === true || isLowPowerMode;
   const t = dict[lang];
   const isMobile = useIsMobile();
 
-  React.useLayoutEffect(() => {
-    if (window.matchMedia('(max-width: 767px)').matches) {
-      setVisibleCount(PUB_PAGE_MOBILE);
-    }
-  }, []);
+  useEffect(() => {
+    setVisibleCount(isMobile ? PUB_PAGE_MOBILE : PUB_PAGE_DESKTOP);
+  }, [isMobile]);
 
   React.useLayoutEffect(() => {
     const cached = readCachedPapers();
@@ -407,30 +417,52 @@ export default function HomePage() {
   useEffect(() => {
     let cancelled = false;
 
-    fetch(PAPERS_JSON_URL, { cache: 'default' })
-      .then((res) => {
+    const loadPublications = async () => {
+      try {
+        const res = await fetch(PAPERS_JSON_URL, { cache: 'force-cache' });
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        return res.json();
-      })
-      .then((data: unknown) => {
+        const data: unknown = await res.json();
         if (cancelled) return;
+
         if (Array.isArray(data) && data.length > 0) {
           const parsedData = normalizePublicationsFromJson(data);
-
           writeCachedPapers(parsedData);
           startTransition(() => {
             setPublications(parsedData);
             setIsLoading(false);
           });
-        } else {
-          setIsLoading(false);
+          return;
         }
-      })
-      .catch((err) => {
+      } catch (err) {
         if (cancelled) return;
-        console.warn('Using fallback publications. Failed to fetch from GitHub:', err);
-        setIsLoading(false);
-      });
+        console.warn('Fetch papers.json failed, loading local fallback on demand:', err);
+
+        const cached = readCachedPapers();
+        if (cached && cached.length > 0) {
+          startTransition(() => {
+            setPublications(cached);
+            setIsLoading(false);
+          });
+          return;
+        }
+
+        try {
+          const localData = await import('@/lib/publications');
+          if (cancelled) return;
+          startTransition(() => {
+            setPublications(localData.publications);
+            setIsLoading(false);
+          });
+          return;
+        } catch {
+          /* 最終保底：維持空列表 */
+        }
+      }
+
+      if (!cancelled) setIsLoading(false);
+    };
+
+    void loadPublications();
 
     return () => {
       cancelled = true;
@@ -443,16 +475,8 @@ export default function HomePage() {
     );
   }, [publications]);
 
-  const filteredPublications = useMemo(() => {
-    let result = [...publications];
-    
-    if (pubFilter === 'Selected') {
-      result = result.filter((p) => p.citations >= 50);
-    } else if (pubFilter !== 'All') {
-      result = result.filter((p) => String(p.year) === pubFilter);
-    }
-
-    // Sort by corresponding author (is_star === '是') first, then year descending, then citations
+  const sortedPublications = useMemo(() => {
+    const result = [...publications];
     result.sort((a, b) => {
       // 1. Global priority: Corresponding author
       if (a.is_star === '是' && b.is_star !== '是') return -1;
@@ -468,7 +492,17 @@ export default function HomePage() {
     });
 
     return result;
-  }, [pubFilter, publications]);
+  }, [publications]);
+
+  const filteredPublications = useMemo(() => {
+    if (pubFilter === 'Selected') {
+      return sortedPublications.filter((p) => p.citations >= 50);
+    }
+    if (pubFilter !== 'All') {
+      return sortedPublications.filter((p) => String(p.year) === pubFilter);
+    }
+    return sortedPublications;
+  }, [pubFilter, sortedPublications]);
 
   const featuredPublications = useMemo(
     () => computeFeaturedPublications(publications, 3),
@@ -519,7 +553,7 @@ export default function HomePage() {
         <motion.div
           style={{ willChange: 'transform, opacity' }}
           animate={
-            prefersReducedMotion
+            noMotion
               ? { opacity: 0.06 }
               : {
                   scale: [1, 1.1, 1],
@@ -528,7 +562,7 @@ export default function HomePage() {
                 }
           }
           transition={
-            prefersReducedMotion
+            noMotion
               ? { duration: 0.2 }
               : { duration: 28, repeat: Infinity, ease: 'linear' }
           }
@@ -538,7 +572,7 @@ export default function HomePage() {
         <motion.div
           style={{ willChange: 'transform, opacity' }}
           animate={
-            prefersReducedMotion
+            noMotion
               ? { opacity: 0.04 }
               : {
                   scale: [1, 1.25, 1],
@@ -548,13 +582,13 @@ export default function HomePage() {
                 }
           }
           transition={
-            prefersReducedMotion
+            noMotion
               ? { duration: 0.2 }
               : { duration: 32, repeat: Infinity, ease: 'easeInOut' }
           }
           className="absolute -right-[20%] top-[40%] h-[60vw] w-[60vw] rounded-full bg-gradient-to-tl from-[#5c4a32]/14 to-transparent blur-[120px] transform-gpu"
         />
-        <div className="pointer-events-none absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.07] mix-blend-overlay" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.02),transparent_65%)] opacity-[0.22]" />
       </div>
 
       {/* Navigation */}
@@ -648,7 +682,7 @@ export default function HomePage() {
         totalPubs={totalPubs}
         totalCitations={totalCitations}
         isMobile={isMobile}
-        prefersReducedMotion={prefersReducedMotion}
+        prefersReducedMotion={noMotion}
       />
 
       <PublicationsSection
@@ -665,7 +699,7 @@ export default function HomePage() {
           filteredPublications.length > 0 && publicationsRows.length === 0
         }
         isMobile={isMobile}
-        prefersReducedMotion={prefersReducedMotion}
+        prefersReducedMotion={noMotion}
         onFilterChange={handlePubFilterChange}
         onLoadMore={handleLoadMore}
       />

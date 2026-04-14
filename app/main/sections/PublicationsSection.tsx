@@ -237,7 +237,15 @@ function PublicationCard({
       viewport={litePub ? undefined : { once: true, margin: '0px 0px -50px 0px', amount: 'some' }}
       transition={{ delay: cardStaggerDelay(index), duration: litePub ? 0 : 0.35 }}
       whileHover={litePub ? {} : { y: -2 }}
-      style={{ transform: 'translateZ(0)' }}
+      style={{
+        transform: 'translateZ(0)',
+        ...(variant === 'list'
+          ? {
+              contentVisibility: 'auto',
+              containIntrinsicSize: '560px',
+            }
+          : {}),
+      }}
       className={`${layoutCls} ${surface}`}
     >
       <div className={imgColCls}>

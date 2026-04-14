@@ -12,6 +12,7 @@ import {
 import { useLanguage } from './LanguageContext';
 import { LanguageSwitcher } from '@/app/components/LanguageSwitcher';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useLowPowerMode } from '@/hooks/use-low-power-mode';
 import { prefetchPapersJson } from '@/lib/papersCache';
 
 const dict = {
@@ -33,10 +34,10 @@ export default function VisualsPage() {
   const { lang } = useLanguage();
   const t = dict[lang];
   const isMobile = useIsMobile();
+  const isLowPowerMode = useLowPowerMode();
   const prefersReducedMotion = useReducedMotion();
-  const noMotion = prefersReducedMotion === true;
+  const noMotion = prefersReducedMotion === true || isLowPowerMode;
   const fullDesktop = !isMobile && !noMotion;
-  const mobileAnim = isMobile && !noMotion;
 
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -45,7 +46,7 @@ export default function VisualsPage() {
 
   const particles = useMemo(() => {
     if (noMotion) return [];
-    const count = fullDesktop ? 40 : 16;
+    const count = fullDesktop ? 26 : 10;
     return Array.from({ length: count }).map((_, i) => ({
       id: i,
       size: ((i * 7) % 6) + 1,
@@ -298,9 +299,9 @@ export default function VisualsPage() {
               willChange: 'transform, opacity',
             }}
             animate={{
-              y: [0, -800],
+              y: [0, fullDesktop ? -620 : -420],
               opacity: [0, 0.85, 0.85, 0],
-              x: [0, Math.sin(p.id) * (fullDesktop ? 150 : 100), 0],
+              x: [0, Math.sin(p.id) * (fullDesktop ? 105 : 64), 0],
               scale: [0, 1.5, 1.5, 0],
             }}
             transition={{
@@ -314,7 +315,7 @@ export default function VisualsPage() {
         ))}
       </div>
 
-      <div className="pointer-events-none absolute inset-0 z-50 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.12] mix-blend-overlay" />
+      <div className="pointer-events-none absolute inset-0 z-50 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.03),transparent_60%)] opacity-[0.25]" />
     </main>
   );
 }

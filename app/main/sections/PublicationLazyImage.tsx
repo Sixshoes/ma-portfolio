@@ -40,10 +40,7 @@ export function PublicationLazyImage({
         loading={eager || priority ? 'eager' : 'lazy'}
         decoding="async"
         unoptimized={isExternal}
-        onError={() => {
-          console.warn(`圖片載入失敗，切換為預設圖: ${src}`);
-          setHasError(true);
-        }}
+        onError={() => setHasError(true)}
         {...rest}
       />
     </div>
