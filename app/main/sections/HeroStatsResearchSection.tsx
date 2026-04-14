@@ -20,9 +20,9 @@ type HeroText = {
 type StatsText = {
   pubs: string;
   citations: string;
-  exp: string;
+  hIndex: string;
+  hIndexValue: string;
   scopusNote: string;
-  expValue: string;
 };
 
 type ResearchItem = {
@@ -211,7 +211,7 @@ function HeroStatsResearchSectionComponent({
 
       <section className="border-y border-white/[0.05] bg-white/[0.02] py-16 backdrop-blur-sm md:py-20">
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-3 gap-6 md:gap-10 text-center">
-          {[{ label: statsText.pubs, value: totalPubs }, { label: statsText.citations, value: totalCitations }, { label: statsText.exp, value: statsText.expValue }].map((stat, i) => (
+          {[{ label: statsText.pubs, value: totalPubs }, { label: statsText.citations, value: totalCitations }, { label: statsText.hIndex, value: statsText.hIndexValue }].map((stat, i) => (
             <motion.div key={i} initial={{ opacity: 0, scale: 0.8 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.1, duration: 0.5 }}>
               <div className="font-heading-serif mb-2 text-3xl font-light text-stone-100 md:text-5xl">{stat.value}</div>
               <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-stone-500">{stat.label}</div>

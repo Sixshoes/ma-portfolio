@@ -42,9 +42,9 @@ const dict = {
     stats: {
       pubs: 'Publications',
       citations: 'Citations',
-      exp: 'Years Experience',
+      hIndex: 'H-Index',
+      hIndexValue: '49',
       scopusNote: '* Citation and publication data sourced from Scopus & ORCID',
-      expValue: '30+'
     },
     research: {
       title: 'Research',
@@ -208,9 +208,9 @@ const dict = {
     stats: {
       pubs: '發表論文',
       citations: '引用次數',
-      exp: '年研究經驗',
+      hIndex: 'h-索引',
       scopusNote: '* 引用與發表數據來源為 Scopus & ORCID',
-      expValue: '30+'
+      hIndexValue: '49',
     },
     research: {
       title: '專業',
@@ -599,8 +599,8 @@ export default function HomePage() {
         className="fixed left-0 top-0 z-50 w-full border-b border-white/[0.06] bg-[#0c0a09]/82 shadow-[0_8px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl"
       >
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div className="flex cursor-pointer items-center gap-2 font-display text-xl font-bold tracking-[0.25em] text-stone-100 transition-transform hover:scale-[1.02]">
-            <span className="text-[#c4a77d]">Y.R.</span> MA
+          <div className="flex cursor-pointer items-center gap-2 font-display text-xl font-bold tracking-[0.15em] text-stone-100 transition-transform hover:scale-[1.02] md:tracking-[0.2em]">
+            <span className="text-[#c4a77d]">Yuan-Ron</span> Ma
           </div>
           <div className="flex items-center gap-4 md:gap-8">
             <div className="hidden space-x-8 font-display text-xs uppercase tracking-[0.2em] text-stone-500 md:flex">
