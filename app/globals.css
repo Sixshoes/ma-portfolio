@@ -2,8 +2,8 @@
 
 :root {
   color-scheme: dark;
-  /* 曜石黑底：襯托香檳金、減少藍調混濁感 */
-  --app-bg: #0c0a09;
+  /* 深炭灰底：保留沈穩感，同時降低過暗壓迫 */
+  --app-bg: #1c1c1c;
   background-color: var(--app-bg);
 }
 
@@ -17,7 +17,7 @@
 
 /* 學術沉穩主題：香檳金焦點 */
 :focus-visible {
-  outline: 2px solid rgba(196, 167, 125, 0.55);
+  outline: 2px solid rgba(212, 175, 55, 0.7);
   outline-offset: 2px;
 }
 
