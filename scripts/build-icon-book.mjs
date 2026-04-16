@@ -1,6 +1,6 @@
 /**
  * 將書本圖示去背並輸出為 app/icon.png（透明背景）。
- * 來源：Gemini_Generated_Image_1bc66j1bc66j1bc6.png
+ * 來源：Gemini_Generated_Image_szzlv2szzlv2szzl.png
  */
 import sharp from "sharp";
 import { fileURLToPath } from "url";
@@ -9,7 +9,7 @@ import fs from "fs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, "..");
-const sourceName = "Gemini_Generated_Image_1bc66j1bc66j1bc6.png";
+const sourceName = "Gemini_Generated_Image_szzlv2szzlv2szzl.png";
 const sourcePath = path.join(root, sourceName);
 const outPath = path.join(root, "app", "icon.png");
 
