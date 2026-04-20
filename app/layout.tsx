@@ -8,16 +8,19 @@ import ScrollToTop from './ScrollToTop';
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-sans',
+  display: 'swap',
 });
 
 const outfit = Outfit({
   subsets: ['latin'],
   variable: '--font-display',
+  display: 'swap',
 });
 
 const mono = JetBrains_Mono({
   subsets: ['latin'],
   variable: '--font-mono',
+  display: 'swap',
 });
 
 const playfair = Playfair_Display({

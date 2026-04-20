@@ -1,6 +1,6 @@
 'use client';
 
-import React, { memo, useMemo, useState } from 'react';
+import React, { memo, useCallback, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'motion/react';
 import { HeroLatticeBackground } from '@/app/components/HeroLatticeBackground';
@@ -59,6 +59,7 @@ function HeroStatsResearchSectionComponent({
 }: HeroStatsResearchSectionProps) {
   useRenderProfiler('HeroStatsResearchSection');
   const [isImgLoaded, setIsImgLoaded] = useState(false);
+  const onImgLoaded = useCallback(() => setIsImgLoaded(true), []);
 
   const profileParticles = useMemo(() => {
     const count = isMobile ? 0 : 4;
@@ -172,7 +173,7 @@ function HeroStatsResearchSectionComponent({
                 alt="馬遠榮副校長個人照 (Prof. Y.R. Ma)"
                 fill
                 priority
-                onLoad={() => setIsImgLoaded(true)}
+                onLoad={onImgLoaded}
                 className={`object-cover object-top transition-all duration-1000 hover:scale-105 ${isImgLoaded ? 'opacity-100' : 'opacity-0'}`}
                 referrerPolicy="no-referrer"
               />

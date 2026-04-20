@@ -59,14 +59,24 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
   );
 
   const particles = useMemo(() => {
-    return Array.from({ length: 16 }).map((_, i) => {
-      const angle = (i / 16) * Math.PI * 2;
+    if (prefersReducedMotion) return [];
+    const count = 8;
+    return Array.from({ length: count }).map((_, i) => {
+      const angle = (i / count) * Math.PI * 2;
       const distance = 120 + ((i * 137) % 80);
       const duration = 0.45 + ((i * 11) % 5) * 0.06;
       const hue = i % 2 === 0 ? 'bg-slate-400/55' : 'bg-[#c4a77d]/50';
-      return { angle, distance, duration, hue, delay: i * 0.025 };
+      return {
+        angle,
+        distance,
+        duration,
+        hue,
+        delay: i * 0.03,
+        cosA: Math.cos(angle) * distance,
+        sinA: Math.sin(angle) * distance,
+      };
     });
-  }, []);
+  }, [prefersReducedMotion]);
 
   const contextValue = useMemo(
     () => ({ lang, setLang, isTransitioning }),
@@ -103,8 +113,8 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
                 key={`p-${i}`}
                 initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
                 animate={{
-                  x: Math.cos(p.angle) * p.distance,
-                  y: Math.sin(p.angle) * p.distance,
+                  x: p.cosA,
+                  y: p.sinA,
                   scale: [0, 1.1, 0],
                   opacity: [0, 0.95, 0],
                 }}

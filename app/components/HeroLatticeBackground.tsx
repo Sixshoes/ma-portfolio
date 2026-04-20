@@ -1,139 +1,157 @@
 'use client';
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 
 type HeroLatticeBackgroundProps = {
   isMobile?: boolean;
   prefersReducedMotion?: boolean | null;
 };
 
-/** 游標相對於容器的座標；用於與格點幾何中心比對距離（避免每格 getBoundingClientRect） */
-function useThrottledContainerMouse(
-  containerRef: React.RefObject<HTMLDivElement | null>,
-  enabled: boolean
-) {
-  const [mouse, setMouse] = useState({ x: -1e4, y: -1e4 });
-  const pendingRef = useRef<{ x: number; y: number } | null>(null);
-  const rafRef = useRef<number | null>(null);
-
-  const flush = useCallback(() => {
-    rafRef.current = null;
-    const p = pendingRef.current;
-    if (p) {
-      pendingRef.current = null;
-      setMouse(p);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!enabled) return;
-
-    const onMove = (e: MouseEvent) => {
-      const el = containerRef.current;
-      if (!el) return;
-      const r = el.getBoundingClientRect();
-      pendingRef.current = {
-        x: e.clientX - r.left,
-        y: e.clientY - r.top,
-      };
-      if (rafRef.current == null) {
-        rafRef.current = requestAnimationFrame(flush);
-      }
-    };
-
-    window.addEventListener('mousemove', onMove, { passive: true });
-    return () => {
-      window.removeEventListener('mousemove', onMove);
-      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
-    };
-  }, [enabled, containerRef, flush]);
-
-  return mouse;
-}
-
-function LatticeDot({
-  col,
-  row,
-  cols,
-  rows,
-  mx,
-  my,
-  w,
-  h,
-  interactionRadius,
-}: {
-  col: number;
-  row: number;
-  cols: number;
-  rows: number;
-  mx: number;
-  my: number;
-  w: number;
-  h: number;
-  interactionRadius: number;
-}) {
-  if (w <= 0 || h <= 0) {
-    return (
-      <div className="flex h-full w-full items-center justify-center">
-        <div className="h-1 w-1 rounded-full bg-slate-600/20" />
-      </div>
-    );
-  }
-
-  const nx = (col + 0.5) * (w / cols);
-  const ny = (row + 0.5) * (h / rows);
-  const dist = Math.hypot(mx - nx, my - ny);
-  const isInteracting = dist < interactionRadius;
-  const intensity = isInteracting ? Math.max(0, 1 - dist / interactionRadius) : 0;
-  const scale = isInteracting ? 1 + intensity * 1.45 : 1;
-  const opacity = isInteracting ? 0.28 + intensity * 0.72 : 0.12;
-  const bg = isInteracting ? '#c4a77d' : '#475569';
-  const glow = isInteracting ? `0 0 ${8 + intensity * 14}px rgba(196,167,125,0.55)` : 'none';
-
-  return (
-    <div className="flex h-full w-full items-center justify-center">
-      <div
-        className="h-1.5 w-1.5 rounded-full transition-[transform,opacity,background-color,box-shadow] duration-200 ease-out will-change-transform"
-        style={{
-          transform: `scale(${scale})`,
-          opacity,
-          backgroundColor: bg,
-          boxShadow: glow,
-        }}
-      />
-    </div>
-  );
-}
-
+/**
+ * Canvas-based lattice background — replaces the previous 312-DOM-node grid
+ * with a single <canvas> element for significantly less layout/paint cost.
+ *
+ * Desktop: animated glow follows cursor via requestAnimationFrame loop.
+ * Mobile / reduced-motion: draws a static lattice once (no rAF loop).
+ */
 export function HeroLatticeBackground({
   isMobile = false,
   prefersReducedMotion = false,
 }: HeroLatticeBackgroundProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [dims, setDims] = useState({ w: 0, h: 0 });
-
+  const mouseRef = useRef({ x: -1e4, y: -1e4 });
+  const rafRef = useRef<number | null>(null);
   const reduced = prefersReducedMotion === true;
+
   const cols = isMobile ? 16 : 26;
   const rows = isMobile ? 10 : 12;
-  const total = rows * cols;
   const interactionRadius = isMobile ? 110 : 150;
 
-  const trackMouse = !reduced;
-  const mouse = useThrottledContainerMouse(containerRef, trackMouse);
+  const draw = useCallback(
+    (ctx: CanvasRenderingContext2D, w: number, h: number) => {
+      const dpr = window.devicePixelRatio || 1;
+      ctx.clearRect(0, 0, w * dpr, h * dpr);
 
+      const mx = mouseRef.current.x * dpr;
+      const my = mouseRef.current.y * dpr;
+      const ir = interactionRadius * dpr;
+
+      const cellW = (w * dpr) / cols;
+      const cellH = (h * dpr) / rows;
+
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const nx = (col + 0.5) * cellW;
+          const ny = (row + 0.5) * cellH;
+
+          const dx = mx - nx;
+          const dy = my - ny;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const isInteracting = !reduced && dist < ir;
+          const intensity = isInteracting ? Math.max(0, 1 - dist / ir) : 0;
+
+          const scale = isInteracting ? 1 + intensity * 1.45 : 1;
+          const opacity = (isInteracting ? 0.28 + intensity * 0.72 : 0.12) * 0.55;
+          const radius = (1.5 * dpr * scale) / 2;
+
+          ctx.beginPath();
+          ctx.arc(nx, ny, radius, 0, Math.PI * 2);
+
+          if (isInteracting) {
+            // Gold glow colour
+            const r = 196, g = 167, b = 125;
+            ctx.fillStyle = `rgba(${r},${g},${b},${opacity})`;
+            // Glow shadow
+            const glowSize = (8 + intensity * 14) * dpr;
+            ctx.shadowColor = `rgba(196,167,125,${0.55 * intensity})`;
+            ctx.shadowBlur = glowSize;
+          } else {
+            // Slate colour
+            ctx.fillStyle = `rgba(71,85,105,${opacity})`;
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+          }
+
+          ctx.fill();
+        }
+      }
+      // Reset shadow after loop
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+    },
+    [cols, rows, interactionRadius, reduced],
+  );
+
+  // Resize handler — keeps canvas crisp on DPR changes / container resize
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
+    const container = containerRef.current;
+    const canvas = canvasRef.current;
+    if (!container || !canvas) return;
 
-    const measure = () => {
-      setDims({ w: el.clientWidth, h: el.clientHeight });
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const resize = () => {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = container.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      canvas.style.width = `${rect.width}px`;
+      canvas.style.height = `${rect.height}px`;
+      // Draw once immediately after resize
+      draw(ctx, rect.width, rect.height);
     };
 
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(container);
     return () => ro.disconnect();
-  }, []);
+  }, [draw]);
+
+  // Mouse tracking + animation loop (desktop only)
+  useEffect(() => {
+    if (reduced) return; // Static mode — already drawn in resize handler
+
+    const canvas = canvasRef.current;
+    const container = containerRef.current;
+    if (!canvas || !container) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const onMove = (e: MouseEvent) => {
+      const r = container.getBoundingClientRect();
+      mouseRef.current = {
+        x: e.clientX - r.left,
+        y: e.clientY - r.top,
+      };
+    };
+
+    if (!isMobile) {
+      window.addEventListener('mousemove', onMove, { passive: true });
+    }
+
+    let running = true;
+    const loop = () => {
+      if (!running) return;
+      const rect = container.getBoundingClientRect();
+      draw(ctx, rect.width, rect.height);
+      rafRef.current = requestAnimationFrame(loop);
+    };
+
+    // Only run continuous loop on desktop with mouse interaction
+    if (!isMobile) {
+      rafRef.current = requestAnimationFrame(loop);
+    }
+
+    return () => {
+      running = false;
+      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+      if (!isMobile) {
+        window.removeEventListener('mousemove', onMove);
+      }
+    };
+  }, [draw, reduced, isMobile]);
 
   return (
     <div
@@ -141,32 +159,11 @@ export function HeroLatticeBackground({
       className="pointer-events-none absolute inset-0 z-0 overflow-hidden bg-transparent"
       aria-hidden
     >
-      <div
-        className="absolute inset-0 grid h-full w-full opacity-[0.55]"
-        style={{
-          gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-          gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))`,
-        }}
-      >
-        {Array.from({ length: total }).map((_, i) => {
-          const col = i % cols;
-          const row = Math.floor(i / cols);
-          return (
-            <LatticeDot
-              key={i}
-              col={col}
-              row={row}
-              cols={cols}
-              rows={rows}
-              mx={reduced ? -1e4 : mouse.x}
-              my={reduced ? -1e4 : mouse.y}
-              w={dims.w}
-              h={dims.h}
-              interactionRadius={interactionRadius}
-            />
-          );
-        })}
-      </div>
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 opacity-[0.55]"
+        style={{ imageRendering: 'auto' }}
+      />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(12,10,9,0.38)_55%,#0c0a09_92%)]" />
     </div>
   );

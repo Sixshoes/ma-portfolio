@@ -55,6 +55,7 @@ export default function VisualsPage() {
       duration: ((i * 3) % 15) + (fullDesktop ? 10 : 14),
       delay: (i * 0.5) % 2,
       color: i % 2 === 0 ? 'bg-slate-400' : 'bg-[#c4a77d]',
+      sinX: Math.sin(i) * (fullDesktop ? 105 : 64),
     }));
   }, [fullDesktop, noMotion]);
 
@@ -301,7 +302,7 @@ export default function VisualsPage() {
             animate={{
               y: [0, fullDesktop ? -620 : -420],
               opacity: [0, 0.85, 0.85, 0],
-              x: [0, Math.sin(p.id) * (fullDesktop ? 105 : 64), 0],
+              x: [0, p.sinX, 0],
               scale: [0, 1.5, 1.5, 0],
             }}
             transition={{

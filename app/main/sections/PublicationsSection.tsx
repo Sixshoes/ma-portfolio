@@ -1,6 +1,6 @@
 'use client';
 
-import React, { memo, useCallback, useEffect, useState } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronDown, ChevronUp, ExternalLink, FolderOpen, Quote, Star } from 'lucide-react';
 import { Publication } from '@/lib/publications';
@@ -187,7 +187,7 @@ type PublicationCardProps = {
   onToggleAbstract: (doi: string) => void;
 };
 
-function PublicationCard({
+const PublicationCard = memo(function PublicationCard({
   pub,
   pubsText,
   isMobile,
@@ -242,7 +242,7 @@ function PublicationCard({
         ...(variant === 'list'
           ? {
               contentVisibility: 'auto',
-              containIntrinsicSize: '560px',
+              containIntrinsicSize: isMobile ? '400px' : '560px',
             }
           : {}),
       }}
@@ -452,7 +452,19 @@ function PublicationCard({
       </div>
     </motion.div>
   );
-}
+}, (prev, next) => {
+  // Custom comparator: skip re-render when card data has not changed
+  return (
+    prev.pub.doi === next.pub.doi &&
+    prev.pub.citations === next.pub.citations &&
+    prev.variant === next.variant &&
+    prev.index === next.index &&
+    prev.isMobile === next.isMobile &&
+    prev.litePub === next.litePub &&
+    prev.locale === next.locale &&
+    (prev.expandedDoi === prev.pub.doi) === (next.expandedDoi === next.pub.doi)
+  );
+});
 
 function PublicationsListSkeleton({
   prefersReducedMotion,
