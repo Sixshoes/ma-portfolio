@@ -23,8 +23,12 @@ const CLEAR_MS = 520;
 export const LanguageProvider = ({ children }: { children: React.ReactNode }) => {
   const [lang, setLangState] = useState<Lang>(() => {
     if (typeof window !== 'undefined') {
-      const savedLang = localStorage.getItem('preferred_lang') as Lang;
-      if (savedLang === 'en' || savedLang === 'zh') return savedLang;
+      try {
+        const savedLang = localStorage.getItem('preferred_lang') as Lang;
+        if (savedLang === 'en' || savedLang === 'zh') return savedLang;
+      } catch {
+        /* localStorage unavailable (private mode, disabled, etc.) */
+      }
     }
     return 'en';
   });

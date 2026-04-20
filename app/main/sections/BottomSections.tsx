@@ -4,6 +4,7 @@ import React, { memo } from 'react';
 import { motion } from 'motion/react';
 import { useRenderProfiler } from './useRenderProfiler';
 import { uiTokens } from './uiTokens';
+import { impactData } from '@/lib/impactData';
 import {
   Globe,
   MapPin,
@@ -81,7 +82,7 @@ function BottomSectionsComponent({ t, lang: _lang, onDownloadVCard }: BottomSect
                 </div>
                 <div>
                   <h3 className="font-heading-serif text-xl font-semibold text-stone-100 md:text-2xl">{t.impact.ndhu}</h3>
-                  <p className="mt-1 font-mono text-sm text-stone-500">Hualien, Taiwan</p>
+                  <p className="mt-1 font-mono text-sm text-stone-500">{impactData.ndhu.location}</p>
                 </div>
               </div>
 
@@ -90,21 +91,21 @@ function BottomSectionsComponent({ t, lang: _lang, onDownloadVCard }: BottomSect
                   <div className="mx-auto mb-3 flex h-8 w-8 items-center justify-center rounded-full border border-stone-700/60 bg-slate-900/50 md:h-10 md:w-10">
                     <Globe className="h-4 w-4 stroke-1 text-stone-400 md:h-5 md:w-5" />
                   </div>
-                  <div className="font-heading-serif text-lg font-semibold text-stone-100 md:text-2xl">49,442</div>
+                  <div className="font-heading-serif text-lg font-semibold text-stone-100 md:text-2xl">{impactData.ndhu.worldRank}</div>
                   <div className="mt-1 text-[8px] font-medium uppercase tracking-wider text-stone-600 md:text-[10px]">{t.impact.worldRank}</div>
                 </div>
                 <div className="text-center">
                   <div className="mx-auto mb-3 flex h-8 w-8 items-center justify-center rounded-full border border-[#8f7038]/30 bg-[#2a241c]/35 md:h-10 md:w-10">
                     <MapPin className="h-4 w-4 stroke-1 text-[#c4a77d] md:h-5 md:w-5" />
                   </div>
-                  <div className="font-heading-serif text-lg font-semibold text-stone-100 md:text-2xl">225</div>
+                  <div className="font-heading-serif text-lg font-semibold text-stone-100 md:text-2xl">{impactData.ndhu.countryRank}</div>
                   <div className="mt-1 text-[8px] font-medium uppercase tracking-wider text-stone-600 md:text-[10px]">{t.impact.countryRank}</div>
                 </div>
                 <div className="text-center">
                   <div className="mx-auto mb-3 flex h-8 w-8 items-center justify-center rounded-full border border-stone-800/80 bg-slate-900/40 md:h-10 md:w-10">
                     <GraduationCap className="h-4 w-4 stroke-1 text-stone-500 md:h-5 md:w-5" />
                   </div>
-                  <div className="font-heading-serif text-lg font-semibold text-stone-100 md:text-2xl">1</div>
+                  <div className="font-heading-serif text-lg font-semibold text-stone-100 md:text-2xl">{impactData.ndhu.uniRank}</div>
                   <div className="mt-1 text-[8px] font-medium uppercase tracking-wider text-stone-600 md:text-[10px]">{t.impact.uniRank}</div>
                 </div>
               </div>
@@ -113,15 +114,15 @@ function BottomSectionsComponent({ t, lang: _lang, onDownloadVCard }: BottomSect
                 <h4 className="mb-6 text-center font-mono text-xs uppercase tracking-widest text-stone-500 md:text-sm">{t.impact.hIndex}</h4>
                 <div className="grid grid-cols-3 gap-2 text-center md:gap-4">
                   <div>
-                    <div className="font-heading-serif text-xl font-semibold text-[#c4a77d] md:text-3xl">62</div>
+                    <div className="font-heading-serif text-xl font-semibold text-[#c4a77d] md:text-3xl">{impactData.ndhu.hIndex.total}</div>
                     <div className="mt-2 text-[8px] uppercase tracking-wider text-stone-600 md:text-[10px]">{t.impact.total}</div>
                   </div>
                   <div>
-                    <div className="font-heading-serif text-xl font-semibold text-stone-100 md:text-3xl">47</div>
+                    <div className="font-heading-serif text-xl font-semibold text-stone-100 md:text-3xl">{impactData.ndhu.hIndex.last5}</div>
                     <div className="mt-2 text-[8px] uppercase tracking-wider text-stone-600 md:text-[10px]">{t.impact.last5}</div>
                   </div>
                   <div>
-                    <div className="font-heading-serif text-xl font-semibold text-stone-100 md:text-3xl">0.758</div>
+                    <div className="font-heading-serif text-xl font-semibold text-stone-100 md:text-3xl">{impactData.ndhu.hIndex.ratio}</div>
                     <div className="mt-2 text-[8px] uppercase tracking-wider text-stone-600 md:text-[10px]">{t.impact.ratio}</div>
                   </div>
                 </div>
@@ -141,7 +142,7 @@ function BottomSectionsComponent({ t, lang: _lang, onDownloadVCard }: BottomSect
                 </div>
                 <div>
                   <h3 className="font-heading-serif text-xl font-semibold text-stone-100 md:text-2xl">{t.impact.fgu}</h3>
-                  <p className="mt-1 font-mono text-sm text-stone-500">Yilan County, Taiwan</p>
+                  <p className="mt-1 font-mono text-sm text-stone-500">{impactData.fgu.location}</p>
                 </div>
               </div>
 
@@ -150,21 +151,21 @@ function BottomSectionsComponent({ t, lang: _lang, onDownloadVCard }: BottomSect
                   <div className="mx-auto mb-3 flex h-8 w-8 items-center justify-center rounded-full border border-stone-700/60 bg-slate-900/50 md:h-10 md:w-10">
                     <Globe className="h-4 w-4 stroke-1 text-stone-400 md:h-5 md:w-5" />
                   </div>
-                  <div className="font-heading-serif text-lg font-semibold text-stone-100 md:text-2xl">80,658</div>
+                  <div className="font-heading-serif text-lg font-semibold text-stone-100 md:text-2xl">{impactData.fgu.worldRank}</div>
                   <div className="mt-1 text-[8px] font-medium uppercase tracking-wider text-stone-600 md:text-[10px]">{t.impact.worldRank}</div>
                 </div>
                 <div className="text-center">
                   <div className="mx-auto mb-3 flex h-8 w-8 items-center justify-center rounded-full border border-[#8f7038]/30 bg-[#2a241c]/35 md:h-10 md:w-10">
                     <MapPin className="h-4 w-4 stroke-1 text-[#c4a77d] md:h-5 md:w-5" />
                   </div>
-                  <div className="font-heading-serif text-lg font-semibold text-stone-100 md:text-2xl">423</div>
+                  <div className="font-heading-serif text-lg font-semibold text-stone-100 md:text-2xl">{impactData.fgu.countryRank}</div>
                   <div className="mt-1 text-[8px] font-medium uppercase tracking-wider text-stone-600 md:text-[10px]">{t.impact.countryRank}</div>
                 </div>
                 <div className="text-center">
                   <div className="mx-auto mb-3 flex h-8 w-8 items-center justify-center rounded-full border border-stone-800/80 bg-slate-900/40 md:h-10 md:w-10">
                     <GraduationCap className="h-4 w-4 stroke-1 text-stone-500 md:h-5 md:w-5" />
                   </div>
-                  <div className="font-heading-serif text-lg font-semibold text-stone-100 md:text-2xl">2</div>
+                  <div className="font-heading-serif text-lg font-semibold text-stone-100 md:text-2xl">{impactData.fgu.uniRank}</div>
                   <div className="mt-1 text-[8px] font-medium uppercase tracking-wider text-stone-600 md:text-[10px]">{t.impact.uniRank}</div>
                 </div>
               </div>
@@ -173,15 +174,15 @@ function BottomSectionsComponent({ t, lang: _lang, onDownloadVCard }: BottomSect
                 <h4 className="mb-6 text-center font-mono text-xs uppercase tracking-widest text-stone-500 md:text-sm">{t.impact.hIndex}</h4>
                 <div className="grid grid-cols-3 gap-2 text-center md:gap-4">
                   <div>
-                    <div className="font-heading-serif text-xl font-semibold text-[#c4a77d] md:text-3xl">52</div>
+                    <div className="font-heading-serif text-xl font-semibold text-[#c4a77d] md:text-3xl">{impactData.fgu.hIndex.total}</div>
                     <div className="mt-2 text-[8px] uppercase tracking-wider text-stone-600 md:text-[10px]">{t.impact.total}</div>
                   </div>
                   <div>
-                    <div className="font-heading-serif text-xl font-semibold text-stone-100 md:text-3xl">38</div>
+                    <div className="font-heading-serif text-xl font-semibold text-stone-100 md:text-3xl">{impactData.fgu.hIndex.last5}</div>
                     <div className="mt-2 text-[8px] uppercase tracking-wider text-stone-600 md:text-[10px]">{t.impact.last5}</div>
                   </div>
                   <div>
-                    <div className="font-heading-serif text-xl font-semibold text-stone-100 md:text-3xl">0.731</div>
+                    <div className="font-heading-serif text-xl font-semibold text-stone-100 md:text-3xl">{impactData.fgu.hIndex.ratio}</div>
                     <div className="mt-2 text-[8px] uppercase tracking-wider text-stone-600 md:text-[10px]">{t.impact.ratio}</div>
                   </div>
                 </div>
