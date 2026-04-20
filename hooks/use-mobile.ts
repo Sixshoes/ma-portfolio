@@ -5,8 +5,8 @@ const MOBILE_BREAKPOINT = 768
 export function useIsMobile() {
   const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
 
-  // useLayoutEffect：在瀏覽器繪製前同步 viewport，避免窄螢幕先閃「桌機版」Lenis／動畫
-  React.useLayoutEffect(() => {
+  // 使用 useEffect 避免 SSR hydration warning
+  React.useEffect(() => {
     const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
     const onChange = () => setIsMobile(mql.matches)
     mql.addEventListener("change", onChange)

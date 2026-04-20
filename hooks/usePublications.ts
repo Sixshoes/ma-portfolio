@@ -27,7 +27,7 @@ export function usePublications(isMobile: boolean) {
   }, [isMobile]);
 
   // Synchronous cache restore (before paint)
-  React.useLayoutEffect(() => {
+  useEffect(() => {
     const cached = readCachedPapers();
     if (cached && cached.length > 0) {
       setPublications(cached);

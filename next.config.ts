@@ -10,7 +10,6 @@ const nextConfig: NextConfig = {
   },
   // Remote hosts for journal thumbnails, profile photo, and portal assets.
   images: {
-    unoptimized: true, // Required for GitHub Pages static export
     remotePatterns: [
       {
         protocol: 'https',
@@ -44,10 +43,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Use 'export' and set basePath ONLY when running in GitHub Actions.
-  // This keeps the AI Studio preview working ('standalone') while deploying correctly to GitHub Pages.
-  output: process.env.GITHUB_ACTIONS ? 'export' : 'standalone',
-  basePath: process.env.GITHUB_ACTIONS ? '/Ma-Research-Portal' : '',
   transpilePackages: ['motion'],
   webpack: (config, {dev}) => {
     // HMR is disabled in AI Studio via DISABLE_HMR env var.

@@ -65,7 +65,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://sixshoes.github.io" crossOrigin="anonymous" />
       </head>
       <body
-        suppressHydrationWarning
         className="bg-[var(--app-bg)] text-stone-400 font-sans antialiased selection:bg-[#d4af37]/20 selection:text-stone-100"
       >
         {/* Subtle noise texture overlay for premium material feel - Removed for performance */}
