@@ -121,7 +121,10 @@ export type ContactText = {
   labelEmail: string;
   labelPhone: string;
   labelFax: string;
+  /** Primary mailbox (mailto) */
   email: string;
+  /** Additional addresses shown under the same email block */
+  emailAdditional?: string[];
   phone: string;
   fax: string;
   vcard: string;
@@ -162,7 +165,7 @@ export const dict: Record<Lang, I18nDict> = {
       pubs: 'Publications',
       citations: 'Citations',
       hIndex: 'H-Index',
-      hIndexValue: '49',
+      hIndexValue: '62',
       scopusNote: '* Citation and publication data sourced from Scopus & ORCID',
     },
     research: {
@@ -171,10 +174,10 @@ export const dict: Record<Lang, I18nDict> = {
       desc: 'Pushing the boundaries of physics and materials science',
       items: [
         { title: '1D Nanomaterials', desc: 'Synthesis and characterization of one-dimensional metal-oxide nanostructures, nanorods, and nanowires for advanced applications.', icon: Network },
-        { title: '2D Magnetic Materials', desc: 'Investigating magnetic behaviors, spin dynamics, and spintronic applications in two-dimensional layered materials.', icon: Magnet },
+        { title: '2D Ferromagnetic Materials', desc: 'Investigating magnetic behaviors, spin dynamics, and spintronic applications in two-dimensional layered materials.', icon: Magnet },
         { title: 'Electrochromism', desc: 'Developing high-performance electrochromic smart windows and optical modulation devices for energy efficiency.', icon: Contrast },
         { title: 'Supercapacitors', desc: 'Researching advanced energy storage systems with high energy density, rapid charging, and long cycle life.', icon: BatteryCharging },
-        { title: 'Quantum Computers', desc: 'Dedicated to the development of novel qubit materials and next-generation quantum computing architectures.', icon: Atom }
+        { title: 'Quantum Computer', desc: 'Dedicated to the development of novel qubit materials and next-generation quantum computing architectures.', icon: Atom }
       ]
     },
     pubs: {
@@ -218,7 +221,8 @@ export const dict: Record<Lang, I18nDict> = {
       subtitle: 'Journey',
       rolesEduTab: 'Roles & Education',
       leadership: 'Academic Leadership',
-      leadershipDesc: 'Serving as the Vice President of Fo Guang University, fostering academic excellence, interdisciplinary research, and innovation in higher education.',
+      leadershipDesc:
+        'Vice President and Chair Professor at Fo Guang University (on secondment from National Dong Hwa University), with Distinguished Professor appointment in Physics at NDHU. He advances academic excellence, international cooperation, sustainability, and interdisciplinary research across both institutions.',
       roleLabel: 'Current Positions',
       roles: [
         'Vice President, Fo Guang University (2025/02/01~)',
@@ -231,13 +235,12 @@ export const dict: Record<Lang, I18nDict> = {
       eduLabel: 'Education',
       edu: [
         'Ph.D. in Physics and Astronomy, University of Nottingham, UK (1998)',
-        'M.Sc. in Physics, University of Warwick, UK (1994)',
+        'M.Sc. in Physics, University of Warwick, UK (1995)',
         'B.Sc. in Physics, Tamkang University, Taiwan (1988)'
       ],
       adminLabel: 'Administrative Experience',
       admin: [
-        'Dean, College of Applied Technology and Design, Fo Guang University (2025/08/01~2025/10/31)',
-        'Dean, College of Creativity and Technology, Fo Guang University (2025/02/01~2025/07/31)',
+        'Dean, College of Creativity & Technology, Fo Guang University (2025/02/01~2025/10/31)',
         'Vice President for Administration, National Dong Hwa University (2021/10/01~2023/09/30)',
         'Dean, Office of International Affairs, National Dong Hwa University (2018/08/01~2024/01)',
         'Acting Dean, College of Science and Engineering, National Dong Hwa University (2022/03~2023/04)',
@@ -258,8 +261,8 @@ export const dict: Record<Lang, I18nDict> = {
         'Editor, Chinese Journal of Physics, Elsevier (2019/01~)',
         'Editorial Board Member, Sensors, MDPI (2019/01~)',
         'Editorial Board Member, Scientific Reports, Nature Publishing Group (2013/01~)',
-        'Co-Convener, Executive Committee, 1st Division of Condensed Matter Physics, Physical Society of Taiwan (2022/08~2024/01)',
-        'Executive Committee Member, 1st Division of Condensed Matter Physics, Physical Society of Taiwan (2022/02~2024/01)',
+        'Co-Chair, Executive Committee, Division of Condensed Matter Physics, Physical Society of Taiwan (2022/08~2024/01)',
+        'Executive Committee Member, Division of Condensed Matter Physics, Physical Society of Taiwan (2022/02~2024/01)',
         'Planning and Promotion Committee Member, Center for Global Affairs and Science Engagement, MOST (2018/10~2021/12)',
         'Review Committee Member, Physics Discipline, Department of Natural Sciences, MOST (2017/01~2019/12)',
         'Board Member, Physical Society of Taiwan (2016/01~2018/12)',
@@ -269,12 +272,17 @@ export const dict: Record<Lang, I18nDict> = {
       ],
       awardsLabel: 'Honors & Awards',
       awards: [
+        'Visiting Distinguished Professor, Indian Institute of Technology Indore (IITI) (2025)',
+        'Fellow, International Association of Advanced Materials (IAAM) (2025)',
+        'Vebleo Fellow (2025)',
+        'Visiting Distinguished Professor, USCI University, Malaysia (2023)',
         'NDHU Top Talent Academic Award (2016-2025)',
-        'ESI Highly Cited Researcher (Top 1%) in Science and Engineering (2016~2022)',
+        'ESI Highly Cited Researcher (Top 1%) in Science and Engineering (2016-2023)',
         'NDHU Research Breakthrough Award (2021, Paper published in Advanced Materials)',
         'NDHU First-Class Academic Award (2021)',
-        'GREEN Outstanding Research Achievement and Contribution Award, Asia Pacific Society for Materials Research (2019)',
+        'APSMR Award for Outstanding Research Achievement and Contribution to GREEN, Asia Pacific Society for Materials Research (2019)',
         'Outstanding Teacher and Public Servant Award, Ministry of Education (2013)',
+        'NDHU College of Science and Engineering Excellent Teaching Award (2020)',
         'NDHU University-Level Outstanding Teacher (2007)',
         'NDHU Outstanding Research Award (2004~2015)'
       ]
@@ -299,7 +307,8 @@ export const dict: Record<Lang, I18nDict> = {
       labelEmail: 'Email',
       labelPhone: 'Phone',
       labelFax: 'Fax',
-      email: 'yrma@mail.fgu.edu.tw',
+      email: 'yrma@gm.fgu.edu.tw',
+      emailAdditional: ['ronma@gms.ndhu.edu.tw'],
       phone: '+886-3-9871000 ext. 11010',
       fax: '+886-3-9874815',
       vcard: 'Save Contact Info',
@@ -329,7 +338,7 @@ export const dict: Record<Lang, I18nDict> = {
       citations: '引用次數',
       hIndex: 'h-索引',
       scopusNote: '* 引用與發表數據來源為 Scopus & ORCID',
-      hIndexValue: '49',
+      hIndexValue: '62',
     },
     research: {
       title: '專業',
@@ -337,7 +346,7 @@ export const dict: Record<Lang, I18nDict> = {
       desc: '突破物理與材料科學的界限',
       items: [
         { title: '一維奈米材料', desc: '專注於一維金屬氧化物奈米結構、奈米棒與奈米線的合成與特性研究，應用於先進光電元件。', icon: Network },
-        { title: '二維磁性材料', desc: '探討二維層狀材料的磁性行為、自旋動力學與自旋電子學應用。', icon: Magnet },
+        { title: '二維鐵磁材料', desc: '探討二維層狀材料的磁性行為、自旋動力學與自旋電子學應用。', icon: Magnet },
         { title: '電致變色', desc: '開發高效能電致變色智慧窗與光學調變元件，致力於節能與智能玻璃技術。', icon: Contrast },
         { title: '超級電容器', desc: '研發具備高能量密度、快速充放電與長壽命的先進儲能系統與奈米電極材料。', icon: BatteryCharging },
         { title: '量子電腦', desc: '致力於新型量子位元材料開發與次世代量子計算架構之基礎物理研究。', icon: Atom }
@@ -383,7 +392,8 @@ export const dict: Record<Lang, I18nDict> = {
       subtitle: '歷程',
       rolesEduTab: '現職與學歷',
       leadership: '學術領導',
-      leadershipDesc: '擔任佛光大學副校長，致力於推動高等教育的學術卓越、跨領域研究與創新發展。',
+      leadershipDesc:
+        '借調至佛光大學擔任副校長暨講座教授，並於國立東華大學物理學系擔任特聘教授。致力推動校務發展、國際合作、永續行政與跨領域研究。',
       roleLabel: '現職',
       roles: [
         '佛光大學副校長 (2025/02/01~)',
@@ -396,13 +406,12 @@ export const dict: Record<Lang, I18nDict> = {
       eduLabel: '學歷',
       edu: [
         '英國諾丁翰大學物理學暨天文學博士 (1998)',
-        '英國華威大學物理學碩士 (1994)',
+        '英國華威大學物理學碩士 (1995)',
         '淡江大學物理學學士 (1988)'
       ],
       adminLabel: '行政經歷',
       admin: [
-        '佛光大學應用科技與設計學院院長 (2025/08/01~2025/10/31)',
-        '佛光大學創意與科技學院院長 (2025/02/01~2025/07/31)',
+        '佛光大學創意與科技學院院長 (2025/02/01~2025/10/31)',
         '國立東華大學行政副校長 (2021/10/01~2023/09/30)',
         '國立東華大學國際事務處處長 (2018/08/01~2024/01)',
         '國立東華大學理工學院代理院長 (2022/03~2023/04)',
@@ -423,8 +432,8 @@ export const dict: Record<Lang, I18nDict> = {
         '愛思唯爾華人物理期刊編輯 (2019/01~)',
         'MDPI 感應器編輯委員 (2019/01~)',
         '自然出版集團科學報導編輯委員 (2013/01~)',
-        '台灣物理學會第一屆凝態物理學部執行委員會共同召集人 (2022/08~2024/01)',
-        '台灣物理學會第一屆凝態物理學部執行委員 (2022/02~2024/01)',
+        '台灣物理學會凝態物理學部執行委員會共同主席 (2022/08~2024/01)',
+        '台灣物理學會凝態物理學部執行委員 (2022/02~2024/01)',
         '科技部全球事務與科學發展中心規劃推動委員 (2018/10~2021/12)',
         '科技部自然司物理學門複審委員 (2017/01~2019/12)',
         '中華民國物理學會理事 (2016/01~2018/12)',
@@ -434,12 +443,17 @@ export const dict: Record<Lang, I18nDict> = {
       ],
       awardsLabel: '榮譽與獲獎',
       awards: [
+        '印度理工學院印多爾分校 (IITI) 訪問特聘教授 (2025)',
+        '國際先進材料協會 (IAAM) Fellow (2025)',
+        'Vebleo Fellow (2025)',
+        '馬來西亞 USCI 大學訪問特聘教授 (2023)',
         '東華頂尖人才學術獎勵 (2016-2025)',
-        'ESI 科學與工程類 1% 高引用值 (2016~2022)',
+        'ESI 科學與工程類 1% 高引用值 (2016-2023)',
         '東華研究突破獎 (2021，論文刊登於頂尖期刊 Advanced Materials)',
         '東華一等學術獎 (2021)',
-        '亞太材料研究學會 GREEN 傑出研究成就與貢獻獎 (2019)',
+        '亞太材料研究學會 (APSMR) GREEN 傑出研究成就與貢獻獎 (2019)',
         '教育部優良教師與公務人員獎 (2013)',
+        '東華理工學院優良教學獎 (2020)',
         '東華校級優良教師 (2007)',
         '東華研究優良獎勵 (2004~2015)'
       ]
@@ -464,7 +478,8 @@ export const dict: Record<Lang, I18nDict> = {
       labelEmail: '電子郵件',
       labelPhone: '電話',
       labelFax: '傳真',
-      email: 'yrma@mail.fgu.edu.tw',
+      email: 'yrma@gm.fgu.edu.tw',
+      emailAdditional: ['ronma@gms.ndhu.edu.tw'],
       phone: '(03)9871000 分機 11010',
       fax: '(03)9874815',
       vcard: '儲存聯絡資訊',

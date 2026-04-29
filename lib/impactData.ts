@@ -36,5 +36,6 @@ TITLE:Vice President, Chair Professor
 ORG:Fo Guang University
 TEL;TYPE=WORK,VOICE:+886-3-9871000;ext=11010
 TEL;TYPE=WORK,FAX:+886-3-9874815
-EMAIL;TYPE=PREF,INTERNET:yrma@mail.fgu.edu.tw
+EMAIL;TYPE=PREF,INTERNET:yrma@gm.fgu.edu.tw
+EMAIL;TYPE=INTERNET:ronma@gms.ndhu.edu.tw
 END:VCARD`;

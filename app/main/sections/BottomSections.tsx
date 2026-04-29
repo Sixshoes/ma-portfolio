@@ -39,6 +39,7 @@ type BottomSectionsProps = {
       labelPhone: string;
       labelFax: string;
       email: string;
+      emailAdditional?: string[];
       phone: string;
       fax: string;
       vcard: string;
@@ -222,8 +223,8 @@ function BottomSectionsComponent({ t, lang: _lang, onDownloadVCard }: BottomSect
               [
                 {
                   label: t.contact.labelEmail,
-                  value: t.contact.email,
-                  href: `mailto:${t.contact.email}`,
+                  value: [t.contact.email, ...(t.contact.emailAdditional ?? [])],
+                  href: [t.contact.email, ...(t.contact.emailAdditional ?? [])].map((e) => `mailto:${e}`),
                   Icon: Mail,
                 },
                 {
@@ -250,15 +251,27 @@ function BottomSectionsComponent({ t, lang: _lang, onDownloadVCard }: BottomSect
                     {label}
                   </span>
                 </div>
-                {href ? (
+                {Array.isArray(value) && Array.isArray(href) ? (
+                  <div className="flex flex-col gap-2">
+                    {value.map((v, i) => (
+                      <a
+                        key={v}
+                        href={href[i]}
+                        className="break-words text-lg font-medium leading-snug text-stone-200 transition-colors hover:text-stone-50"
+                      >
+                        {v}
+                      </a>
+                    ))}
+                  </div>
+                ) : href ? (
                   <a
-                    href={href}
+                    href={href as string}
                     className="break-words text-lg font-medium leading-snug text-stone-200 transition-colors hover:text-stone-50"
                   >
-                    {value}
+                    {value as string}
                   </a>
                 ) : (
-                  <p className="text-lg font-medium leading-snug text-stone-200">{value}</p>
+                  <p className="text-lg font-medium leading-snug text-stone-200">{value as string}</p>
                 )}
               </div>
             ))}
