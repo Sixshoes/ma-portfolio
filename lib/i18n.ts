@@ -165,7 +165,7 @@ export const dict: Record<Lang, I18nDict> = {
       pubs: 'Publications',
       citations: 'Citations',
       hIndex: 'H-Index',
-      hIndexValue: '62',
+      hIndexValue: '49',
       scopusNote: '* Citation and publication data sourced from Scopus & ORCID',
     },
     research: {
@@ -308,7 +308,6 @@ export const dict: Record<Lang, I18nDict> = {
       labelPhone: 'Phone',
       labelFax: 'Fax',
       email: 'yrma@gm.fgu.edu.tw',
-      emailAdditional: ['ronma@gms.ndhu.edu.tw'],
       phone: '+886-3-9871000 ext. 11010',
       fax: '+886-3-9874815',
       vcard: 'Save Contact Info',
@@ -338,7 +337,7 @@ export const dict: Record<Lang, I18nDict> = {
       citations: '引用次數',
       hIndex: 'h-索引',
       scopusNote: '* 引用與發表數據來源為 Scopus & ORCID',
-      hIndexValue: '62',
+      hIndexValue: '49',
     },
     research: {
       title: '專業',
@@ -479,7 +478,6 @@ export const dict: Record<Lang, I18nDict> = {
       labelPhone: '電話',
       labelFax: '傳真',
       email: 'yrma@gm.fgu.edu.tw',
-      emailAdditional: ['ronma@gms.ndhu.edu.tw'],
       phone: '(03)9871000 分機 11010',
       fax: '(03)9874815',
       vcard: '儲存聯絡資訊',
