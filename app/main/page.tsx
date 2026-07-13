@@ -2,7 +2,7 @@
 
 import React, { useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { motion, useReducedMotion } from 'motion/react';
+import { motion } from 'motion/react';
 import { useLanguage } from '../LanguageContext';
 import { dict } from '@/lib/i18n';
 import { vcardData } from '@/lib/impactData';
@@ -11,7 +11,7 @@ import { ErrorBoundary } from '@/app/components/ErrorBoundary';
 import { HeroStatsResearchSection } from './sections/HeroStatsResearchSection';
 import { useRenderProfiler } from './sections/useRenderProfiler';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useLowPowerMode } from '@/hooks/use-low-power-mode';
+import { useLiteVisuals } from '@/hooks/use-lite-visuals';
 import { usePublications } from '@/hooks/usePublications';
 
 const PublicationsSection = dynamic(
@@ -31,9 +31,8 @@ export default function HomePage() {
   useRenderProfiler('MainPage');
   const { lang } = useLanguage();
   const isMobile = useIsMobile();
-  const prefersReducedMotion = useReducedMotion();
-  const isLowPowerMode = useLowPowerMode();
-  const noMotion = prefersReducedMotion === true || isLowPowerMode;
+  const liteVisuals = useLiteVisuals();
+  const noMotion = liteVisuals;
   const t = dict[lang];
 
   const {

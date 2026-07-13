@@ -37,6 +37,7 @@ const notoSerifTc = Noto_Serif_TC({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://sixshoes.github.io/ma-portfolio'),
   title: '馬遠榮副校長 | 佛光大學 個人學術網站',
   description: '展示馬遠榮副校長的學術履歷、研究成果、發行著作以及相關專業經歷。',
   openGraph: {
@@ -44,7 +45,7 @@ export const metadata: Metadata = {
     description: '展示馬遠榮副校長的學術履歷、研究成果、發行著作以及相關專業經歷。',
     type: 'website',
     locale: 'zh_TW',
-    url: 'https://ais-dev-2vkfnzcdenqunkr3e52tml-76665202037.asia-northeast1.run.app',
+    url: 'https://sixshoes.github.io/ma-portfolio/',
     siteName: '馬遠榮副校長學術網站',
   },
   twitter: {

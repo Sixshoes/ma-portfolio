@@ -6,13 +6,12 @@ import {
   motion,
   useMotionValue,
   useSpring,
-  useReducedMotion,
   AnimatePresence,
 } from 'motion/react';
 import { useLanguage } from './LanguageContext';
 import { LanguageSwitcher } from '@/app/components/LanguageSwitcher';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useLowPowerMode } from '@/hooks/use-low-power-mode';
+import { useLiteVisuals } from '@/hooks/use-lite-visuals';
 import { prefetchPapersJson } from '@/lib/papersCache';
 
 const dict = {
@@ -34,9 +33,8 @@ export default function VisualsPage() {
   const { lang } = useLanguage();
   const t = dict[lang];
   const isMobile = useIsMobile();
-  const isLowPowerMode = useLowPowerMode();
-  const prefersReducedMotion = useReducedMotion();
-  const noMotion = prefersReducedMotion === true || isLowPowerMode;
+  const liteVisuals = useLiteVisuals();
+  const noMotion = liteVisuals;
   const fullDesktop = !isMobile && !noMotion;
 
   const mouseX = useMotionValue(0);
@@ -126,7 +124,7 @@ export default function VisualsPage() {
         >
           <Link
             href="/main"
-            className="group flex items-center gap-2 whitespace-nowrap rounded-full border border-[#9a8260]/45 bg-slate-950/50 px-6 py-2.5 font-display text-[10px] uppercase tracking-[0.1em] text-[#d4c4a8] backdrop-blur-md transition-colors hover:bg-[#c4a77d] hover:text-stone-950 active:scale-[0.98] md:px-8 md:py-3 md:text-sm md:tracking-[0.2em]"
+            className="group flex items-center gap-2 whitespace-nowrap rounded-full border border-[#9a8260]/45 bg-slate-950/80 px-6 py-2.5 font-display text-[10px] uppercase tracking-[0.1em] text-[#d4c4a8] transition-colors hover:bg-[#c4a77d] hover:text-stone-950 active:scale-[0.98] md:bg-slate-950/50 md:px-8 md:py-3 md:text-sm md:tracking-[0.2em] md:backdrop-blur-md"
           >
             <span className="inline-flex items-center gap-2 transition-transform duration-300 group-hover:scale-[1.05] group-active:scale-[0.97]">
               {t.enter}
@@ -226,20 +224,16 @@ export default function VisualsPage() {
                 ? { duration: 8, repeat: Infinity, ease: 'easeInOut' }
                 : { duration: 5.5, repeat: Infinity, ease: 'easeInOut' }
           }
-          className="h-24 w-24 rounded-full bg-gradient-to-tr from-[#6b5429]/40 to-slate-600/35 opacity-90 mix-blend-screen blur-2xl md:h-40 md:w-40"
+          className={`h-24 w-24 rounded-full bg-gradient-to-tr from-[#6b5429]/40 to-slate-600/35 opacity-90 md:h-40 md:w-40 ${noMotion ? '' : 'mix-blend-screen blur-2xl'}`}
         />
 
         <div className="pointer-events-none absolute flex w-[90vw] flex-col items-center gap-2 text-center font-display font-light uppercase text-stone-100 md:w-[600px] md:gap-4 md:text-xl">
           <AnimatePresence mode="wait">
             <motion.div
               key={lang}
-              initial={noMotion ? false : { opacity: 0, y: 10, filter: 'blur(6px)' }}
-              animate={
-                noMotion
-                  ? undefined
-                  : { opacity: 1, y: 0, filter: 'blur(0px)' }
-              }
-              exit={noMotion ? undefined : { opacity: 0, y: -8, filter: 'blur(4px)' }}
+              initial={noMotion ? false : { opacity: 0, y: 10 }}
+              animate={noMotion ? undefined : { opacity: 1, y: 0 }}
+              exit={noMotion ? undefined : { opacity: 0, y: -8 }}
               transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
               className="flex flex-col items-center gap-2 md:gap-4"
             >

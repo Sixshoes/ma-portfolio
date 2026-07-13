@@ -1,7 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, useState, useMemo, useCallback } from 'react';
+import React, { createContext, useContext, useState, useMemo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
+import { useLiteVisuals } from '@/hooks/use-lite-visuals';
 
 type Lang = 'en' | 'zh';
 
@@ -21,24 +22,25 @@ const SWAP_MS = 160;
 const CLEAR_MS = 520;
 
 export const LanguageProvider = ({ children }: { children: React.ReactNode }) => {
-  const [lang, setLangState] = useState<Lang>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const savedLang = localStorage.getItem('preferred_lang') as Lang;
-        if (savedLang === 'en' || savedLang === 'zh') return savedLang;
-      } catch {
-        /* localStorage unavailable (private mode, disabled, etc.) */
-      }
-    }
-    return 'en';
-  });
+  const [lang, setLangState] = useState<Lang>('en');
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const liteVisuals = useLiteVisuals();
   const prefersReducedMotion = useReducedMotion() === true;
+  const skipTransition = prefersReducedMotion || liteVisuals;
+
+  useEffect(() => {
+    try {
+      const savedLang = localStorage.getItem('preferred_lang') as Lang;
+      if (savedLang === 'en' || savedLang === 'zh') setLangState(savedLang);
+    } catch {
+      /* localStorage unavailable */
+    }
+  }, []);
 
   const setLang = useCallback(
     (newLang: Lang) => {
       if (newLang === lang) return;
-      if (prefersReducedMotion) {
+      if (skipTransition) {
         setLangState(newLang);
         try {
           localStorage.setItem('preferred_lang', newLang);
@@ -59,11 +61,11 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
       }, SWAP_MS);
       window.setTimeout(() => setIsTransitioning(false), CLEAR_MS);
     },
-    [lang, isTransitioning, prefersReducedMotion]
+    [lang, isTransitioning, skipTransition]
   );
 
   const particles = useMemo(() => {
-    if (prefersReducedMotion) return [];
+    if (prefersReducedMotion || liteVisuals) return [];
     const count = 8;
     return Array.from({ length: count }).map((_, i) => {
       const angle = (i / count) * Math.PI * 2;
@@ -80,7 +82,7 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
         sinA: Math.sin(angle) * distance,
       };
     });
-  }, [prefersReducedMotion]);
+  }, [prefersReducedMotion, liteVisuals]);
 
   const contextValue = useMemo(
     () => ({ lang, setLang, isTransitioning }),
@@ -90,7 +92,7 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
   return (
     <LanguageContext.Provider value={contextValue}>
       <AnimatePresence>
-        {isTransitioning && !prefersReducedMotion && (
+        {isTransitioning && !skipTransition && (
           <motion.div
             key="lang-transition"
             initial={{ opacity: 0 }}
@@ -149,8 +151,8 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
 
       <motion.div
         animate={{
-          opacity: isTransitioning && !prefersReducedMotion ? 0.78 : 1,
-          y: isTransitioning && !prefersReducedMotion ? 5 : 0,
+          opacity: isTransitioning && !skipTransition ? 0.78 : 1,
+          y: isTransitioning && !skipTransition ? 5 : 0,
         }}
         transition={{
           duration: 0.32,
