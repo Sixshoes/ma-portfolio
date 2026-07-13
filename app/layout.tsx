@@ -4,6 +4,9 @@ import './globals.css';
 import { LanguageProvider } from './LanguageContext';
 import SmoothScroll from './SmoothScroll';
 import ScrollToTop from './ScrollToTop';
+import { getSiteUrl } from '@/lib/site-url';
+
+const siteUrl = getSiteUrl();
 
 const inter = Inter({
   subsets: ['latin'],
@@ -37,7 +40,7 @@ const notoSerifTc = Noto_Serif_TC({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://sixshoes.github.io/ma-portfolio'),
+  metadataBase: new URL(siteUrl),
   title: '馬遠榮副校長 | 佛光大學 個人學術網站',
   description: '展示馬遠榮副校長的學術履歷、研究成果、發行著作以及相關專業經歷。',
   openGraph: {
@@ -45,7 +48,7 @@ export const metadata: Metadata = {
     description: '展示馬遠榮副校長的學術履歷、研究成果、發行著作以及相關專業經歷。',
     type: 'website',
     locale: 'zh_TW',
-    url: 'https://sixshoes.github.io/ma-portfolio/',
+    url: `${siteUrl}/`,
     siteName: '馬遠榮副校長學術網站',
   },
   twitter: {
