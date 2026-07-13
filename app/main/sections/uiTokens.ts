@@ -10,6 +10,9 @@ export const uiTokens = {
   /** 玻璃擬物卡片：略提亮、細邊框與內發光感 */
   surfaceCard:
     'rounded-3xl border border-white/15 bg-white/[0.06] backdrop-blur-lg shadow-[0_10px_40px_rgba(0,0,0,0.5)]',
+  /** 手機版：無 backdrop-blur，降低 GPU 負擔 */
+  surfaceCardSolid:
+    'rounded-3xl border border-white/15 bg-slate-900/92 shadow-[0_10px_40px_rgba(0,0,0,0.5)]',
   surfaceCardHover:
     'hover:border-[#d4af37]/50 hover:bg-white/[0.08] hover:shadow-[0_20px_50px_rgba(212,175,55,0.08)] transition-all duration-500',
   buttonPrimary:

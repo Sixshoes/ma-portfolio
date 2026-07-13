@@ -53,11 +53,17 @@ type BottomSectionsProps = {
     };
   };
   lang: 'en' | 'zh';
+  isMobile?: boolean;
   onDownloadVCard: () => void;
 };
 
-function BottomSectionsComponent({ t, lang: _lang, onDownloadVCard }: BottomSectionsProps) {
+function BottomSectionsComponent({ t, lang: _lang, isMobile = false, onDownloadVCard }: BottomSectionsProps) {
   useRenderProfiler('BottomSections');
+  const cardSurface = isMobile ? uiTokens.surfaceCardSolid : uiTokens.surfaceCard;
+  const fadeIn = isMobile
+    ? {}
+    : { initial: { opacity: 0, y: 20 } as const, whileInView: { opacity: 1, y: 0 } as const, viewport: { once: true } as const };
+
   return (
     <>
       <section id="impact" className="relative overflow-hidden py-28 md:py-32">
@@ -72,10 +78,8 @@ function BottomSectionsComponent({ t, lang: _lang, onDownloadVCard }: BottomSect
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-7">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className={`${uiTokens.surfaceCard} p-7 transition-colors hover:border-[#9a8260]/35 md:p-8`}
+              {...fadeIn}
+              className={`${cardSurface} p-7 transition-colors hover:border-[#9a8260]/35 md:p-8`}
             >
               <div className="mb-8 flex items-center gap-4 border-b border-stone-800/60 pb-8">
                 <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-[#8f7038]/25 bg-[#2a241c]/40">
@@ -131,11 +135,9 @@ function BottomSectionsComponent({ t, lang: _lang, onDownloadVCard }: BottomSect
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
-              className={`${uiTokens.surfaceCard} p-7 transition-colors hover:border-stone-500/40 md:p-8`}
+              {...fadeIn}
+              transition={isMobile ? undefined : { delay: 0.1 }}
+              className={`${cardSurface} p-7 transition-colors hover:border-stone-500/40 md:p-8`}
             >
               <div className="mb-8 flex items-center gap-4 border-b border-stone-800/60 pb-8">
                 <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-stone-600/40 bg-slate-800/40">
@@ -204,11 +206,15 @@ function BottomSectionsComponent({ t, lang: _lang, onDownloadVCard }: BottomSect
         <div className="absolute left-1/2 top-0 h-px w-full max-w-3xl -translate-x-1/2 bg-gradient-to-r from-transparent via-[#d4af37]/25 to-transparent" />
 
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-60px' }}
-          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-          className="relative z-10 mx-auto max-w-6xl px-6"
+          {...(isMobile
+            ? { className: 'relative z-10 mx-auto max-w-6xl px-6' }
+            : {
+                initial: { opacity: 0, y: 24 },
+                whileInView: { opacity: 1, y: 0 },
+                viewport: { once: true, margin: '-60px' },
+                transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] },
+                className: 'relative z-10 mx-auto max-w-6xl px-6',
+              })}
         >
           <div className="mb-14 text-center md:mb-16">
             <h2 className="font-heading-serif mb-5 text-4xl tracking-tight text-stone-100 md:text-5xl">

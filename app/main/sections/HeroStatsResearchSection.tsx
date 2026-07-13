@@ -60,6 +60,8 @@ function HeroStatsResearchSectionComponent({
   useRenderProfiler('HeroStatsResearchSection');
   const [isImgLoaded, setIsImgLoaded] = useState(false);
   const onImgLoaded = useCallback(() => setIsImgLoaded(true), []);
+  const lite = Boolean(prefersReducedMotion) || isMobile;
+  const cardSurface = lite ? uiTokens.surfaceCardSolid : uiTokens.surfaceCard;
 
   const profileParticles = useMemo(() => {
     const count = isMobile ? 0 : 4;
@@ -79,6 +81,29 @@ function HeroStatsResearchSectionComponent({
       <section className="relative z-10 mx-auto min-h-[86vh] max-w-7xl overflow-hidden px-6 pb-24 pt-36 md:pb-28 md:pt-40">
         <HeroLatticeBackground isMobile={isMobile} prefersReducedMotion={prefersReducedMotion} />
         <div className="relative z-10 grid grid-cols-1 items-center gap-12 md:grid-cols-2 md:gap-16 lg:gap-16">
+        {lite ? (
+        <div className="relative z-10">
+          <div className="mb-6 inline-block rounded-full border border-stone-600/50 bg-stone-900/50 px-4 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-[#d4c4a8]">
+            {heroText.role}
+          </div>
+          <h1 className="font-heading-serif mb-7 text-4xl leading-[1.08] text-stone-100 drop-shadow-[0_4px_24px_rgba(0,0,0,0.35)] md:text-6xl lg:text-7xl">
+            <span className="inline-block origin-left font-normal tracking-wide text-[#c4a77d]">{heroText.title1}</span>{' '}
+            <br />
+            <span className="inline-block origin-left font-semibold tracking-tight text-stone-100">{heroText.title2}</span>{' '}
+            {heroText.title3} <br />
+            <span className="inline-block origin-left font-normal tracking-wide text-stone-400">{heroText.title4}</span>
+          </h1>
+          <p className="mb-8 max-w-xl text-base font-light leading-relaxed text-stone-500 md:text-lg">{heroText.desc}</p>
+          <div className="flex space-x-4 pt-1">
+            <a
+              href="#publications"
+              className={`${uiTokens.buttonPrimaryStrong} inline-block rounded-full px-7 py-3.5 font-display text-xs font-bold uppercase tracking-[0.2em] transition-all`}
+            >
+              {heroText.cta}
+            </a>
+          </div>
+        </div>
+        ) : (
         <motion.div
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -130,7 +155,26 @@ function HeroStatsResearchSectionComponent({
             </motion.a>
           </motion.div>
         </motion.div>
+        )}
 
+        {lite ? (
+        <div className="relative mx-auto aspect-[4/5] w-full max-w-md">
+          <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-3xl border border-stone-800/60 bg-slate-950 shadow-[0_8px_32px_rgba(0,0,0,0.45)]">
+            <div className="absolute inset-0 z-10 overflow-hidden rounded-3xl">
+              <Image
+                src="https://sixshoes.github.io/Ma-Research-Portal/profile.jpg"
+                alt="馬遠榮副校長個人照 (Prof. Y.R. Ma)"
+                fill
+                priority
+                onLoad={onImgLoaded}
+                className={`object-cover object-top transition-opacity duration-700 ${isImgLoaded ? 'opacity-100' : 'opacity-0'}`}
+                referrerPolicy="no-referrer"
+              />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/25 to-transparent" />
+            </div>
+          </div>
+        </div>
+        ) : (
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1, delay: 0.2 }} className="relative aspect-[4/5] w-full max-w-md mx-auto">
           <div className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-slate-600/15 to-[#5c4a32]/20 blur-3xl md:animate-pulse" />
           {!prefersReducedMotion && profileParticles.map((p) => (
@@ -207,17 +251,25 @@ function HeroStatsResearchSectionComponent({
             <div className="h-1 w-1 rounded-full bg-stone-500" />
           </motion.div>
         </motion.div>
+        )}
         </div>
       </section>
 
-      <section className="border-y border-white/[0.05] bg-white/[0.02] py-16 backdrop-blur-sm md:py-20">
+      <section className="border-y border-white/[0.05] bg-white/[0.02] py-16 md:py-20 md:backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-3 gap-6 md:gap-10 text-center">
-          {[{ label: statsText.pubs, value: totalPubs }, { label: statsText.citations, value: totalCitations }, { label: statsText.hIndex, value: statsText.hIndexValue }].map((stat, i) => (
+          {[{ label: statsText.pubs, value: totalPubs }, { label: statsText.citations, value: totalCitations }, { label: statsText.hIndex, value: statsText.hIndexValue }].map((stat, i) =>
+            lite ? (
+              <div key={i}>
+                <div className="font-heading-serif mb-2 text-3xl font-light text-stone-100 md:text-5xl">{stat.value}</div>
+                <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-stone-500">{stat.label}</div>
+              </div>
+            ) : (
             <motion.div key={i} initial={{ opacity: 0, scale: 0.8 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.1, duration: 0.5 }}>
               <div className="font-heading-serif mb-2 text-3xl font-light text-stone-100 md:text-5xl">{stat.value}</div>
               <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-stone-500">{stat.label}</div>
             </motion.div>
-          ))}
+            )
+          )}
         </div>
         <div className="mt-8 text-center">
           <p className="font-mono text-xs text-stone-600">{statsText.scopusNote}</p>
@@ -236,14 +288,28 @@ function HeroStatsResearchSectionComponent({
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 relative z-10">
-          {researchText.items.map((item, i) => (
+          {researchText.items.map((item, i) =>
+            lite ? (
+              <div
+                key={i}
+                className={`${cardSurface} ${uiTokens.surfaceCardHover} p-8 md:p-9 group relative overflow-hidden`}
+              >
+                <div className="relative z-10">
+                  <div className="mb-8 flex h-14 w-14 items-center justify-center rounded-xl border border-stone-800/60 bg-slate-900/40 text-stone-400">
+                    <item.icon className="h-6 w-6 stroke-1" />
+                  </div>
+                  <h3 className="font-heading-serif mb-4 text-2xl font-medium text-stone-100">{item.title}</h3>
+                  <p className="text-sm font-light leading-relaxed text-stone-500">{item.desc}</p>
+                </div>
+              </div>
+            ) : (
             <motion.div
               key={i}
-              initial={prefersReducedMotion ? false : { opacity: 0, y: 30, scale: 0.95 }}
-              whileInView={prefersReducedMotion ? undefined : { opacity: 1, y: 0, scale: 1 }}
+              initial={{ opacity: 0, y: 30, scale: 0.95 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, margin: '-50px' }}
               transition={{ duration: 0.6, delay: i * 0.1, ease: [0.215, 0.61, 0.355, 1] }}
-              whileHover={prefersReducedMotion ? {} : { y: -6, scale: 1.01 }}
+              whileHover={{ y: -6, scale: 1.01 }}
               className={`${uiTokens.surfaceCard} ${uiTokens.surfaceCardHover} p-8 md:p-9 group relative overflow-hidden`}
             >
               <div className="absolute inset-0 bg-gradient-to-br from-stone-800/0 to-[#3d3428]/0 opacity-0 transition-opacity duration-500 group-hover:from-stone-800/30 group-hover:to-[#3d3428]/20 group-hover:opacity-100" />
@@ -259,7 +325,8 @@ function HeroStatsResearchSectionComponent({
                 </p>
               </div>
             </motion.div>
-          ))}
+            )
+          )}
         </div>
       </section>
     </>

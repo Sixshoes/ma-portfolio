@@ -81,7 +81,7 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
               aria-hidden
             />
           </div>
-          <div className="absolute -bottom-12 -right-6 max-w-xs rounded-2xl border border-stone-700/50 bg-slate-950/95 p-8 shadow-[0_20px_48px_rgba(0,0,0,0.45)] backdrop-blur-md md:-right-12 md:p-10">
+          <div className="absolute -bottom-12 -right-6 max-w-xs rounded-2xl border border-stone-700/50 bg-slate-950/95 p-8 shadow-[0_20px_48px_rgba(0,0,0,0.45)] md:-right-12 md:p-10 md:backdrop-blur-md">
             <GraduationCap className="mb-4 h-8 w-8 stroke-1 text-[#c4a77d]" />
             <h4 className="font-heading-serif mb-3 text-xl font-normal tracking-wide text-stone-100">
               {aboutText.leadership}

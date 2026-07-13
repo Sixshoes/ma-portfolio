@@ -9,18 +9,17 @@ import type { NavText } from '@/lib/i18n';
 
 type NavbarProps = {
   navText: NavText;
+  isMobile?: boolean;
 };
 
-export function Navbar({ navText }: NavbarProps) {
+export function Navbar({ navText, isMobile = false }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  return (
-    <motion.nav
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.8, ease: 'easeOut' }}
-      className="fixed left-0 top-0 z-50 w-full border-b border-white/[0.06] bg-[#0c0a09]/82 shadow-[0_8px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl"
-    >
+  const navClassName =
+    'fixed left-0 top-0 z-50 w-full border-b border-white/[0.06] bg-[#0c0a09]/95 shadow-[0_8px_30px_rgba(0,0,0,0.35)] md:bg-[#0c0a09]/82 md:backdrop-blur-xl';
+
+  const inner = (
+    <>
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
         <div className="flex cursor-pointer items-center gap-2 font-display text-xl font-bold tracking-[0.15em] text-stone-100 transition-transform hover:scale-[1.02] md:tracking-[0.2em]">
           <span className="text-[#c4a77d]">Yuan-Ron</span> Ma
@@ -64,14 +63,13 @@ export function Navbar({ navText }: NavbarProps) {
         </div>
       </div>
 
-      {/* Mobile Menu */}
       <AnimatePresence>
         {isMenuOpen && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden border-b border-white/[0.06] bg-[#0c0a09]/95 backdrop-blur-xl md:hidden"
+            className="overflow-hidden border-b border-white/[0.06] bg-[#0c0a09]/98 md:hidden"
           >
             <div className="flex flex-col space-y-4 p-6 font-display text-xs uppercase tracking-[0.2em] text-stone-500">
               <Link
@@ -95,6 +93,21 @@ export function Navbar({ navText }: NavbarProps) {
           </motion.div>
         )}
       </AnimatePresence>
+    </>
+  );
+
+  if (isMobile) {
+    return <nav className={navClassName}>{inner}</nav>;
+  }
+
+  return (
+    <motion.nav
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.8, ease: 'easeOut' }}
+      className={navClassName}
+    >
+      {inner}
     </motion.nav>
   );
 }

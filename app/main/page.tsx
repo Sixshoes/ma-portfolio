@@ -32,7 +32,7 @@ export default function HomePage() {
   const { lang } = useLanguage();
   const isMobile = useIsMobile();
   const liteVisuals = useLiteVisuals();
-  const noMotion = liteVisuals;
+  const mainLite = isMobile || liteVisuals;
   const t = dict[lang];
 
   const {
@@ -63,36 +63,33 @@ export default function HomePage() {
 
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-[var(--app-bg)] bg-[radial-gradient(ellipse_120%_80%_at_50%_-18%,rgba(100,116,139,0.07),transparent_52%),radial-gradient(circle_at_88%_12%,rgba(212,175,55,0.055),transparent_45%)] font-sans text-stone-400">
-      {/* Dynamic Animated Background */}
+      {/* Dynamic Animated Background — static on mobile to reduce GPU load */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        <motion.div
-          style={{ willChange: 'transform, opacity' }}
-          animate={
-            noMotion
-              ? { opacity: 0.06 }
-              : { scale: [1, 1.1, 1], opacity: [0.04, 0.06, 0.04], rotate: [0, 60, 0] }
-          }
-          transition={
-            noMotion ? { duration: 0.2 } : { duration: 28, repeat: Infinity, ease: 'linear' }
-          }
-          className="absolute -left-[10%] -top-[20%] h-[70vw] w-[70vw] rounded-full bg-gradient-to-br from-slate-700/14 to-transparent blur-[80px] transform-gpu md:blur-[100px]"
-        />
-        <motion.div
-          style={{ willChange: 'transform, opacity' }}
-          animate={
-            noMotion
-              ? { opacity: 0.04 }
-              : { scale: [1, 1.25, 1], opacity: [0.025, 0.045, 0.025], x: [0, 60, 0], y: [0, -30, 0] }
-          }
-          transition={
-            noMotion ? { duration: 0.2 } : { duration: 32, repeat: Infinity, ease: 'easeInOut' }
-          }
-          className="absolute -right-[20%] top-[40%] h-[60vw] w-[60vw] rounded-full bg-gradient-to-tl from-[#5c4a32]/14 to-transparent blur-[120px] transform-gpu"
-        />
+        {mainLite ? (
+          <>
+            <div className="absolute -left-[10%] -top-[20%] h-[70vw] w-[70vw] rounded-full bg-gradient-to-br from-slate-700/10 to-transparent opacity-60" />
+            <div className="absolute -right-[20%] top-[40%] h-[60vw] w-[60vw] rounded-full bg-gradient-to-tl from-[#5c4a32]/10 to-transparent opacity-50" />
+          </>
+        ) : (
+          <>
+            <motion.div
+              style={{ willChange: 'transform, opacity' }}
+              animate={{ scale: [1, 1.1, 1], opacity: [0.04, 0.06, 0.04], rotate: [0, 60, 0] }}
+              transition={{ duration: 28, repeat: Infinity, ease: 'linear' }}
+              className="absolute -left-[10%] -top-[20%] h-[70vw] w-[70vw] rounded-full bg-gradient-to-br from-slate-700/14 to-transparent blur-[80px] transform-gpu md:blur-[100px]"
+            />
+            <motion.div
+              style={{ willChange: 'transform, opacity' }}
+              animate={{ scale: [1, 1.25, 1], opacity: [0.025, 0.045, 0.025], x: [0, 60, 0], y: [0, -30, 0] }}
+              transition={{ duration: 32, repeat: Infinity, ease: 'easeInOut' }}
+              className="absolute -right-[20%] top-[40%] h-[60vw] w-[60vw] rounded-full bg-gradient-to-tl from-[#5c4a32]/14 to-transparent blur-[120px] transform-gpu"
+            />
+          </>
+        )}
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.02),transparent_65%)] opacity-[0.22]" />
       </div>
 
-      <Navbar navText={t.nav} />
+      <Navbar navText={t.nav} isMobile={isMobile} />
 
       <HeroStatsResearchSection
         heroText={t.hero}
@@ -101,7 +98,7 @@ export default function HomePage() {
         totalPubs={totalPubs}
         totalCitations={totalCitations}
         isMobile={isMobile}
-        prefersReducedMotion={noMotion}
+        prefersReducedMotion={mainLite}
       />
 
       <ErrorBoundary>
@@ -119,7 +116,7 @@ export default function HomePage() {
             filteredPublications.length > 0 && publicationsRows.length === 0
           }
           isMobile={isMobile}
-          prefersReducedMotion={noMotion}
+          prefersReducedMotion={mainLite}
           onFilterChange={handlePubFilterChange}
           onLoadMore={handleLoadMore}
         />
@@ -127,7 +124,7 @@ export default function HomePage() {
 
       <AboutSection aboutText={t.about} lang={lang} />
 
-      <BottomSections t={t} lang={lang} onDownloadVCard={handleDownloadVCard} />
+      <BottomSections t={t} lang={lang} isMobile={isMobile} onDownloadVCard={handleDownloadVCard} />
     </main>
   );
 }
