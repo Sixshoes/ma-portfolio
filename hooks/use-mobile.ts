@@ -3,9 +3,9 @@ import * as React from "react"
 const MOBILE_BREAKPOINT = 768
 
 export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
+  // Default true: avoids motion starting at opacity 0 before matchMedia runs on iOS.
+  const [isMobile, setIsMobile] = React.useState(true)
 
-  // 使用 useEffect 避免 SSR hydration warning
   React.useEffect(() => {
     const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
     const onChange = () => setIsMobile(mql.matches)
@@ -14,5 +14,5 @@ export function useIsMobile() {
     return () => mql.removeEventListener("change", onChange)
   }, [])
 
-  return !!isMobile
+  return isMobile
 }

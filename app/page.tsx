@@ -29,6 +29,65 @@ const dict = {
   },
 };
 
+type LandingCopy = (typeof dict)['en'];
+
+/** Static landing — no motion library, avoids iOS WebKit opacity stuck at 0. */
+function LandingStatic({ t }: { t: LandingCopy }) {
+  return (
+    <main className="relative flex h-[100dvh] w-full items-center justify-center overflow-hidden bg-slate-950 font-sans">
+      <div className="absolute right-6 top-6 z-50 md:right-8 md:top-8">
+        <LanguageSwitcher layoutId="hetero-landing" />
+      </div>
+
+      <div className="absolute bottom-24 left-1/2 z-50 -translate-x-1/2 md:bottom-16">
+        <Link
+          href="/main"
+          className="group flex items-center gap-2 whitespace-nowrap rounded-full border border-[#9a8260]/45 bg-slate-950/90 px-6 py-2.5 font-display text-[10px] uppercase tracking-[0.1em] text-[#d4c4a8] transition-colors active:scale-[0.98] md:px-8 md:py-3 md:text-sm md:tracking-[0.2em]"
+        >
+          {t.enter}
+        </Link>
+      </div>
+
+      <div className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[60vw] w-[60vw] -translate-x-1/2 -translate-y-1/2 rounded-full bg-slate-600/10 md:h-[40vw] md:w-[40vw]" />
+
+      <div className="relative z-10 flex items-center justify-center">
+        <div
+          aria-hidden
+          className="absolute h-[300px] w-[300px] rounded-full border border-dashed border-white/[0.08] md:h-[600px] md:w-[600px]"
+        />
+        <div
+          aria-hidden
+          className="absolute h-[200px] w-[200px] rounded-full border border-stone-600/40 md:h-[400px] md:w-[400px]"
+        >
+          <div className="absolute left-1/2 top-0 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-slate-400 md:h-3 md:w-3" />
+        </div>
+        <div
+          aria-hidden
+          className="absolute h-[120px] w-[120px] rounded-full border border-[#8f7038]/45 md:h-[200px] md:w-[200px]"
+        >
+          <div className="absolute bottom-0 left-1/2 h-3 w-3 -translate-x-1/2 translate-y-1/2 rounded-full bg-[#c4a77d] md:h-4 md:w-4" />
+        </div>
+        <div
+          aria-hidden
+          className="h-24 w-24 rounded-full bg-gradient-to-tr from-[#6b5429]/40 to-slate-600/35 opacity-90 md:h-40 md:w-40"
+        />
+
+        <div className="pointer-events-none absolute flex w-[90vw] flex-col items-center gap-2 text-center font-display font-light uppercase md:w-[600px] md:gap-4 md:text-xl">
+          <span className="block text-[10px] tracking-[0.2em] text-stone-400 md:text-sm md:tracking-[0.3em]">
+            {t.name}
+          </span>
+          <span className="font-heading-serif block text-xl font-semibold tracking-[0.08em] text-[#e8dcc4] md:text-3xl md:tracking-[0.15em]">
+            {t.title}
+          </span>
+          <span className="mt-1 block text-[9px] tracking-[0.1em] text-stone-400 md:mt-2 md:text-xs md:tracking-[0.2em]">
+            {t.subtitle}
+          </span>
+        </div>
+      </div>
+    </main>
+  );
+}
+
 export default function VisualsPage() {
   const { lang } = useLanguage();
   const t = dict[lang];
@@ -76,12 +135,16 @@ export default function VisualsPage() {
     prefetchPapersJson();
   }, []);
 
-  const orbitOuter = noMotion ? 0 : fullDesktop ? 360 : 360;
-  const orbitOuterDur = noMotion ? 0 : fullDesktop ? 38 : 95;
-  const orbitMid = noMotion ? 0 : fullDesktop ? -360 : -360;
-  const orbitMidDur = noMotion ? 0 : fullDesktop ? 28 : 78;
-  const orbitInner = noMotion ? 0 : fullDesktop ? 360 : 360;
-  const orbitInnerDur = noMotion ? 0 : fullDesktop ? 14 : 52;
+  if (liteVisuals) {
+    return <LandingStatic t={t} />;
+  }
+
+  const orbitOuter = fullDesktop ? 360 : 360;
+  const orbitOuterDur = fullDesktop ? 38 : 95;
+  const orbitMid = fullDesktop ? -360 : -360;
+  const orbitMidDur = fullDesktop ? 28 : 78;
+  const orbitInner = fullDesktop ? 360 : 360;
+  const orbitInnerDur = fullDesktop ? 14 : 52;
 
   return (
     <main className="relative flex h-[100dvh] w-full items-center justify-center overflow-hidden bg-slate-950 font-sans">
