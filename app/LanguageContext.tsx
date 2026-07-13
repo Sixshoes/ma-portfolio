@@ -1,10 +1,52 @@
 'use client';
 
-import React, { createContext, useContext, useState, useMemo, useCallback, useEffect } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useMemo,
+  useCallback,
+  useSyncExternalStore,
+} from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { useLiteVisuals } from '@/hooks/use-lite-visuals';
 
 type Lang = 'en' | 'zh';
+
+const LANG_STORAGE_KEY = 'preferred_lang';
+const LANG_CHANGE_EVENT = 'preferred-lang-change';
+
+function readStoredLang(): Lang {
+  if (typeof window === 'undefined') return 'en';
+  try {
+    const saved = localStorage.getItem(LANG_STORAGE_KEY) as Lang;
+    if (saved === 'en' || saved === 'zh') return saved;
+  } catch {
+    /* localStorage unavailable */
+  }
+  return 'en';
+}
+
+function subscribeLang(onStoreChange: () => void) {
+  const onStorage = (e: StorageEvent) => {
+    if (e.key === LANG_STORAGE_KEY || e.key === null) onStoreChange();
+  };
+  window.addEventListener('storage', onStorage);
+  window.addEventListener(LANG_CHANGE_EVENT, onStoreChange);
+  return () => {
+    window.removeEventListener('storage', onStorage);
+    window.removeEventListener(LANG_CHANGE_EVENT, onStoreChange);
+  };
+}
+
+function persistLang(lang: Lang) {
+  try {
+    localStorage.setItem(LANG_STORAGE_KEY, lang);
+    window.dispatchEvent(new Event(LANG_CHANGE_EVENT));
+  } catch {
+    /* ignore */
+  }
+}
 
 interface LanguageContextType {
   lang: Lang;
@@ -22,43 +64,22 @@ const SWAP_MS = 160;
 const CLEAR_MS = 520;
 
 export const LanguageProvider = ({ children }: { children: React.ReactNode }) => {
-  const [lang, setLangState] = useState<Lang>('en');
+  const lang = useSyncExternalStore(subscribeLang, readStoredLang, (): Lang => 'en');
   const [isTransitioning, setIsTransitioning] = useState(false);
   const liteVisuals = useLiteVisuals();
   const prefersReducedMotion = useReducedMotion() === true;
   const skipTransition = prefersReducedMotion || liteVisuals;
 
-  useEffect(() => {
-    try {
-      const savedLang = localStorage.getItem('preferred_lang') as Lang;
-      if (savedLang === 'en' || savedLang === 'zh') setLangState(savedLang);
-    } catch {
-      /* localStorage unavailable */
-    }
-  }, []);
-
   const setLang = useCallback(
     (newLang: Lang) => {
       if (newLang === lang) return;
       if (skipTransition) {
-        setLangState(newLang);
-        try {
-          localStorage.setItem('preferred_lang', newLang);
-        } catch {
-          /* ignore */
-        }
+        persistLang(newLang);
         return;
       }
       if (isTransitioning) return;
       setIsTransitioning(true);
-      window.setTimeout(() => {
-        setLangState(newLang);
-        try {
-          localStorage.setItem('preferred_lang', newLang);
-        } catch {
-          /* ignore */
-        }
-      }, SWAP_MS);
+      window.setTimeout(() => persistLang(newLang), SWAP_MS);
       window.setTimeout(() => setIsTransitioning(false), CLEAR_MS);
     },
     [lang, isTransitioning, skipTransition]
