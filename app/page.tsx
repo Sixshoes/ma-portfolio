@@ -43,7 +43,7 @@ export default function VisualsPage() {
 
   const particles = useMemo(() => {
     if (noMotion) return [];
-    const count = fullDesktop ? 26 : 10;
+    const count = fullDesktop ? 26 : 6;
     return Array.from({ length: count }).map((_, i) => ({
       id: i,
       size: ((i * 7) % 6) + 1,
@@ -111,11 +111,7 @@ export default function VisualsPage() {
           />
         </div>
       ) : (
-        <motion.div
-          className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[60vw] w-[60vw] -translate-x-1/2 -translate-y-1/2 rounded-full bg-slate-600/15 md:h-[40vw] md:w-[40vw]"
-          animate={{ x: [0, 18, -12, 0], y: [0, -14, 10, 0] }}
-          transition={{ duration: 24, repeat: Infinity, ease: 'easeInOut' }}
-        />
+        <div className="anim-hero-glow pointer-events-none absolute left-1/2 top-1/2 z-0 h-[60vw] w-[60vw] rounded-full bg-slate-600/15 md:h-[40vw] md:w-[40vw]" />
       )}
 
       <div className="relative z-10 flex items-center justify-center">
@@ -128,51 +124,44 @@ export default function VisualsPage() {
           />
         )}
 
-        <motion.div
-          animate={noMotion ? { rotate: 0 } : { rotate: 360 }}
-          transition={
-            noMotion ? { duration: 0 } : { duration: orbitOuterDur, repeat: Infinity, ease: 'linear' }
-          }
-          className="absolute h-[300px] w-[300px] rounded-full border border-dashed border-white/[0.05] md:h-[600px] md:w-[600px]"
+        <div
+          className={`absolute h-[300px] w-[300px] rounded-full border border-dashed border-white/[0.05] md:h-[600px] md:w-[600px] ${
+            noMotion ? '' : 'anim-hero-spin-cw'
+          }`}
+          style={noMotion ? undefined : { animationDuration: `${orbitOuterDur}s` }}
         />
 
-        <motion.div
-          animate={noMotion ? { rotate: 0 } : { rotate: -360 }}
-          transition={
-            noMotion ? { duration: 0 } : { duration: orbitMidDur, repeat: Infinity, ease: 'linear' }
-          }
-          className="absolute h-[200px] w-[200px] rounded-full border border-stone-600/30 md:h-[400px] md:w-[400px]"
+        <div
+          className={`absolute h-[200px] w-[200px] rounded-full border border-stone-600/30 md:h-[400px] md:w-[400px] ${
+            noMotion ? '' : 'anim-hero-spin-ccw'
+          }`}
+          style={noMotion ? undefined : { animationDuration: `${orbitMidDur}s` }}
         >
           <div className="absolute left-1/2 top-0 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-slate-400 shadow-[0_0_12px_rgba(148,163,184,0.45)] md:h-3 md:w-3" />
-        </motion.div>
+        </div>
 
-        <motion.div
-          animate={noMotion ? { rotate: 0 } : { rotate: 360 }}
-          transition={
-            noMotion ? { duration: 0 } : { duration: orbitInnerDur, repeat: Infinity, ease: 'linear' }
-          }
-          className="absolute h-[120px] w-[120px] rounded-full border border-[#8f7038]/35 md:h-[200px] md:w-[200px]"
+        <div
+          className={`absolute h-[120px] w-[120px] rounded-full border border-[#8f7038]/35 md:h-[200px] md:w-[200px] ${
+            noMotion ? '' : 'anim-hero-spin-cw'
+          }`}
+          style={noMotion ? undefined : { animationDuration: `${orbitInnerDur}s` }}
         >
           <div className="absolute bottom-0 left-1/2 h-3 w-3 -translate-x-1/2 translate-y-1/2 rounded-full bg-[#c4a77d] shadow-[0_0_16px_rgba(196,167,125,0.45)] md:h-4 md:w-4" />
-        </motion.div>
+        </div>
 
-        <motion.div
-          animate={
-            noMotion
-              ? { scale: 1, opacity: 0.85, rotate: 0 }
-              : fullDesktop
-                ? { scale: [1, 1.22, 1], opacity: [0.55, 1, 0.55], rotate: [0, 180, 360] }
-                : { scale: [1, 1.12, 1], opacity: [0.65, 0.95, 0.65], rotate: 0 }
-          }
-          transition={
-            noMotion
-              ? { duration: 0.2 }
-              : fullDesktop
-                ? { duration: 8, repeat: Infinity, ease: 'easeInOut' }
-                : { duration: 5.5, repeat: Infinity, ease: 'easeInOut' }
-          }
-          className={`h-24 w-24 rounded-full bg-gradient-to-tr from-[#6b5429]/40 to-slate-600/35 opacity-90 md:h-40 md:w-40 ${fullDesktop ? 'mix-blend-screen blur-2xl' : ''}`}
-        />
+        {fullDesktop ? (
+          <motion.div
+            animate={{ scale: [1, 1.22, 1], opacity: [0.55, 1, 0.55], rotate: [0, 180, 360] }}
+            transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+            className="h-24 w-24 rounded-full bg-gradient-to-tr from-[#6b5429]/40 to-slate-600/35 opacity-90 mix-blend-screen blur-2xl md:h-40 md:w-40"
+          />
+        ) : (
+          <div
+            className={`h-24 w-24 rounded-full bg-gradient-to-tr from-[#6b5429]/40 to-slate-600/35 opacity-90 md:h-40 md:w-40 ${
+              noMotion ? '' : 'anim-hero-core'
+            }`}
+          />
+        )}
 
         <div
           key={lang}
@@ -181,7 +170,7 @@ export default function VisualsPage() {
           <span className="block text-[10px] tracking-[0.2em] text-stone-400 md:text-sm md:tracking-[0.3em]">
             {t.name}
           </span>
-          <span className="font-heading-serif block text-xl font-semibold tracking-[0.08em] text-[#e8dcc4] md:text-3xl md:tracking-[0.15em]">
+          <span className="font-heading-serif text-gold-gradient block text-xl font-semibold tracking-[0.08em] md:text-3xl md:tracking-[0.15em]">
             {t.title}
           </span>
           <span className="mt-1 block text-[9px] tracking-[0.1em] text-stone-400 md:mt-2 md:text-xs md:tracking-[0.2em]">
@@ -192,28 +181,21 @@ export default function VisualsPage() {
 
       <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
         {particles.map((p) => (
-          <motion.div
+          <div
             key={p.id}
-            className={`absolute rounded-full ${p.color} opacity-30`}
-            style={{
-              width: p.size,
-              height: p.size,
-              left: `${p.x}%`,
-              top: `${p.y}%`,
-            }}
-            animate={{
-              y: [0, fullDesktop ? -620 : -420],
-              opacity: [0, 0.85, 0.85, 0],
-              x: [0, p.sinX, 0],
-              scale: [0, 1.5, 1.5, 0],
-            }}
-            transition={{
-              duration: p.duration,
-              repeat: Infinity,
-              delay: p.delay,
-              ease: 'linear',
-              times: [0, 0.1, 0.9, 1],
-            }}
+            className={`anim-hero-particle absolute rounded-full ${p.color} opacity-30`}
+            style={
+              {
+                width: p.size,
+                height: p.size,
+                left: `${p.x}%`,
+                top: `${p.y}%`,
+                animationDuration: `${p.duration}s`,
+                animationDelay: `${p.delay}s`,
+                '--px': `${p.sinX}px`,
+                '--rise': `${fullDesktop ? -620 : -420}px`,
+              } as React.CSSProperties
+            }
           />
         ))}
       </div>

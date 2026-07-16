@@ -87,7 +87,7 @@ function HeroStatsResearchSectionComponent({
             {heroText.role}
           </div>
           <h1 className="font-heading-serif mb-7 text-4xl leading-[1.08] text-stone-100 drop-shadow-[0_4px_24px_rgba(0,0,0,0.35)] md:text-6xl lg:text-7xl">
-            <span className="inline-block origin-left font-normal tracking-wide text-[#c4a77d]">{heroText.title1}</span>{' '}
+            <span className="text-gold-gradient inline-block origin-left font-normal tracking-wide">{heroText.title1}</span>{' '}
             <br />
             <span className="inline-block origin-left font-semibold tracking-tight text-stone-100">{heroText.title2}</span>{' '}
             {heroText.title3} <br />
@@ -124,7 +124,7 @@ function HeroStatsResearchSectionComponent({
             transition={{ delay: 0.4 }}
             className="font-heading-serif mb-7 text-4xl leading-[1.08] text-stone-100 drop-shadow-[0_4px_24px_rgba(0,0,0,0.35)] md:text-6xl lg:text-7xl"
           >
-            <span className="inline-block origin-left font-normal tracking-wide text-[#c4a77d] transition-transform hover:scale-[1.02]">
+            <span className="text-gold-gradient inline-block origin-left font-normal tracking-wide transition-transform hover:scale-[1.02]">
               {heroText.title1}
             </span>{' '}
             <br />
