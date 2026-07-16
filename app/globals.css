@@ -40,6 +40,32 @@ body {
     -webkit-text-fill-color: transparent;
     color: transparent;
   }
+
+  /*
+   * 首頁環境動畫：改用 CSS keyframes（合成器執行緒）取代 JS/rAF 驅動的 motion。
+   * 由於在合成器上執行，即使主執行緒忙碌（捲動、React 重繪）也不會掉幀，
+   * 特別能改善行動裝置「有時卡頓」的問題。
+   */
+  .anim-hero-spin-cw {
+    animation: hero-spin-cw linear infinite;
+    will-change: transform;
+  }
+  .anim-hero-spin-ccw {
+    animation: hero-spin-ccw linear infinite;
+    will-change: transform;
+  }
+  .anim-hero-core {
+    animation: hero-core-pulse 5.5s ease-in-out infinite;
+    will-change: transform, opacity;
+  }
+  .anim-hero-glow {
+    animation: hero-glow-drift 24s ease-in-out infinite;
+    will-change: transform;
+  }
+  .anim-hero-particle {
+    animation: hero-particle linear infinite;
+    will-change: transform, opacity;
+  }
 }
 
 /* 學術沉穩主題：香檳金焦點 */
@@ -90,5 +116,64 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* ── 首頁環境動畫 keyframes（合成器友善：僅動畫 transform / opacity） ── */
+@keyframes hero-spin-cw {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes hero-spin-ccw {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+@keyframes hero-core-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.65;
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 0.95;
+  }
+}
+
+/* -50% 置中內建於 keyframe，避免覆蓋 Tailwind 的 translate 置中 */
+@keyframes hero-glow-drift {
+  0%,
+  100% {
+    transform: translate3d(-50%, -50%, 0);
+  }
+  33% {
+    transform: translate3d(calc(-50% + 18px), calc(-50% - 14px), 0);
+  }
+  66% {
+    transform: translate3d(calc(-50% - 12px), calc(-50% + 10px), 0);
+  }
+}
+
+@keyframes hero-particle {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(0);
+  }
+  10% {
+    opacity: 0.85;
+  }
+  50% {
+    transform: translate3d(var(--px, 0px), calc(var(--rise, -420px) / 2), 0) scale(1.5);
+  }
+  90% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(0, var(--rise, -420px), 0) scale(0);
   }
 }
