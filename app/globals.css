@@ -7,11 +7,38 @@
   background-color: var(--app-bg);
 }
 
-/* 重要標題：襯線（由 layout 注入 --font-playfair、--font-noto-serif-tc） */
+html {
+  /* 避免行動裝置橫向時自動放大字級，維持一致排版 */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  /* 更銳利、更均勻的字體渲染（純渲染設定，對手機無額外負擔） */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+  /* 移除行動裝置點擊時的灰色高亮，觸感更精緻 */
+  -webkit-tap-highlight-color: transparent;
+}
+
 @layer utilities {
+  /* 重要標題：襯線（由 layout 注入 --font-playfair、--font-noto-serif-tc） */
   .font-heading-serif {
     font-family: var(--font-playfair), var(--font-noto-serif-tc), "Songti TC", "STSong", "Noto Serif TC",
       ui-serif, Georgia, "Times New Roman", serif;
+    /* 標題採用等寬襯線數字與更佳的字距 */
+    font-feature-settings: "kern" 1, "liga" 1, "lnum" 1;
+  }
+
+  /* 香檳金金屬質感文字：純 CSS background-clip，桌機與手機成本皆極低 */
+  .text-gold-gradient {
+    background-image: linear-gradient(135deg, #f5e1a4 0%, #e5c158 38%, #c2994a 70%, #b9975a 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
   }
 }
 
@@ -23,4 +50,45 @@
 
 :focus:not(:focus-visible) {
   outline: none;
+}
+
+/* 精緻香檳金捲軸：僅在具備精細指標（桌機）時啟用，行動裝置維持原生輕量捲軸 */
+@media (hover: hover) and (pointer: fine) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(196, 167, 125, 0.35) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(196, 167, 125, 0.4), rgba(154, 130, 96, 0.32));
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(196, 167, 125, 0.65), rgba(154, 130, 96, 0.5));
+    background-clip: padding-box;
+  }
+}
+
+/* 尊重使用者的「減少動態」偏好：關閉 CSS 動畫與轉場（提升無障礙與省電） */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

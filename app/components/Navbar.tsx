@@ -22,7 +22,7 @@ export function Navbar({ navText, isMobile = false }: NavbarProps) {
     <>
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
         <div className="flex cursor-pointer items-center gap-2 font-display text-xl font-bold tracking-[0.15em] text-stone-100 transition-transform hover:scale-[1.02] md:tracking-[0.2em]">
-          <span className="text-[#c4a77d]">Yuan-Ron</span> Ma
+          <span className="text-gold-gradient">Yuan-Ron</span> Ma
         </div>
         <div className="flex items-center gap-4 md:gap-8">
           <div className="hidden space-x-8 font-display text-xs uppercase tracking-[0.2em] text-stone-500 md:flex">

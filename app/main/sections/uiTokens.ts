@@ -2,17 +2,17 @@
 export const uiTokens = {
   sectionTitle:
     'font-heading-serif text-4xl md:text-6xl lg:text-7xl text-stone-50 tracking-tight',
-  titleLight: 'font-heading-serif font-normal text-[#d4af37] tracking-wide',
+  titleLight: 'font-heading-serif font-normal text-gold-gradient tracking-wide',
   titleBold: 'font-heading-serif font-semibold text-stone-100',
   sectionEyebrow:
     'text-[10px] font-mono uppercase tracking-[0.2em] text-stone-500 border border-stone-700/60 bg-stone-900/40 rounded-full px-4 py-2',
   sectionDesc: 'font-mono text-[10px] uppercase tracking-[0.2em] text-stone-300',
-  /** 玻璃擬物卡片：略提亮、細邊框與內發光感 */
+  /** 玻璃擬物卡片：略提亮、細邊框與頂部內發光 */
   surfaceCard:
-    'rounded-3xl border border-white/15 bg-white/[0.06] backdrop-blur-lg shadow-[0_10px_40px_rgba(0,0,0,0.5)]',
-  /** 手機版：無 backdrop-blur，降低 GPU 負擔 */
+    'rounded-3xl border border-white/15 bg-white/[0.06] backdrop-blur-lg shadow-[0_10px_40px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.06)]',
+  /** 手機版：無 backdrop-blur，改用細緻漸層 + 頂部內光，維持精緻感卻不增加 GPU 負擔 */
   surfaceCardSolid:
-    'rounded-3xl border border-white/15 bg-slate-900/92 shadow-[0_10px_40px_rgba(0,0,0,0.5)]',
+    'rounded-3xl border border-white/12 bg-gradient-to-b from-slate-900/94 to-slate-950/94 shadow-[0_10px_40px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.05)]',
   surfaceCardHover:
     'hover:border-[#d4af37]/50 hover:bg-white/[0.08] hover:shadow-[0_20px_50px_rgba(212,175,55,0.08)] transition-all duration-500',
   buttonPrimary:

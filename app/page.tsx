@@ -181,7 +181,7 @@ export default function VisualsPage() {
           <span className="block text-[10px] tracking-[0.2em] text-stone-400 md:text-sm md:tracking-[0.3em]">
             {t.name}
           </span>
-          <span className="font-heading-serif block text-xl font-semibold tracking-[0.08em] text-[#e8dcc4] md:text-3xl md:tracking-[0.15em]">
+          <span className="font-heading-serif text-gold-gradient block text-xl font-semibold tracking-[0.08em] md:text-3xl md:tracking-[0.15em]">
             {t.title}
           </span>
           <span className="mt-1 block text-[9px] tracking-[0.1em] text-stone-400 md:mt-2 md:text-xs md:tracking-[0.2em]">
