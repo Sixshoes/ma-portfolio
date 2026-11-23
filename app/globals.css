@@ -7,40 +7,51 @@
 }
 
 :root {
-  color-scheme: light;
-  /* 歐美期刊象牙紙白與墨黑古銅金系統 */
-  --app-bg: #faf8f4;
-  --app-surface: #f3efe7;
-  --app-card: #ffffff;
-  --app-ink: #141311;
-  --app-body: #3f3b36;
-  --app-muted: #6b655d;
-  --app-border: #e5dfd5;
-  --app-gold: #9a742e;
-  --app-gold-deep: #7f5d1e;
+  color-scheme: dark;
+  /* 深邃黑曜石建築美學系統 */
+  --app-bg: #080807;
+  --app-surface: #0f0e0d;
+  --app-elevated: #141311;
+  --app-hairline: rgba(255, 255, 255, 0.085);
+  --app-ink: #f5f3ef;
+  --app-body: #b8b3aa;
+  --app-muted: #7d7870;
+  --app-gold: #c8a464;
+  --app-gold-bright: #e5cea0;
   background-color: var(--app-bg);
   color: var(--app-ink);
 }
 
-/* 襯線主標題（Playfair Display + Noto Serif TC） */
 @layer utilities {
   .font-heading-serif {
     font-family: var(--font-playfair), var(--font-noto-serif-tc), "Songti TC", "STSong", "Noto Serif TC",
       ui-serif, Georgia, "Times New Roman", serif;
   }
+
+  /* 金屬香檳金微光文字 */
+  .text-gold-sheen {
+    background: linear-gradient(120deg, #ecd8b0 0%, #c8a464 52%, #a68041 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
 }
 
-/* 典雅古銅金鍵盤焦點框 */
+/* 極細微底片微粒質感，消除純黑數位平面感 */
+.editorial-grain {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
 :focus-visible {
-  outline: 2px solid #9a742e;
-  outline-offset: 2px;
+  outline: 1.5px solid rgba(200, 164, 100, 0.85);
+  outline-offset: 3px;
 }
 
 :focus:not(:focus-visible) {
   outline: none;
 }
 
-/* 確保跨瀏覽器隱藏原生 select 箭頭，避免與自訂圖示重疊 */
+/* 跨瀏覽器隱藏原生 select 下拉箭頭，避免與自訂圖示重疊 */
 select.custom-select {
   -webkit-appearance: none !important;
   -moz-appearance: none !important;

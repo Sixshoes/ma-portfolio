@@ -12,7 +12,6 @@ const LANGUAGES: { code: LangCode; label: string }[] = [
 ];
 
 type LanguageSwitcherProps = {
-  /** 不同頁面請用不同 id，避免跨路由 layout 動畫殘影 */
   layoutId?: string;
   className?: string;
 };
@@ -25,7 +24,7 @@ export function LanguageSwitcher({
 
   return (
     <div
-      className={`flex items-center rounded-full border border-[#dcd4c7] bg-[#f3efe7]/90 p-1 shadow-[0_2px_10px_rgba(20,19,17,0.05)] backdrop-blur-md ${className}`}
+      className={`inline-flex items-center rounded-lg border border-white/[0.12] bg-white/[0.03] p-0.5 backdrop-blur-md ${className}`}
       role="group"
       aria-label="Language"
     >
@@ -36,23 +35,23 @@ export function LanguageSwitcher({
             key={code}
             type="button"
             onClick={() => setLang(code)}
-            className="relative rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9a742e]/60 md:text-sm"
+            className="relative rounded-md px-3 py-1 font-mono text-xs transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c8a464]"
           >
             {active ? (
               <motion.div
                 layoutId={layoutId}
-                className="absolute inset-0 z-0 rounded-full bg-[#181614]"
+                className="absolute inset-0 z-0 rounded-md bg-[#f5f3ef]"
                 transition={{
                   type: 'spring',
-                  stiffness: 420,
-                  damping: 30,
-                  mass: 0.8,
+                  stiffness: 460,
+                  damping: 32,
+                  mass: 0.75,
                 }}
               />
             ) : null}
             <span
               className={`relative z-10 transition-colors duration-200 ${
-                active ? 'font-semibold text-[#faf8f4]' : 'text-[#57524b] hover:text-[#141311]'
+                active ? 'font-semibold text-[#080807]' : 'text-[#9b958c] hover:text-[#f5f3ef]'
               }`}
             >
               {label}

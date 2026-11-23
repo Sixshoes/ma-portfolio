@@ -111,7 +111,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
         />
       </head>
-      <body className="bg-[var(--app-bg)] font-sans text-[#3f3b36] antialiased selection:bg-[#9a742e]/20 selection:text-[#141311]">
+      <body className="bg-[var(--app-bg)] font-sans text-[#b8b3aa] antialiased selection:bg-[#c8a464]/25 selection:text-[#f5f3ef]">
         <SmoothScroll>
           <LanguageProvider>
             <>

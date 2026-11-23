@@ -8,7 +8,7 @@ type HeroLatticeBackgroundProps = {
 };
 
 /**
- * 細緻建築製圖點陣背景（象牙紙底石墨細點 + 滑鼠滑過泛出古銅金微光），
+ * 細緻黑底建築微點陣背景（無模糊光暈拖影，滑鼠滑過泛出精準香檳金點光），
  * 採可視區監測 + 按需重繪，零背景耗電。
  */
 export function HeroLatticeBackground({
@@ -23,9 +23,9 @@ export function HeroLatticeBackground({
   const rafRef = useRef<number | null>(null);
   const reduced = prefersReducedMotion === true;
 
-  const cols = isMobile ? 16 : 28;
+  const cols = isMobile ? 16 : 30;
   const rows = isMobile ? 10 : 14;
-  const interactionRadius = isMobile ? 110 : 160;
+  const interactionRadius = isMobile ? 110 : 170;
 
   const draw = useCallback(
     (ctx: CanvasRenderingContext2D, w: number, h: number) => {
@@ -51,16 +51,16 @@ export function HeroLatticeBackground({
           const isInteracting = !reduced && !isMobile && dist < ir;
           const intensity = isInteracting ? Math.max(0, 1 - dist / ir) : 0;
 
-          const scale = isInteracting ? 1 + intensity * 1.4 : 1;
-          const radius = (1.6 * dpr * scale) / 2;
+          const scale = isInteracting ? 1 + intensity * 1.35 : 1;
+          const radius = (1.35 * dpr * scale) / 2;
 
           ctx.beginPath();
           ctx.arc(nx, ny, radius, 0, Math.PI * 2);
 
           if (isInteracting) {
-            ctx.fillStyle = `rgba(154, 116, 46, ${0.28 + intensity * 0.52})`;
+            ctx.fillStyle = `rgba(226, 201, 146, ${0.24 + intensity * 0.58})`;
           } else {
-            ctx.fillStyle = 'rgba(20, 19, 17, 0.11)';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
           }
 
           ctx.fill();
@@ -161,7 +161,7 @@ export function HeroLatticeBackground({
       aria-hidden
     >
       <canvas ref={canvasRef} className="absolute inset-0" style={{ imageRendering: 'auto' }} />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_25%,rgba(250,248,244,0.88)_92%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_22%,rgba(8,8,7,0.92)_92%)]" />
     </div>
   );
 }

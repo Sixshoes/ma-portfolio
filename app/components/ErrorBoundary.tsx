@@ -28,10 +28,10 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         this.props.fallback ?? (
           <section className="mx-auto flex max-w-7xl flex-col items-center justify-center px-6 py-20 text-center">
-            <p className="mb-2 text-lg font-medium text-[#141311]">
+            <p className="mb-2 text-lg font-medium text-[#f5f3ef]">
               Something went wrong
             </p>
-            <p className="text-sm text-[#57524b]">
+            <p className="text-sm text-[#a39e95]">
               Please try refreshing the page.
             </p>
           </section>

@@ -1,21 +1,10 @@
 'use client';
 
 import React, { memo, useCallback, useEffect, useState } from 'react';
-import { motion } from 'motion/react';
+import { Check, Copy, Download } from 'lucide-react';
 import { useRenderProfiler } from './useRenderProfiler';
 import { uiTokens } from './uiTokens';
 import { impactData } from '@/lib/impactData';
-import {
-  Check,
-  Copy,
-  Download,
-  Globe,
-  GraduationCap,
-  Mail,
-  MapPin,
-  Phone,
-  Printer,
-} from 'lucide-react';
 
 type BottomSectionsProps = {
   t: {
@@ -62,16 +51,9 @@ type BottomSectionsProps = {
   onDownloadVCard: () => void;
 };
 
-function BottomSectionsComponent({ t, lang: _lang, isMobile = false, onDownloadVCard }: BottomSectionsProps) {
+function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsProps) {
   useRenderProfiler('BottomSections');
   const [copiedField, setCopiedField] = useState<string | null>(null);
-  const fadeIn = isMobile
-    ? {}
-    : {
-        initial: { opacity: 0, y: 18 } as const,
-        whileInView: { opacity: 1, y: 0 } as const,
-        viewport: { once: true } as const,
-      };
 
   const handleCopy = useCallback((key: string, text: string) => {
     if (navigator.clipboard?.writeText) {
@@ -95,20 +77,25 @@ function BottomSectionsComponent({ t, lang: _lang, isMobile = false, onDownloadV
     return () => window.clearTimeout(timer);
   }, [copiedField]);
 
+  const impactKicker = lang === 'zh' ? '國際影響力評比' : 'GLOBAL BENCHMARKS';
+  const contactKicker = lang === 'zh' ? '學術交流與聯繫' : 'CORRESPONDENCE';
+
   const institutions = [
     {
       key: 'ndhu' as const,
+      index: '01',
       name: t.impact.ndhu,
       location: t.impact.ndhuLocation,
       metrics: impactData.ndhu,
-      iconBadge: 'border-[#dfd5c4] bg-[#f7f2e7] text-[#8a6522]',
+      ratioPct: Math.min(100, Math.round(Number(impactData.ndhu.hIndex.ratio) * 100)),
     },
     {
       key: 'fgu' as const,
+      index: '02',
       name: t.impact.fgu,
       location: t.impact.fguLocation,
       metrics: impactData.fgu,
-      iconBadge: 'border-[#dcd4c7] bg-[#f3efe7] text-[#292622]',
+      ratioPct: Math.min(100, Math.round(Number(impactData.fgu.hIndex.ratio) * 100)),
     },
   ];
 
@@ -119,7 +106,6 @@ function BottomSectionsComponent({ t, lang: _lang, isMobile = false, onDownloadV
       values: [t.contact.email, ...(t.contact.emailAdditional ?? [])],
       hrefs: [t.contact.email, ...(t.contact.emailAdditional ?? [])].map((e) => `mailto:${e}`),
       copyValue: t.contact.email,
-      Icon: Mail,
     },
     {
       key: 'phone',
@@ -127,7 +113,6 @@ function BottomSectionsComponent({ t, lang: _lang, isMobile = false, onDownloadV
       values: [t.contact.phone],
       hrefs: [`tel:${t.contact.phone.replace(/[^0-9+]/g, '')}`],
       copyValue: t.contact.phone,
-      Icon: Phone,
     },
     {
       key: 'fax',
@@ -135,172 +120,179 @@ function BottomSectionsComponent({ t, lang: _lang, isMobile = false, onDownloadV
       values: [t.contact.fax],
       hrefs: [null],
       copyValue: t.contact.fax,
-      Icon: Printer,
     },
   ] as const;
 
   return (
     <>
-      {/* 04 / 學術影響力（暖羊皮紙底 + 白底評比卡片） */}
+      {/* 學術影響力：無縫雙欄黑曜石數據碑 + 視覺化近五年比例條 */}
       <section
         id="impact"
-        className="relative scroll-mt-24 overflow-hidden border-t border-[#e5dfd5] bg-[#f3efe7] py-20 md:py-28"
+        className="relative scroll-mt-24 border-t border-white/[0.08] bg-[#0a0a09] py-24 md:py-32"
       >
-        <div className="relative z-10 mx-auto max-w-7xl px-6">
-          <div className="mb-12 text-center md:mb-14">
-            <div className={`${uiTokens.sectionKicker} mb-3`}>04 / SCIENTIFIC IMPACT</div>
-            <h2 className={`${uiTokens.sectionTitle} mb-4`}>
-              <span className={uiTokens.titleLight}>{t.impact.title}</span>{' '}
-              <span className={uiTokens.titleBold}>{t.impact.subtitle}</span>
-            </h2>
-            <p className="font-mono text-xs tracking-wider text-[#6b655d]">{t.impact.source}</p>
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="mb-12 flex flex-col items-start justify-between gap-4 md:mb-16 md:flex-row md:items-end">
+            <div>
+              <div className="mb-3 flex items-center gap-3">
+                <span className="h-px w-6 bg-[#c8a464]" aria-hidden />
+                <span className={uiTokens.sectionKicker}>{impactKicker}</span>
+              </div>
+              <h2 className={uiTokens.sectionTitle}>
+                <span className={uiTokens.titleLight}>{t.impact.title}</span>{' '}
+                <span className={uiTokens.titleBold}>{t.impact.subtitle}</span>
+              </h2>
+            </div>
+            <p className="font-mono text-xs text-[#8f8980]">{t.impact.source}</p>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 md:gap-7 lg:grid-cols-2">
-            {institutions.map((inst, idx) => (
-              <motion.div
-                key={inst.key}
-                {...fadeIn}
-                transition={isMobile ? undefined : { delay: idx * 0.08 }}
-                className={`${uiTokens.surfaceCard} ${uiTokens.surfaceCardHover} p-7 md:p-8`}
-              >
-                <div className="mb-8 flex items-center gap-4 border-b border-[#efeae0] pb-6">
-                  <div
-                    className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border ${inst.iconBadge}`}
-                  >
-                    <GraduationCap className="h-7 w-7 stroke-[1.6]" aria-hidden />
+          <div className="overflow-hidden rounded-xl border border-white/[0.09] bg-white/[0.08]">
+            <div className="grid grid-cols-1 gap-px lg:grid-cols-2">
+              {institutions.map((inst) => (
+                <div
+                  key={inst.key}
+                  className="bg-[#0d0c0b] p-8 transition-colors duration-300 hover:bg-[#100f0d] md:p-10"
+                >
+                  <div className="mb-8 flex items-baseline justify-between gap-4 border-b border-white/[0.08] pb-6">
+                    <div>
+                      <h3 className="font-heading-serif text-2xl font-medium text-[#f5f3ef] md:text-[1.65rem]">
+                        {inst.name}
+                      </h3>
+                      <p className="mt-1 font-mono text-xs text-[#8f8980]">{inst.location}</p>
+                    </div>
+                    <span className="font-mono text-xs tracking-widest text-[#c8a464]/80">
+                      {inst.index}
+                    </span>
                   </div>
+
+                  {/* 三項國際排名 */}
+                  <div className="mb-8 grid grid-cols-3 gap-4 border-b border-white/[0.07] pb-8">
+                    <div>
+                      <div className="font-heading-serif text-2xl font-medium text-[#f5f3ef] [font-variant-numeric:lining-nums] md:text-3xl">
+                        {inst.metrics.worldRank}
+                      </div>
+                      <div className="mt-1.5 font-mono text-[11px] uppercase tracking-[0.14em] text-[#8f8980]">
+                        {t.impact.worldRank}
+                      </div>
+                    </div>
+                    <div className="border-l border-white/[0.07] pl-4">
+                      <div className="font-heading-serif text-2xl font-medium text-[#e2c992] [font-variant-numeric:lining-nums] md:text-3xl">
+                        #{inst.metrics.countryRank}
+                      </div>
+                      <div className="mt-1.5 font-mono text-[11px] uppercase tracking-[0.14em] text-[#8f8980]">
+                        {t.impact.countryRank}
+                      </div>
+                    </div>
+                    <div className="border-l border-white/[0.07] pl-4">
+                      <div className="font-heading-serif text-2xl font-medium text-[#f5f3ef] [font-variant-numeric:lining-nums] md:text-3xl">
+                        #{inst.metrics.uniRank}
+                      </div>
+                      <div className="mt-1.5 font-mono text-[11px] uppercase tracking-[0.14em] text-[#8f8980]">
+                        {t.impact.uniRank}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* H-Index 與近五年動能視覺條 */}
                   <div>
-                    <h3 className="font-heading-serif text-xl font-semibold text-[#141311] md:text-2xl">
-                      {inst.name}
-                    </h3>
-                    <p className="mt-0.5 font-mono text-xs text-[#6b655d]">{inst.location}</p>
-                  </div>
-                </div>
+                    <div className="mb-4 flex items-center justify-between">
+                      <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#9b958c]">
+                        {t.impact.hIndex}
+                      </span>
+                      <span className="font-mono text-xs text-[#e2c992]">
+                        {t.impact.ratio}: {inst.metrics.hIndex.ratio}
+                      </span>
+                    </div>
 
-                <div className="mb-8 grid grid-cols-3 gap-3 md:gap-4">
-                  <div className="text-center">
-                    <div className="mx-auto mb-2.5 flex h-9 w-9 items-center justify-center rounded-full border border-[#e5dfd5] bg-[#faf8f4]">
-                      <Globe className="h-4 w-4 stroke-[1.6] text-[#57524b]" aria-hidden />
+                    <div className="mb-4 grid grid-cols-3 gap-4">
+                      <div>
+                        <div className="text-gold-sheen font-heading-serif text-3xl font-semibold [font-variant-numeric:lining-nums] md:text-4xl">
+                          {inst.metrics.hIndex.total}
+                        </div>
+                        <div className="mt-1 font-mono text-[11px] text-[#8f8980]">{t.impact.total}</div>
+                      </div>
+                      <div>
+                        <div className="font-heading-serif text-3xl font-medium text-[#f5f3ef] [font-variant-numeric:lining-nums] md:text-4xl">
+                          {inst.metrics.hIndex.last5}
+                        </div>
+                        <div className="mt-1 font-mono text-[11px] text-[#8f8980]">{t.impact.last5}</div>
+                      </div>
+                      <div>
+                        <div className="font-heading-serif text-3xl font-medium text-[#b8b3aa] [font-variant-numeric:lining-nums] md:text-4xl">
+                          {inst.metrics.hIndex.ratio}
+                        </div>
+                        <div className="mt-1 font-mono text-[11px] text-[#8f8980]">
+                          {lang === 'zh' ? '動能比' : 'Ratio'}
+                        </div>
+                      </div>
                     </div>
-                    <div className="font-heading-serif text-xl font-semibold text-[#141311] md:text-2xl">
-                      {inst.metrics.worldRank}
-                    </div>
-                    <div className="mt-1 text-[11px] font-medium uppercase tracking-wider text-[#6b655d] sm:text-xs">
-                      {t.impact.worldRank}
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="mx-auto mb-2.5 flex h-9 w-9 items-center justify-center rounded-full border border-[#dfd5c4] bg-[#f7f2e7]">
-                      <MapPin className="h-4 w-4 stroke-[1.6] text-[#8a6522]" aria-hidden />
-                    </div>
-                    <div className="font-heading-serif text-xl font-semibold text-[#141311] md:text-2xl">
-                      {inst.metrics.countryRank}
-                    </div>
-                    <div className="mt-1 text-[11px] font-medium uppercase tracking-wider text-[#6b655d] sm:text-xs">
-                      {t.impact.countryRank}
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="mx-auto mb-2.5 flex h-9 w-9 items-center justify-center rounded-full border border-[#e5dfd5] bg-[#faf8f4]">
-                      <GraduationCap className="h-4 w-4 stroke-[1.6] text-[#57524b]" aria-hidden />
-                    </div>
-                    <div className="font-heading-serif text-xl font-semibold text-[#141311] md:text-2xl">
-                      {inst.metrics.uniRank}
-                    </div>
-                    <div className="mt-1 text-[11px] font-medium uppercase tracking-wider text-[#6b655d] sm:text-xs">
-                      {t.impact.uniRank}
-                    </div>
-                  </div>
-                </div>
 
-                <div className="rounded-xl border border-[#ece6dc] bg-[#faf8f4] p-5">
-                  <h4 className="mb-4 text-center font-mono text-xs font-semibold uppercase tracking-[0.18em] text-[#57524b]">
-                    {t.impact.hIndex}
-                  </h4>
-                  <div className="grid grid-cols-3 gap-3 text-center md:gap-4">
-                    <div>
-                      <div className="font-heading-serif text-2xl font-semibold text-[#8a6522] md:text-3xl">
-                        {inst.metrics.hIndex.total}
-                      </div>
-                      <div className="mt-1.5 text-[11px] uppercase tracking-wider text-[#6b655d] sm:text-xs">
-                        {t.impact.total}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="font-heading-serif text-2xl font-semibold text-[#141311] md:text-3xl">
-                        {inst.metrics.hIndex.last5}
-                      </div>
-                      <div className="mt-1.5 text-[11px] uppercase tracking-wider text-[#6b655d] sm:text-xs">
-                        {t.impact.last5}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="font-heading-serif text-2xl font-semibold text-[#141311] md:text-3xl">
-                        {inst.metrics.hIndex.ratio}
-                      </div>
-                      <div className="mt-1.5 text-[11px] uppercase tracking-wider text-[#6b655d] sm:text-xs">
-                        {t.impact.ratio}
-                      </div>
+                    {/* 視覺化比例進度細線 */}
+                    <div className="h-1 w-full overflow-hidden rounded-full bg-white/[0.07]">
+                      <div
+                        style={{ width: `${inst.ratioPct}%` }}
+                        className="h-full rounded-full bg-gradient-to-r from-[#8f6c30] via-[#c8a464] to-[#e5cea0]"
+                      />
                     </div>
                   </div>
                 </div>
-              </motion.div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* 05 / 聯絡資訊 */}
+      {/* 聯絡方式與頁尾刊尾（建築式三欄細線排版） */}
       <section
         id="contact"
-        className="relative scroll-mt-24 overflow-hidden border-t border-[#e5dfd5] bg-[#faf8f4] py-20 md:py-28"
+        className="relative scroll-mt-24 border-t border-white/[0.08] bg-[#080807] pb-16 pt-24 md:pb-20 md:pt-32"
       >
-        <motion.div
-          {...(isMobile
-            ? { className: 'relative z-10 mx-auto max-w-6xl px-6' }
-            : {
-                initial: { opacity: 0, y: 18 },
-                whileInView: { opacity: 1, y: 0 },
-                viewport: { once: true, margin: '-50px' },
-                transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] },
-                className: 'relative z-10 mx-auto max-w-6xl px-6',
-              })}
-        >
-          <div className="mb-12 text-center md:mb-14">
-            <div className={`${uiTokens.sectionKicker} mb-3`}>05 / CONTACT</div>
-            <h2 className="font-heading-serif mb-4 text-4xl tracking-tight text-[#141311] md:text-5xl">
-              <span className="font-normal italic text-[#8a6522]">{t.contact.title}</span>{' '}
-              <span className="font-semibold not-italic text-[#141311]">{t.contact.subtitle}</span>
-            </h2>
-            <div className={uiTokens.titleAccentBar} />
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="mb-12 flex flex-col items-start justify-between gap-6 md:mb-16 md:flex-row md:items-end">
+            <div>
+              <div className="mb-3 flex items-center gap-3">
+                <span className="h-px w-6 bg-[#c8a464]" aria-hidden />
+                <span className={uiTokens.sectionKicker}>{contactKicker}</span>
+              </div>
+              <h2 className={uiTokens.sectionTitle}>
+                <span className={uiTokens.titleLight}>{t.contact.title}</span>{' '}
+                <span className={uiTokens.titleBold}>{t.contact.subtitle}</span>
+              </h2>
+            </div>
+
+            <button
+              type="button"
+              onClick={onDownloadVCard}
+              title={t.contact.vcardModal.downloadTooltip}
+              className="group inline-flex items-center gap-2.5 rounded-lg border border-white/[0.16] bg-[#f5f3ef] px-6 py-3 font-display text-xs font-semibold uppercase tracking-[0.16em] text-[#080807] transition-all hover:border-[#e5cea0] hover:bg-[#e5cea0]"
+            >
+              <Download className="h-4 w-4 transition-transform group-hover:translate-y-0.5" aria-hidden />
+              {t.contact.vcard}
+            </button>
           </div>
 
-          <div className="mb-12 grid grid-cols-1 gap-6 md:mb-14 md:grid-cols-3 md:gap-7">
-            {contactItems.map(({ key, label, values, hrefs, copyValue, Icon }) => {
-              const isCopied = copiedField === key;
-              return (
-                <div
-                  key={key}
-                  className={`${uiTokens.surfaceCard} ${uiTokens.surfaceCardHover} group flex flex-col justify-between p-7`}
-                >
-                  <div>
-                    <div className="mb-5 flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2.5 text-[#8a6522]">
-                        <Icon className="h-5 w-5 shrink-0 stroke-[1.6]" aria-hidden />
-                        <span className="font-mono text-xs font-medium uppercase tracking-[0.16em] text-[#57524b]">
-                          {label}
-                        </span>
-                      </div>
+          {/* 無縫三欄細線聯繫列 */}
+          <div className="overflow-hidden rounded-xl border border-white/[0.09] bg-white/[0.08]">
+            <div className="grid grid-cols-1 gap-px md:grid-cols-3">
+              {contactItems.map(({ key, label, values, hrefs, copyValue }) => {
+                const isCopied = copiedField === key;
+                return (
+                  <div
+                    key={key}
+                    className="flex flex-col justify-between bg-[#0c0b0a] p-7 transition-colors hover:bg-[#100f0d] md:p-8"
+                  >
+                    <div className="mb-6 flex items-center justify-between gap-2">
+                      <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#8f8980]">
+                        {label}
+                      </span>
                       <button
                         type="button"
                         onClick={() => handleCopy(key, copyValue)}
                         aria-label={`${t.contact.copyAction} ${label}`}
-                        className="inline-flex items-center gap-1 rounded-full border border-[#dcd4c7] bg-[#faf8f4] px-2.5 py-1 font-mono text-[11px] text-[#3f3b36] transition-colors hover:border-[#9a742e] hover:text-[#7f5d1e]"
+                        className="inline-flex items-center gap-1 font-mono text-[11px] text-[#8f8980] transition-colors hover:text-[#e5cea0]"
                       >
                         {isCopied ? (
                           <>
-                            <Check className="h-3 w-3 text-[#8a6522]" aria-hidden />
+                            <Check className="h-3 w-3 text-[#c8a464]" aria-hidden />
                             {t.contact.copiedAction}
                           </>
                         ) : (
@@ -312,57 +304,42 @@ function BottomSectionsComponent({ t, lang: _lang, isMobile = false, onDownloadV
                       </button>
                     </div>
 
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-1.5">
                       {values.map((val, i) => {
                         const href = hrefs[i];
                         return href ? (
                           <a
                             key={val}
                             href={href}
-                            className="break-words text-base font-semibold leading-snug text-[#141311] transition-colors hover:text-[#8a6522] md:text-lg"
+                            className="break-words font-heading-serif text-lg font-medium text-[#f5f3ef] transition-colors hover:text-[#e5cea0] md:text-xl"
                           >
                             {val}
                           </a>
                         ) : (
-                          <p key={val} className="text-base font-semibold leading-snug text-[#141311] md:text-lg">
+                          <p
+                            key={val}
+                            className="font-heading-serif text-lg font-medium text-[#f5f3ef] md:text-xl"
+                          >
                             {val}
                           </p>
                         );
                       })}
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="flex flex-col items-center gap-3">
-            <button
-              type="button"
-              onClick={onDownloadVCard}
-              title={t.contact.vcardModal.downloadTooltip}
-              className="group inline-flex items-center gap-3 rounded-full border border-[#181614] bg-[#181614] px-9 py-4 font-heading-serif text-base font-medium tracking-wide text-[#faf8f4] shadow-[0_10px_28px_rgba(20,19,17,0.14)] transition-all hover:border-[#8a6522] hover:bg-[#8a6522]"
-            >
-              <Download
-                className="h-4 w-4 text-[#dcc08e] transition-transform duration-300 group-hover:translate-y-0.5 group-hover:text-white"
-                aria-hidden
-              />
-              {t.contact.vcard}
-            </button>
-            <p className="font-mono text-xs tracking-wider text-[#6b655d]">
-              {t.contact.vcardModal.click}
-            </p>
-          </div>
-
-          <footer className="mt-16 w-full border-t border-[#e5dfd5] pt-10 md:mt-20">
-            <div className="flex flex-col items-center text-center">
-              <p className={uiTokens.footerLegal}>
-                {t.contact.footer.replace(/\{year\}/g, String(new Date().getFullYear()))}
-              </p>
-              <p className={uiTokens.footerCredit}>{t.contact.developer}</p>
+                );
+              })}
             </div>
+          </div>
+
+          <footer className="mt-16 flex flex-col items-center justify-between gap-3 border-t border-white/[0.08] pt-8 sm:flex-row">
+            <p className={uiTokens.footerLegal}>
+              {t.contact.footer.replace(/\{year\}/g, String(new Date().getFullYear()))}
+            </p>
+            <p className="font-mono text-xs tracking-[0.12em] text-[#78726a]">
+              {t.contact.developer}
+            </p>
           </footer>
-        </motion.div>
+        </div>
       </section>
     </>
   );

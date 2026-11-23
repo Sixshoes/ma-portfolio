@@ -1,37 +1,40 @@
-/** 歐美名校期刊白底風（象牙紙白 #FAF8F4、墨黑襯線 #141311、古銅暖金細線 #9A742E） */
+/** 深邃黑曜石建築美學系統（Obsidian #080807 · 1px 細線網格 · 克制香檳金） */
 export const uiTokens = {
   sectionKicker:
-    'font-mono text-xs font-medium uppercase tracking-[0.22em] text-[#8a6522]',
+    'font-mono text-[11px] font-medium uppercase tracking-[0.26em] text-[#c8a464]',
   sectionTitle:
-    'font-heading-serif text-4xl md:text-5xl lg:text-6xl text-[#141311] tracking-tight leading-[1.08]',
-  titleLight: 'font-heading-serif font-normal italic text-[#8a6522]',
-  titleBold: 'font-heading-serif font-semibold text-[#141311]',
+    'font-heading-serif text-3xl sm:text-4xl md:text-5xl lg:text-[3.5rem] text-[#f5f3ef] tracking-[-0.02em] leading-[1.08]',
+  titleLight: 'font-heading-serif font-normal italic text-[#e2c992]',
+  titleBold: 'font-heading-serif font-semibold text-[#f5f3ef]',
   sectionEyebrow:
-    'text-xs font-mono uppercase tracking-[0.16em] text-[#57524b] border border-[#ddd5c7] bg-[#f3efe7] rounded-full px-4 py-2',
-  sectionDesc: 'font-sans text-sm md:text-base text-[#57524b] leading-relaxed',
-  /** 期刊畫冊感白卡 */
+    'text-xs font-mono tracking-[0.12em] text-[#9b958c]',
+  sectionDesc: 'font-sans text-sm md:text-base text-[#a39e95] leading-relaxed',
+  /** 建築精雕面板（頂部微高光細線 + 極致克制圓角） */
   surfaceCard:
-    'rounded-2xl border border-[#e5dfd5] bg-white shadow-[0_2px_16px_rgba(20,19,17,0.04)]',
+    'rounded-xl border border-white/[0.085] bg-[#100f0e] shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_18px_50px_rgba(0,0,0,0.45)]',
   surfaceCardSolid:
-    'rounded-2xl border border-[#e5dfd5] bg-white shadow-[0_2px_12px_rgba(20,19,17,0.04)]',
+    'rounded-xl border border-white/[0.085] bg-[#100f0e]',
   surfaceCardHover:
-    'hover:border-[#c9b386] hover:shadow-[0_14px_34px_rgba(20,19,17,0.07)] transition-all duration-300',
+    'hover:border-[#c8a464]/40 hover:bg-[#131210] transition-colors duration-300',
   buttonPrimary:
-    'bg-[#181614] text-[#faf8f4] font-medium border border-[#181614] hover:bg-[#8a6522] hover:border-[#8a6522] transition-colors',
+    'bg-[#f5f3ef] text-[#080807] font-medium border border-[#f5f3ef] hover:bg-[#e5cea0] hover:border-[#e5cea0] transition-colors',
   buttonPrimaryStrong:
-    'bg-[#181614] text-[#faf8f4] border border-[#181614] shadow-[0_8px_24px_rgba(20,19,17,0.14)] hover:bg-[#8a6522] hover:border-[#8a6522] transition-all',
+    'bg-[#f5f3ef] text-[#080807] border border-[#f5f3ef] hover:bg-[#e5cea0] hover:border-[#e5cea0] transition-all duration-300',
   buttonGhost:
-    'border border-[#d8cfc0] bg-white text-[#292622] hover:text-[#7f5d1e] hover:border-[#9a742e] hover:bg-[#fbf9f4] transition-colors',
-  /** 純白畫框：讓白底科學圖文摘要與期刊封面自然融合，無黑底白貼紙感 */
-  pubFigureSurface: 'bg-white border border-[#eae4d9]',
+    'border border-white/[0.14] bg-transparent text-[#e8e4dc] hover:border-[#c8a464]/70 hover:text-[#e5cea0] hover:bg-white/[0.03] transition-colors',
+  /** 美術館裝裱內框：深色外斜角 + 溫潤象牙紙白畫框，讓白底科學圖宛如展覽圖版 */
+  pubPlateOuter:
+    'rounded-lg border border-white/[0.09] bg-[#161513] p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
+  pubFigureSurface:
+    'rounded-[5px] bg-[#f7f5f0] border border-black/10',
   fieldSelect:
-    'custom-select appearance-none bg-white border border-[#dcd4c7] text-[#141311] px-4 py-2.5 pr-10 rounded-full text-sm font-mono focus:outline-none focus:border-[#9a742e] focus:ring-2 focus:ring-[#9a742e]/15 transition-all cursor-pointer',
-  sectionDivider: 'border-t border-[#e5dfd5]',
-  titleAccentBar: 'mx-auto h-px w-20 bg-gradient-to-r from-transparent via-[#9a742e]/60 to-transparent',
-  metaMono: 'font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-[#6b655d]',
+    'custom-select appearance-none bg-[#0d0c0b] border border-white/[0.12] text-[#f5f3ef] px-4 py-2 pr-9 rounded-lg text-xs font-mono focus:outline-none focus:border-[#c8a464]/70 transition-colors cursor-pointer hover:border-white/[0.22]',
+  sectionDivider: 'border-t border-white/[0.08]',
+  titleAccentBar: 'h-px w-16 bg-gradient-to-r from-[#c8a464] to-transparent',
+  metaMono: 'font-mono text-[11px] uppercase tracking-[0.18em] text-[#8f8980]',
   footerLegal:
-    'text-xs font-mono tracking-[0.12em] text-[#57524b] [font-variant-numeric:lining-nums]',
-  footerCredit: 'mt-2 text-xs font-mono tracking-[0.1em] text-[#787168]',
+    'text-xs font-mono tracking-[0.14em] text-[#8f8980] [font-variant-numeric:lining-nums]',
+  footerCredit: 'mt-2 text-xs font-mono tracking-[0.12em] text-[#6d6860]',
   pubBadgeOverlay:
-    'rounded border border-[#e5dfd5] bg-[#faf8f4]/92 font-mono uppercase tracking-wider text-[#57524b] backdrop-blur-sm',
+    'rounded-sm border border-black/10 bg-[#141311]/88 font-mono uppercase tracking-widest text-[#e5cea0] backdrop-blur-sm',
 } as const;

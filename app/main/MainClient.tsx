@@ -18,7 +18,7 @@ const PublicationsSection = dynamic(
   () => import('./sections/PublicationsSection').then((mod) => mod.PublicationsSection),
   {
     loading: () => (
-      <section className="mx-auto max-w-7xl px-6 py-16 text-sm text-[#6b655d]">
+      <section className="mx-auto max-w-7xl px-6 py-16 text-sm text-[#8f8980]">
         Loading publications...
       </section>
     ),
@@ -81,57 +81,69 @@ export function MainClient({ initialPublications = null }: MainClientProps) {
   }, []);
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden bg-[var(--app-bg)] font-sans text-[#3f3b36]">
-      <Navbar navText={t.nav} isMobile={isMobile} />
-
-      <HeroStatsResearchSection
-        heroText={t.hero}
-        statsText={t.stats}
-        researchText={t.research}
-        lang={lang}
-        totalPubs={totalPubs}
-        totalCitations={totalCitations}
-        hIndexValue={hIndexValue}
-        isMobile={isMobile}
-        prefersReducedMotion={mainLite}
+    <main className="relative min-h-screen overflow-x-hidden bg-[#080807] font-sans text-[#b8b3aa]">
+      {/* 極細底片微粒與極克制頂部暗棚微光（移除廉價大光球） */}
+      <div
+        aria-hidden
+        className="editorial-grain pointer-events-none fixed inset-0 z-0 opacity-[0.028]"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-x-0 top-0 z-0 h-[520px] bg-[radial-gradient(ellipse_70%_55%_at_50%_-10%,rgba(200,164,100,0.08),transparent_70%)]"
       />
 
-      <ErrorBoundary>
-        <PublicationsSection
-          pubsText={t.pubs}
+      <Navbar navText={t.nav} isMobile={isMobile} />
+
+      <div className="relative z-10">
+        <HeroStatsResearchSection
+          heroText={t.hero}
+          statsText={t.stats}
+          researchText={t.research}
           lang={lang}
-          allPublications={allPublications}
-          pubFilter={pubFilter}
-          pubSort={pubSort}
-          correspondingOnly={correspondingOnly}
-          viewMode={viewMode}
-          searchQuery={searchQuery}
-          uniqueYears={uniqueYears}
-          isLoading={isLoading}
-          isUsingFallback={isUsingFallback}
-          featuredPublications={featuredPublications}
-          visiblePublications={visiblePublications}
-          filteredCount={filteredPublications.length}
-          listRowCount={publicationsRows.length}
-          listAllInFeatured={
-            featuredPublications.length > 0 &&
-            filteredPublications.length > 0 &&
-            publicationsRows.length === 0
-          }
+          totalPubs={totalPubs}
+          totalCitations={totalCitations}
+          hIndexValue={hIndexValue}
           isMobile={isMobile}
           prefersReducedMotion={mainLite}
-          onFilterChange={handlePubFilterChange}
-          onSortChange={handlePubSortChange}
-          onCorrespondingToggle={handleCorrespondingToggle}
-          onViewModeChange={handleViewModeChange}
-          onSearchChange={handleSearchChange}
-          onLoadMore={handleLoadMore}
         />
-      </ErrorBoundary>
 
-      <AboutSection aboutText={t.about} lang={lang} />
+        <ErrorBoundary>
+          <PublicationsSection
+            pubsText={t.pubs}
+            lang={lang}
+            allPublications={allPublications}
+            pubFilter={pubFilter}
+            pubSort={pubSort}
+            correspondingOnly={correspondingOnly}
+            viewMode={viewMode}
+            searchQuery={searchQuery}
+            uniqueYears={uniqueYears}
+            isLoading={isLoading}
+            isUsingFallback={isUsingFallback}
+            featuredPublications={featuredPublications}
+            visiblePublications={visiblePublications}
+            filteredCount={filteredPublications.length}
+            listRowCount={publicationsRows.length}
+            listAllInFeatured={
+              featuredPublications.length > 0 &&
+              filteredPublications.length > 0 &&
+              publicationsRows.length === 0
+            }
+            isMobile={isMobile}
+            prefersReducedMotion={mainLite}
+            onFilterChange={handlePubFilterChange}
+            onSortChange={handlePubSortChange}
+            onCorrespondingToggle={handleCorrespondingToggle}
+            onViewModeChange={handleViewModeChange}
+            onSearchChange={handleSearchChange}
+            onLoadMore={handleLoadMore}
+          />
+        </ErrorBoundary>
 
-      <BottomSections t={t} lang={lang} isMobile={isMobile} onDownloadVCard={handleDownloadVCard} />
+        <AboutSection aboutText={t.about} lang={lang} />
+
+        <BottomSections t={t} lang={lang} isMobile={isMobile} onDownloadVCard={handleDownloadVCard} />
+      </div>
     </main>
   );
 }

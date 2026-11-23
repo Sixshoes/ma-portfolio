@@ -18,26 +18,22 @@ function ScrollTopFab({
   const pathname = usePathname();
   const { lang } = useLanguage();
   const ariaTop = lang === 'zh' ? '回到頂部' : 'Scroll to top';
-  const labelTop = lang === 'zh' ? '頂部' : 'TOP';
 
   return (
     <AnimatePresence>
       {showScrollTop && pathname !== '/' && pathname !== '/admin' && (
         <motion.button
-          initial={{ opacity: 0, scale: 0.85, y: 16 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.85, y: 16 }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 12 }}
+          whileHover={{ y: -2 }}
+          whileTap={{ scale: 0.96 }}
           onClick={onScrollToTop}
           type="button"
-          className="group fixed bottom-5 right-5 z-[99999] flex min-h-11 min-w-11 flex-col items-center justify-center gap-0.5 rounded-full border border-[#d8cfc0] bg-white/95 p-3 text-[#292622] shadow-[0_8px_24px_rgba(20,19,17,0.12)] backdrop-blur-md transition-colors hover:border-[#9a742e] hover:bg-[#181614] hover:text-[#faf8f4] md:bottom-8 md:right-8 md:h-14 md:w-14"
+          className="group fixed bottom-6 right-6 z-[99999] flex h-11 w-11 items-center justify-center rounded-lg border border-white/[0.14] bg-[#0e0d0c]/90 text-[#e8e4dc] shadow-[0_12px_32px_rgba(0,0,0,0.6)] backdrop-blur-md transition-colors hover:border-[#c8a464]/70 hover:text-[#e5cea0] md:bottom-8 md:right-8"
           aria-label={ariaTop}
         >
-          <ArrowUp className="h-4 w-4 transition-transform duration-300 group-hover:-translate-y-0.5 md:h-5 md:w-5" />
-          <span className="font-mono text-[9px] font-bold uppercase tracking-tight opacity-75 group-hover:opacity-100">
-            {labelTop}
-          </span>
+          <ArrowUp className="h-4 w-4 transition-transform duration-300 group-hover:-translate-y-0.5" />
         </motion.button>
       )}
     </AnimatePresence>
@@ -49,7 +45,7 @@ function ScrollToTopLenis() {
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   const lenis = useLenis(({ scroll }) => {
-    const nextShow = pathname !== '/' && scroll > 240;
+    const nextShow = pathname !== '/' && scroll > 280;
     setShowScrollTop((prev) => (prev === nextShow ? prev : nextShow));
   }, [pathname]);
 
@@ -71,7 +67,7 @@ function ScrollToTopNative() {
   useEffect(() => {
     const onScroll = () => {
       const scroll = window.scrollY || document.documentElement.scrollTop;
-      const nextShow = pathname !== '/' && scroll > 240;
+      const nextShow = pathname !== '/' && scroll > 280;
       setShowScrollTop((prev) => (prev === nextShow ? prev : nextShow));
     };
     onScroll();
