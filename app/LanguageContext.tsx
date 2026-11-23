@@ -3,12 +3,14 @@
 import React, {
   createContext,
   useContext,
+  useEffect,
+  useRef,
   useState,
   useMemo,
   useCallback,
   useSyncExternalStore,
 } from 'react';
-import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
+import { motion, useReducedMotion } from 'motion/react';
 import { useLiteVisuals } from '@/hooks/use-lite-visuals';
 
 type Lang = 'en' | 'zh';
@@ -16,15 +18,21 @@ type Lang = 'en' | 'zh';
 const LANG_STORAGE_KEY = 'preferred_lang';
 const LANG_CHANGE_EVENT = 'preferred-lang-change';
 
+function detectDefaultLang(): Lang {
+  if (typeof navigator === 'undefined') return 'en';
+  const browserLang = (navigator.language || '').toLowerCase();
+  return browserLang.startsWith('zh') ? 'zh' : 'en';
+}
+
 function readStoredLang(): Lang {
   if (typeof window === 'undefined') return 'en';
   try {
-    const saved = localStorage.getItem(LANG_STORAGE_KEY) as Lang;
+    const saved = localStorage.getItem(LANG_STORAGE_KEY) as Lang | null;
     if (saved === 'en' || saved === 'zh') return saved;
   } catch {
     /* localStorage unavailable */
   }
-  return 'en';
+  return detectDefaultLang();
 }
 
 function subscribeLang(onStoreChange: () => void) {
@@ -60,15 +68,29 @@ const LanguageContext = createContext<LanguageContextType>({
   isTransitioning: false,
 });
 
-const SWAP_MS = 160;
-const CLEAR_MS = 520;
+const SWAP_MS = 75;
+const CLEAR_MS = 180;
 
 export const LanguageProvider = ({ children }: { children: React.ReactNode }) => {
   const lang = useSyncExternalStore(subscribeLang, readStoredLang, (): Lang => 'en');
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const swapTimerRef = useRef<number | null>(null);
+  const clearTimerRef = useRef<number | null>(null);
   const liteVisuals = useLiteVisuals();
   const prefersReducedMotion = useReducedMotion() === true;
   const skipTransition = prefersReducedMotion || liteVisuals;
+
+  // 同步更新 <html lang="..."> 以利無障礙與搜尋引擎辨識語系
+  useEffect(() => {
+    document.documentElement.lang = lang === 'zh' ? 'zh-Hant-TW' : 'en';
+  }, [lang]);
+
+  useEffect(() => {
+    return () => {
+      if (swapTimerRef.current !== null) window.clearTimeout(swapTimerRef.current);
+      if (clearTimerRef.current !== null) window.clearTimeout(clearTimerRef.current);
+    };
+  }, []);
 
   const setLang = useCallback(
     (newLang: Lang) => {
@@ -77,107 +99,29 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
         persistLang(newLang);
         return;
       }
-      if (isTransitioning) return;
+      if (swapTimerRef.current !== null) window.clearTimeout(swapTimerRef.current);
+      if (clearTimerRef.current !== null) window.clearTimeout(clearTimerRef.current);
       setIsTransitioning(true);
-      window.setTimeout(() => persistLang(newLang), SWAP_MS);
-      window.setTimeout(() => setIsTransitioning(false), CLEAR_MS);
+      swapTimerRef.current = window.setTimeout(() => persistLang(newLang), SWAP_MS);
+      clearTimerRef.current = window.setTimeout(() => setIsTransitioning(false), CLEAR_MS);
     },
-    [lang, isTransitioning, skipTransition]
+    [lang, skipTransition],
   );
-
-  const particles = useMemo(() => {
-    if (prefersReducedMotion || liteVisuals) return [];
-    const count = 8;
-    return Array.from({ length: count }).map((_, i) => {
-      const angle = (i / count) * Math.PI * 2;
-      const distance = 120 + ((i * 137) % 80);
-      const duration = 0.45 + ((i * 11) % 5) * 0.06;
-      const hue = i % 2 === 0 ? 'bg-slate-400/55' : 'bg-[#c4a77d]/50';
-      return {
-        angle,
-        distance,
-        duration,
-        hue,
-        delay: i * 0.03,
-        cosA: Math.cos(angle) * distance,
-        sinA: Math.sin(angle) * distance,
-      };
-    });
-  }, [prefersReducedMotion, liteVisuals]);
 
   const contextValue = useMemo(
     () => ({ lang, setLang, isTransitioning }),
-    [lang, setLang, isTransitioning]
+    [lang, setLang, isTransitioning],
   );
 
   return (
     <LanguageContext.Provider value={contextValue}>
-      <AnimatePresence>
-        {isTransitioning && !skipTransition && (
-          <motion.div
-            key="lang-transition"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed inset-0 z-[9999999] pointer-events-none flex items-center justify-center"
-          >
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-slate-950/75 backdrop-blur-md"
-            />
-            <motion.div
-              initial={{ scale: 0.85, opacity: 0 }}
-              animate={{ scale: [0.85, 1.08, 1], opacity: [0, 0.35, 0.2] }}
-              exit={{ scale: 1.05, opacity: 0 }}
-              transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-              className="absolute h-[min(90vw,420px)] w-[min(90vw,420px)] rounded-full bg-gradient-to-tr from-slate-600/20 via-[#6b5429]/12 to-transparent blur-3xl"
-            />
-            {particles.map((p, i) => (
-              <motion.div
-                key={`p-${i}`}
-                initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
-                animate={{
-                  x: p.cosA,
-                  y: p.sinA,
-                  scale: [0, 1.1, 0],
-                  opacity: [0, 0.95, 0],
-                }}
-                transition={{
-                  duration: p.duration,
-                  delay: p.delay,
-                  ease: [0.22, 1, 0.36, 1],
-                }}
-                className={`absolute h-2 w-2 rounded-full ${p.hue} shadow-[0_0_10px_rgba(196,167,125,0.35)]`}
-                style={{
-                  left: '50%',
-                  top: '50%',
-                  marginLeft: -4,
-                  marginTop: -4,
-                  willChange: 'transform, opacity',
-                }}
-              />
-            ))}
-            <motion.div
-              initial={{ scale: 0.5, opacity: 0 }}
-              animate={{ scale: 1.35, opacity: [0, 0.45, 0] }}
-              transition={{ duration: 0.5, ease: 'easeOut' }}
-              className="absolute h-32 w-32 rounded-full border border-stone-500/35 shadow-[0_0_40px_rgba(0,0,0,0.25)]"
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       <motion.div
         animate={{
-          opacity: isTransitioning && !skipTransition ? 0.78 : 1,
-          y: isTransitioning && !skipTransition ? 5 : 0,
+          opacity: isTransitioning && !skipTransition ? 0.85 : 1,
         }}
         transition={{
-          duration: 0.32,
-          ease: [0.22, 1, 0.36, 1],
+          duration: 0.16,
+          ease: 'easeOut',
         }}
         className="relative z-10"
       >

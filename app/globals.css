@@ -1,9 +1,16 @@
 @import "tailwindcss";
 
+@theme inline {
+  --font-sans: var(--font-inter), "PingFang TC", "Microsoft JhengHei", ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-outfit), var(--font-inter), "PingFang TC", "Microsoft JhengHei", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
 :root {
   color-scheme: dark;
-  /* 深炭灰底：保留沈穩感，同時降低過暗壓迫 */
-  --app-bg: #1c1c1c;
+  /* 統一深炭暖黑底色，取代原先混雜的冷藍灰與紫調 */
+  --app-bg: #161514;
+  --app-surface: #1e1c1a;
   background-color: var(--app-bg);
 }
 
@@ -17,7 +24,7 @@
 
 /* 學術沉穩主題：香檳金焦點 */
 :focus-visible {
-  outline: 2px solid rgba(212, 175, 55, 0.7);
+  outline: 2px solid rgba(212, 175, 55, 0.75);
   outline-offset: 2px;
 }
 

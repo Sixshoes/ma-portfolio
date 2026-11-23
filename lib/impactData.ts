@@ -31,7 +31,7 @@ export const impactData: Record<'ndhu' | 'fgu', InstitutionImpact> = {
 export const vcardData = `BEGIN:VCARD
 VERSION:3.0
 N:Ma;Yuan-Ron;;;
-FN:Yuan-Ron Ma (???)
+FN:Yuan-Ron Ma (馬遠榮)
 TITLE:Vice President, Chair Professor
 ORG:Fo Guang University
 TEL;TYPE=WORK,VOICE:+886-3-9871000;ext=11010

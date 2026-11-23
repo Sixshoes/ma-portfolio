@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 
 export function detectIOS(): boolean {
   if (typeof navigator === 'undefined') return false;
@@ -11,13 +11,9 @@ export function detectIOS(): boolean {
   );
 }
 
+const subscribeNoop = () => () => {};
+
 /** iOS WebKit (Safari, Messenger/LINE in-app browser, etc.) struggles with blur / blend / heavy rAF. */
-export function useIsIOS() {
-  const [isIOS, setIsIOS] = useState(true);
-
-  useEffect(() => {
-    setIsIOS(detectIOS());
-  }, []);
-
-  return isIOS;
+export function useIsIOS(): boolean {
+  return useSyncExternalStore(subscribeNoop, detectIOS, () => true);
 }

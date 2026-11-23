@@ -13,6 +13,7 @@ export type NavText = {
   about: string;
   research: string;
   publications: string;
+  impact: string;
   contact: string;
 };
 
@@ -80,6 +81,22 @@ export type PublicationsText = {
   collapseAbstract: string;
   altmetricLink: string;
   allInFeaturedNote: string;
+  searchPlaceholder: string;
+  searchAriaLabel: string;
+  clearSearch: string;
+  resultCount: string;
+  offlineFallbackNote: string;
+  sortLabel: string;
+  sortNewest: string;
+  sortCitations: string;
+  sortStarred: string;
+  correspondingOnly: string;
+  viewCard: string;
+  viewCompact: string;
+  copyCitation: string;
+  copiedCitation: string;
+  zoomFigure: string;
+  closeLightbox: string;
 };
 
 export type AboutText = {
@@ -104,7 +121,9 @@ export type ImpactText = {
   title: string;
   subtitle: string;
   ndhu: string;
+  ndhuLocation: string;
   fgu: string;
+  fguLocation: string;
   worldRank: string;
   countryRank: string;
   uniRank: string;
@@ -127,6 +146,8 @@ export type ContactText = {
   emailAdditional?: string[];
   phone: string;
   fax: string;
+  copyAction: string;
+  copiedAction: string;
   vcard: string;
   vcardModal: {
     title: string;
@@ -151,7 +172,14 @@ export type I18nDict = {
 
 export const dict: Record<Lang, I18nDict> = {
   en: {
-    nav: { home: 'Home', about: 'About', research: 'Research', publications: 'Publications', contact: 'Contact' },
+    nav: {
+      home: 'Home',
+      about: 'About',
+      research: 'Research',
+      publications: 'Publications',
+      impact: 'Impact',
+      contact: 'Contact',
+    },
     hero: {
       role: 'Vice President, Chair Professor',
       title1: 'Advanced',
@@ -165,7 +193,7 @@ export const dict: Record<Lang, I18nDict> = {
       pubs: 'Publications',
       citations: 'Citations',
       hIndex: 'H-Index',
-      hIndexValue: '49',
+      hIndexValue: '51',
       scopusNote: '* Citation and publication data sourced from Scopus & ORCID',
     },
     research: {
@@ -186,7 +214,7 @@ export const dict: Record<Lang, I18nDict> = {
       desc: 'A curated list of recent high-impact research',
       filterBy: 'Filter by',
       filterAll: 'All publications',
-      filterSelected: 'Selected / highlighted',
+      filterSelected: 'High impact (≥ 50 citations)',
       filterYearGroup: 'By year',
       citations: 'Citations',
       journal: 'Journal',
@@ -215,6 +243,23 @@ export const dict: Record<Lang, I18nDict> = {
       altmetricLink: 'Altmetric attention',
       allInFeaturedNote:
         'All matching items are already shown in the featured spotlight above. Switch filter to browse the full list.',
+      searchPlaceholder: 'Search title, journal, or year...',
+      searchAriaLabel: 'Search publications',
+      clearSearch: 'Clear search',
+      resultCount: '{count} publications',
+      offlineFallbackNote:
+        'Showing offline selected works; the full publication list will sync automatically when live data is reachable.',
+      sortLabel: 'Sort',
+      sortNewest: 'Newest first',
+      sortCitations: 'Most cited',
+      sortStarred: 'Corresponding first',
+      correspondingOnly: 'Corresponding only',
+      viewCard: 'Card view',
+      viewCompact: 'Compact list',
+      copyCitation: 'Copy citation',
+      copiedCitation: 'Copied',
+      zoomFigure: 'Enlarge figure',
+      closeLightbox: 'Close preview',
     },
     about: {
       title: 'Academic',
@@ -291,7 +336,9 @@ export const dict: Record<Lang, I18nDict> = {
       title: 'Scientific',
       subtitle: 'Impact',
       ndhu: 'National Dong Hwa University',
+      ndhuLocation: 'Hualien, Taiwan',
       fgu: 'Fo Guang University',
+      fguLocation: 'Yilan County, Taiwan',
       worldRank: 'World Rank',
       countryRank: 'Country Rank',
       uniRank: 'University Rank',
@@ -310,6 +357,8 @@ export const dict: Record<Lang, I18nDict> = {
       email: 'yrma@gm.fgu.edu.tw',
       phone: '+886-3-9871000 ext. 11010',
       fax: '+886-3-9874815',
+      copyAction: 'Copy',
+      copiedAction: 'Copied',
       vcard: 'Save Contact Info',
       vcardModal: {
         title: 'Save Contact',
@@ -322,12 +371,19 @@ export const dict: Record<Lang, I18nDict> = {
     }
   },
   zh: {
-    nav: { home: '首頁', about: '關於我', research: '研究領域', publications: '發表著作', contact: '聯絡資訊' },
+    nav: {
+      home: '首頁',
+      about: '關於我',
+      research: '研究領域',
+      publications: '發表著作',
+      impact: '學術影響力',
+      contact: '聯絡資訊',
+    },
     hero: {
       role: '副校長 / 講座教授',
       title1: '先進材料',
-      title2: '與',
-      title3: '量子元件',
+      title2: '與量子元件',
+      title3: '',
       title4: '實驗室',
       desc: '探索奈米科技的尖端，專攻一維金屬氧化物奈米結構、電致變色技術以及次世代量子元件應用。',
       cta: '查看發表著作'
@@ -337,7 +393,7 @@ export const dict: Record<Lang, I18nDict> = {
       citations: '引用次數',
       hIndex: 'h-索引',
       scopusNote: '* 引用與發表數據來源為 Scopus & ORCID',
-      hIndexValue: '49',
+      hIndexValue: '51',
     },
     research: {
       title: '專業',
@@ -357,7 +413,7 @@ export const dict: Record<Lang, I18nDict> = {
       desc: '近期高影響力之學術研究發表',
       filterBy: '篩選',
       filterAll: '全部著作',
-      filterSelected: '精選／高引用',
+      filterSelected: '高引用精選（引用 ≥ 50）',
       filterYearGroup: '依年份',
       citations: '引用次數',
       journal: '發表期刊',
@@ -385,6 +441,22 @@ export const dict: Record<Lang, I18nDict> = {
       collapseAbstract: '收合',
       altmetricLink: 'Altmetric 關注度',
       allInFeaturedNote: '符合條件的項目皆已列於上方精選區，請切換篩選以瀏覽完整清單。',
+      searchPlaceholder: '搜尋論文標題、期刊或年份…',
+      searchAriaLabel: '搜尋發表著作',
+      clearSearch: '清除搜尋',
+      resultCount: '共 {count} 篇',
+      offlineFallbackNote: '目前顯示離線精選著作，連線恢復後將自動同步完整清單。',
+      sortLabel: '排序',
+      sortNewest: '最新發表優先',
+      sortCitations: '高引用優先',
+      sortStarred: '通訊作者優先',
+      correspondingOnly: '僅看通訊作者',
+      viewCard: '圖卡模式',
+      viewCompact: '精簡條列',
+      copyCitation: '複製引用',
+      copiedCitation: '已複製',
+      zoomFigure: '放大檢視圖片',
+      closeLightbox: '關閉預覽',
     },
     about: {
       title: '學術',
@@ -461,7 +533,9 @@ export const dict: Record<Lang, I18nDict> = {
       title: '學術',
       subtitle: '影響力',
       ndhu: '國立東華大學',
+      ndhuLocation: '台灣・花蓮',
       fgu: '佛光大學',
+      fguLocation: '台灣・宜蘭',
       worldRank: '世界排名',
       countryRank: '全國排名',
       uniRank: '全校排名',
@@ -480,6 +554,8 @@ export const dict: Record<Lang, I18nDict> = {
       email: 'yrma@gm.fgu.edu.tw',
       phone: '(03)9871000 分機 11010',
       fax: '(03)9874815',
+      copyAction: '複製',
+      copiedAction: '已複製',
       vcard: '儲存聯絡資訊',
       vcardModal: {
         title: '儲存聯絡資訊',

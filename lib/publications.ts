@@ -1,4 +1,6 @@
 export interface Publication {
+  /** 穩定唯一識別碼（Notion page ID，選填以向下相容舊資料） */
+  id?: string;
   title: string;
   year: number;
   journal: string;
@@ -18,42 +20,108 @@ export interface Publication {
   altmetric_id?: string;
 }
 
-/** 從遠端 JSON 或 session 快取還原時正規化數值，避免 render 階段反覆 Number() */
+const YEAR_REGEX = /\b((?:19|20)\d{2})\b/;
+const DOI_PREFIX_REGEX = /^https?:\/\/(?:dx\.)?doi\.org\/(.+)$/i;
+
+function sanitizeHttpUrl(value: unknown): string {
+  if (typeof value !== 'string') return '';
+  const trimmed = value.trim();
+  return /^https?:\/\//i.test(trimmed) ? trimmed : '';
+}
+
+function parseSafeYear(value: unknown): number {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    const rounded = Math.trunc(value);
+    return rounded >= 1900 && rounded <= 2100 ? rounded : 0;
+  }
+  const str = String(value ?? '').trim();
+  if (!str) return 0;
+  const match = str.match(YEAR_REGEX);
+  if (match) return Number.parseInt(match[1], 10);
+  const parsed = Number.parseInt(str, 10);
+  return Number.isFinite(parsed) && parsed >= 1900 && parsed <= 2100 ? parsed : 0;
+}
+
+function parseSafeCitations(value: unknown): number {
+  const parsed = Number(value ?? 0);
+  return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : 0;
+}
+
+/** 從完整 DOI 網址自動擷取 DOI 本體（供 Altmetric 外連使用） */
+export function extractDoiIdentifier(doiUrl: string): string | undefined {
+  const trimmed = doiUrl.trim();
+  if (!trimmed) return undefined;
+  const match = trimmed.match(DOI_PREFIX_REGEX);
+  if (match && match[1]) {
+    return match[1].trim();
+  }
+  if (/^10\.\d{4,9}\/\S+$/.test(trimmed)) {
+    return trimmed;
+  }
+  return undefined;
+}
+
+/** 取得單篇論文的穩定識別鍵，避免無 DOI 或重複 DOI 時發生衝突 */
+export function getPublicationKey(pub: Publication, fallbackIndex?: number): string {
+  if (pub.id?.trim()) return pub.id.trim();
+  if (pub.doi?.trim()) return pub.doi.trim().toLowerCase();
+  const base = `${pub.year}-${pub.title.trim().toLowerCase()}`;
+  return fallbackIndex !== undefined ? `${base}-${fallbackIndex}` : base;
+}
+
+/** 根據論文引用次數即時計算 H-index */
+export function computeHIndex(list: Publication[]): number {
+  if (list.length === 0) return 0;
+  const sortedCitations = list
+    .map((p) => (Number.isFinite(p.citations) && p.citations > 0 ? p.citations : 0))
+    .sort((a, b) => b - a);
+  let h = 0;
+  for (let i = 0; i < sortedCitations.length; i += 1) {
+    if (sortedCitations[i] >= i + 1) {
+      h = i + 1;
+    } else {
+      break;
+    }
+  }
+  return h;
+}
+
+/** 從遠端 JSON 或本地快取還原時正規化欄位，防止 NaN / 異常型別污染 UI */
 export function normalizePublicationsFromJson(data: unknown): Publication[] {
   if (!Array.isArray(data)) return [];
-  return data.map((item) => {
-    const pub = item as Partial<Publication> & Record<string, unknown>;
-    const authors = pub.authors != null ? String(pub.authors) : undefined;
-    const takeaway = pub.takeaway != null ? String(pub.takeaway) : undefined;
-    const abstract_excerpt =
-      pub.abstract_excerpt != null
-        ? String(pub.abstract_excerpt)
-        : (pub as Record<string, unknown>).abstractExcerpt != null
-          ? String((pub as Record<string, unknown>).abstractExcerpt)
-          : undefined;
-    const altmetric_id =
-      pub.altmetric_id != null
-        ? String(pub.altmetric_id)
-        : (pub as Record<string, unknown>).altmetricId != null
-          ? String((pub as Record<string, unknown>).altmetricId)
-          : undefined;
+  return data
+    .filter((item): item is Record<string, unknown> => item !== null && typeof item === 'object')
+    .map((pub) => {
+      const id = typeof pub.id === 'string' && pub.id.trim() ? pub.id.trim() : undefined;
+      const doi = sanitizeHttpUrl(pub.doi);
+      const authors = typeof pub.authors === 'string' && pub.authors.trim() ? pub.authors.trim() : undefined;
+      const takeaway = typeof pub.takeaway === 'string' && pub.takeaway.trim() ? pub.takeaway.trim() : undefined;
+      const rawAbstract = pub.abstract_excerpt ?? pub.abstractExcerpt;
+      const abstract_excerpt =
+        typeof rawAbstract === 'string' && rawAbstract.trim() ? rawAbstract.trim() : undefined;
+      const rawAltmetric = pub.altmetric_id ?? pub.altmetricId;
+      const altmetric_id =
+        typeof rawAltmetric === 'string' && rawAltmetric.trim()
+          ? rawAltmetric.trim()
+          : extractDoiIdentifier(doi);
 
-    return {
-      title: String(pub.title ?? ''),
-      year: Number(pub.year),
-      journal: String(pub.journal ?? ''),
-      doi: String(pub.doi ?? ''),
-      citations: Number(pub.citations ?? 0),
-      is_star: String(pub.is_star ?? ''),
-      highlight: String(pub.highlight ?? ''),
-      cover_url: String(pub.cover_url ?? ''),
-      file_img: String(pub.file_img ?? ''),
-      ...(authors ? { authors } : {}),
-      ...(takeaway ? { takeaway } : {}),
-      ...(abstract_excerpt ? { abstract_excerpt } : {}),
-      ...(altmetric_id ? { altmetric_id } : {}),
-    };
-  });
+      return {
+        ...(id ? { id } : {}),
+        title: String(pub.title ?? '').trim() || 'Untitled',
+        year: parseSafeYear(pub.year),
+        journal: String(pub.journal ?? '').trim() || 'Unknown',
+        doi,
+        citations: parseSafeCitations(pub.citations),
+        is_star: String(pub.is_star ?? '否').trim(),
+        highlight: String(pub.highlight ?? '').trim(),
+        cover_url: sanitizeHttpUrl(pub.cover_url),
+        file_img: sanitizeHttpUrl(pub.file_img),
+        ...(authors ? { authors } : {}),
+        ...(takeaway ? { takeaway } : {}),
+        ...(abstract_excerpt ? { abstract_excerpt } : {}),
+        ...(altmetric_id ? { altmetric_id } : {}),
+      };
+    });
 }
 
 export const publications: Publication[] = [
@@ -66,7 +134,8 @@ export const publications: Publication[] = [
     "is_star": "否",
     "highlight": "⭐ 重點關注",
     "cover_url": "https://ars.els-cdn.com/content/image/1-s2.0-S1385894723035209-ga1.jpg",
-    "file_img": "https://ars.els-cdn.com/content/image/X13858947.jpg"
+    "file_img": "https://ars.els-cdn.com/content/image/X13858947.jpg",
+    "altmetric_id": "10.1016/j.cej.2023.144789"
   },
   {
     "title": "Exploiting the capabilities of MoS2-WO3 heterojunction sensors for harmful NO2 gas detection at low temperature",
@@ -77,7 +146,8 @@ export const publications: Publication[] = [
     "is_star": "否",
     "highlight": "📄 一般論文",
     "cover_url": "https://ars.els-cdn.com/content/image/X02728842.jpg",
-    "file_img": "https://ars.els-cdn.com/content/image/X02728842.jpg"
+    "file_img": "https://ars.els-cdn.com/content/image/X02728842.jpg",
+    "altmetric_id": "10.1016/j.ceramint.2024.02.084"
   },
   {
     "title": "Enhancing the Hydrogen Evolution Performance of Tungsten Diphosphide on Carbon Fiber through Ruthenium Modification",
@@ -88,7 +158,8 @@ export const publications: Publication[] = [
     "is_star": "否",
     "highlight": "📄 一般論文",
     "cover_url": "https://pubs.acs.org/cms/10.1021/acsami.3c17114/asset/images/medium/am3c17114_0007.gif",
-    "file_img": "https://pubs.acs.org/cms/10.1021/aamick.2024.16.issue-10/asset/19267426-e519-6742-ce51-267426ce5192/aamick.2024.16.issue-10.largecover.jpg"
+    "file_img": "https://pubs.acs.org/cms/10.1021/aamick.2024.16.issue-10/asset/19267426-e519-6742-ce51-267426ce5192/aamick.2024.16.issue-10.largecover.jpg",
+    "altmetric_id": "10.1021/acsami.3c17114"
   },
   {
     "title": "Doping-free bandgap tuning in one-dimensional Magnéli-phase nanorods of Mo4O11",
@@ -99,7 +170,8 @@ export const publications: Publication[] = [
     "is_star": "是",
     "highlight": "📄 一般論文",
     "cover_url": "https://pubs.rsc.org/en/Image/Get?imageInfo.ImageType=GA&imageInfo.ImageIdentifier.ManuscriptID=C5NR08118A&imageInfo.ImageIdentifier.Year=2016",
-    "file_img": "https://pubs.rsc.org/en/Image/Get?imageInfo.ImageType=CoverIssue&imageInfo.ImageIdentifier.SerCode=nr&imageInfo.ImageIdentifier.IssueId=NR018009&imageInfo.ImageIdentifier.Year=2026"
+    "file_img": "https://pubs.rsc.org/en/Image/Get?imageInfo.ImageType=CoverIssue&imageInfo.ImageIdentifier.SerCode=nr&imageInfo.ImageIdentifier.IssueId=NR018009&imageInfo.ImageIdentifier.Year=2026",
+    "altmetric_id": "10.1039/c5nr08118a"
   },
   {
     "title": "Investigations on silver/polyaniline electrodes for electrochemical supercapacitors",
@@ -110,7 +182,8 @@ export const publications: Publication[] = [
     "is_star": "否",
     "highlight": "🔥 國際標竿",
     "cover_url": "https://pubs.rsc.org/en/Image/Get?imageInfo.ImageType=GA&imageInfo.ImageIdentifier.ManuscriptID=C2CP41757J&imageInfo.ImageIdentifier.Year=2012",
-    "file_img": "https://pubs.rsc.org/en/Image/Get?imageInfo.ImageType=CoverIssue&imageInfo.ImageIdentifier.SerCode=cp&imageInfo.ImageIdentifier.IssueId=CP028010&imageInfo.ImageIdentifier.Year=2026"
+    "file_img": "https://pubs.rsc.org/en/Image/Get?imageInfo.ImageType=CoverIssue&imageInfo.ImageIdentifier.SerCode=cp&imageInfo.ImageIdentifier.IssueId=CP028010&imageInfo.ImageIdentifier.Year=2026",
+    "altmetric_id": "10.1039/c2cp41757j"
   },
   {
     "title": "Impact of Nanosize on Supercapacitance: Study of 1D Nanorods and 2D Thin-Films of Nickel Oxide",
@@ -121,7 +194,8 @@ export const publications: Publication[] = [
     "is_star": "是",
     "highlight": "⭐ 重點關注",
     "cover_url": "https://pubs.acs.org/cms/10.1021/acsami.6b00487/asset/images/medium/am-2016-004878_0002.gif",
-    "file_img": "https://pubs.acs.org/cms/10.1021/aamick.2016.8.issue-15/asset/15655aff-b415-55af-3b41-655aff3b4156/aamick.2016.8.issue-15.largecover.jpg"
+    "file_img": "https://pubs.acs.org/cms/10.1021/aamick.2016.8.issue-15/asset/15655aff-b415-55af-3b41-655aff3b4156/aamick.2016.8.issue-15.largecover.jpg",
+    "altmetric_id": "10.1021/acsami.6b00487"
   },
   {
     title: 'One-dimensional metal-oxide nanostructures: Recent developments in synthesis, characterization, and applications',
@@ -152,7 +226,8 @@ export const publications: Publication[] = [
     "is_star": "是",
     "highlight": "🔥 國際標竿",
     "cover_url": "https://ars.els-cdn.com/content/image/1-s2.0-S0927024813X00030-cov150h.gif",
-    "file_img": "https://ars.els-cdn.com/content/image/1-s2.0-S0927024813X00030-cov150h.gif"
+    "file_img": "https://ars.els-cdn.com/content/image/1-s2.0-S0927024813X00030-cov150h.gif",
+    "altmetric_id": "10.1016/j.solmat.2013.01.003"
   },
   {
     title: 'Synthesis and characterization of Ru doped CuO thin films for supercapacitor based on Bronsted acidic ionic liquid',

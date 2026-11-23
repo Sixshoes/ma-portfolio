@@ -1,7 +1,7 @@
 'use client';
 
-import React, { memo, useState } from 'react';
-import { GraduationCap } from 'lucide-react';
+import React, { memo, useCallback, useRef, useState } from 'react';
+import { Award, Briefcase, GraduationCap, Users } from 'lucide-react';
 import { useRenderProfiler } from './useRenderProfiler';
 import { uiTokens } from './uiTokens';
 
@@ -28,21 +28,22 @@ type AboutSectionProps = {
   lang: 'en' | 'zh';
 };
 
-type AboutTab = 'roles' | 'admin' | 'service' | 'awards';
+const TAB_IDS = ['roles', 'admin', 'service', 'awards'] as const;
+type AboutTab = (typeof TAB_IDS)[number];
 
 function renderListItem(text: string) {
   const match = text.match(/(.*?)\s*\(([^)]+)\)$/);
   if (match) {
     return (
-      <div className="flex flex-col gap-2 border-b border-stone-800/50 py-3 transition-colors last:border-0 sm:flex-row sm:items-start sm:justify-between group-hover:border-stone-700/60">
-        <span className="font-medium leading-relaxed text-stone-300">{match[1]}</span>
-        <span className="mt-1 whitespace-nowrap rounded border border-stone-700/50 bg-stone-900/40 px-2 py-1 font-mono text-[10px] text-stone-500 sm:mt-0">
+      <div className="flex flex-col gap-2 border-b border-stone-800/60 py-3.5 transition-colors last:border-0 sm:flex-row sm:items-start sm:justify-between sm:gap-4 group-hover:border-stone-700/60">
+        <span className="font-medium leading-relaxed text-stone-200">{match[1]}</span>
+        <span className="w-fit max-w-full rounded-md border border-stone-700/60 bg-stone-900/70 px-2.5 py-1 font-mono text-xs leading-snug text-stone-300 sm:max-w-[44%] sm:shrink-0 sm:text-right">
           {match[2]}
         </span>
       </div>
     );
   }
-  return <div className="py-2 leading-relaxed text-stone-300">{text}</div>;
+  return <div className="border-b border-stone-800/60 py-3 leading-relaxed text-stone-200 last:border-0">{text}</div>;
 }
 
 function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
@@ -50,45 +51,128 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
   const [tab, setTab] = useState<AboutTab>('roles');
   const [isExpandedAdmin, setIsExpandedAdmin] = useState(false);
   const [isExpandedService, setIsExpandedService] = useState(false);
+  const tabRefs = useRef<Record<AboutTab, HTMLButtonElement | null>>({
+    roles: null,
+    admin: null,
+    service: null,
+    awards: null,
+  });
+
   const tablistLabel = lang === 'zh' ? '學術履歷分類' : 'Resume categories';
 
+  const handleTabKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLButtonElement>, currentId: AboutTab) => {
+      const idx = TAB_IDS.indexOf(currentId);
+      let nextIdx: number | null = null;
+      if (e.key === 'ArrowRight') nextIdx = (idx + 1) % TAB_IDS.length;
+      else if (e.key === 'ArrowLeft') nextIdx = (idx - 1 + TAB_IDS.length) % TAB_IDS.length;
+      else if (e.key === 'Home') nextIdx = 0;
+      else if (e.key === 'End') nextIdx = TAB_IDS.length - 1;
+
+      if (nextIdx !== null) {
+        e.preventDefault();
+        const nextId = TAB_IDS[nextIdx];
+        setTab(nextId);
+        tabRefs.current[nextId]?.focus();
+      }
+    },
+    [],
+  );
+
+  const summaryHighlights = [
+    {
+      icon: Briefcase,
+      label: aboutText.roleLabel,
+      count: aboutText.roles.length,
+      targetTab: 'roles' as AboutTab,
+    },
+    {
+      icon: GraduationCap,
+      label: aboutText.adminLabel,
+      count: aboutText.admin.length,
+      targetTab: 'admin' as AboutTab,
+    },
+    {
+      icon: Users,
+      label: aboutText.serviceLabel,
+      count: aboutText.service.length,
+      targetTab: 'service' as AboutTab,
+    },
+    {
+      icon: Award,
+      label: aboutText.awardsLabel,
+      count: aboutText.awards.length,
+      targetTab: 'awards' as AboutTab,
+    },
+  ];
+
+  const tabs: { id: AboutTab; label: string; count?: number }[] = [
+    { id: 'roles', label: aboutText.rolesEduTab },
+    { id: 'admin', label: aboutText.adminLabel, count: aboutText.admin.length },
+    { id: 'service', label: aboutText.serviceLabel, count: aboutText.service.length },
+    { id: 'awards', label: aboutText.awardsLabel, count: aboutText.awards.length },
+  ];
+
   return (
-    <section id="about" className={`mx-auto max-w-7xl px-6 py-28 md:py-32 ${uiTokens.sectionDivider}`}>
-      <div className="grid grid-cols-1 items-start gap-14 lg:grid-cols-3 lg:gap-16">
-        <div className="relative lg:col-span-1">
-          <div className="relative aspect-[4/5] overflow-hidden rounded-3xl border border-stone-800/60 bg-slate-900 shadow-[0_8px_32px_rgba(0,0,0,0.3)] lg:aspect-square lg:sticky lg:top-28">
+    <section
+      id="about"
+      className={`mx-auto max-w-7xl scroll-mt-24 px-6 py-24 md:py-32 ${uiTokens.sectionDivider}`}
+    >
+      <div className="grid grid-cols-1 items-start gap-12 lg:grid-cols-3 lg:gap-14">
+        {/* 實質內容化的黏性左側摘要卡（修正原先空白漸層框與手機版負邊距截斷問題） */}
+        <div className="lg:sticky lg:top-28 lg:col-span-1">
+          <div className="relative overflow-hidden rounded-3xl border border-stone-700/50 bg-gradient-to-br from-[#211e1b] via-[#191715] to-[#131210] p-7 shadow-[0_18px_48px_rgba(0,0,0,0.45)] md:p-8">
             <div
-              className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-950 to-[#1a1612]"
+              className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#d4af37]/60 to-transparent"
               aria-hidden
             />
             <div
-              className="absolute inset-0 opacity-90"
+              className="pointer-events-none absolute inset-0 opacity-[0.06]"
               style={{
-                backgroundImage: `
-                  radial-gradient(ellipse 80% 60% at 30% 40%, rgba(148, 163, 184, 0.12), transparent 55%),
-                  radial-gradient(ellipse 70% 50% at 75% 65%, rgba(196, 167, 125, 0.08), transparent 50%),
-                  linear-gradient(180deg, transparent 40%, #0c0a09 100%)
-                `,
-              }}
-              aria-hidden
-            />
-            <div
-              className="absolute inset-0 opacity-[0.06]"
-              style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%2378716c' stroke-width='0.35' d='M12 1v22M1 12h22'/%3E%3C/svg%3E")`,
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23d4af37' stroke-width='0.4' d='M12 1v22M1 12h22'/%3E%3C/svg%3E")`,
                 backgroundSize: '24px 24px',
               }}
               aria-hidden
             />
-          </div>
-          <div className="absolute -bottom-12 -right-6 max-w-xs rounded-2xl border border-stone-700/50 bg-slate-950/95 p-8 shadow-[0_20px_48px_rgba(0,0,0,0.45)] md:-right-12 md:p-10 md:backdrop-blur-md">
-            <GraduationCap className="mb-4 h-8 w-8 stroke-1 text-[#c4a77d]" />
-            <h4 className="font-heading-serif mb-3 text-xl font-normal tracking-wide text-stone-100">
-              {aboutText.leadership}
-            </h4>
-            <p className="text-sm font-light leading-relaxed text-stone-500">{aboutText.leadershipDesc}</p>
+
+            <div className="relative z-10">
+              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl border border-[#c4a77d]/35 bg-[#2a241c]/70 text-[#d4af37]">
+                <GraduationCap className="h-6 w-6 stroke-[1.5]" aria-hidden />
+              </div>
+              <h3 className="font-heading-serif mb-3 text-2xl font-medium tracking-wide text-stone-100">
+                {aboutText.leadership}
+              </h3>
+              <p className="mb-7 text-sm font-light leading-relaxed text-stone-300">
+                {aboutText.leadershipDesc}
+              </p>
+
+              <div className="grid grid-cols-2 gap-3 border-t border-stone-800/70 pt-6">
+                {summaryHighlights.map(({ icon: Icon, label, count, targetTab }) => {
+                  const isActive = tab === targetTab;
+                  return (
+                    <button
+                      key={targetTab}
+                      type="button"
+                      onClick={() => setTab(targetTab)}
+                      className={`rounded-2xl border p-3.5 text-left transition-all ${
+                        isActive
+                          ? 'border-[#c4a77d]/50 bg-[#2a241c]/55'
+                          : 'border-stone-800/70 bg-stone-900/45 hover:border-stone-700/80 hover:bg-stone-900/75'
+                      }`}
+                    >
+                      <div className="mb-1.5 flex items-center justify-between">
+                        <Icon className="h-4 w-4 text-[#c4a77d]" aria-hidden />
+                        <span className="font-mono text-lg font-semibold text-stone-100">{count}</span>
+                      </div>
+                      <div className="line-clamp-1 text-xs text-stone-300">{label}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
+
         <div className="lg:col-span-2">
           <h2 className={`${uiTokens.sectionTitle} mb-8 md:mb-10`}>
             <span className={uiTokens.titleLight}>{aboutText.title}</span> <br />
@@ -98,33 +182,34 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
           <div
             role="tablist"
             aria-label={tablistLabel}
-            className="mb-8 flex flex-wrap gap-2 border-b border-stone-800/60 pb-4"
+            className="mb-8 flex flex-wrap gap-2 border-b border-stone-800/70 pb-4"
           >
-            {(
-              [
-                ['roles', aboutText.rolesEduTab],
-                ['admin', aboutText.adminLabel],
-                ['service', aboutText.serviceLabel],
-                ['awards', aboutText.awardsLabel],
-              ] as const
-            ).map(([id, label]) => {
+            {tabs.map(({ id, label, count }) => {
               const selected = tab === id;
               return (
                 <button
                   key={id}
+                  ref={(el) => {
+                    tabRefs.current[id] = el;
+                  }}
                   type="button"
                   role="tab"
                   aria-selected={selected}
+                  tabIndex={selected ? 0 : -1}
                   id={`about-tab-${id}`}
                   aria-controls={`about-panel-${id}`}
                   onClick={() => setTab(id)}
-                  className={`rounded-full px-3.5 py-2 text-left font-mono text-[10px] uppercase tracking-[0.18em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9a8260]/45 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 md:px-4 ${
+                  onKeyDown={(e) => handleTabKeyDown(e, id)}
+                  className={`rounded-full px-4 py-2 text-left font-mono text-xs uppercase tracking-[0.14em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c4a77d]/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161514] ${
                     selected
-                      ? 'border border-[#8f7038]/45 bg-[#2a241c]/60 text-[#e8dcc4]'
-                      : 'border border-transparent text-stone-500 hover:border-stone-700/60 hover:bg-stone-900/40 hover:text-stone-300'
+                      ? 'border border-[#c4a77d]/55 bg-[#2a241c]/70 text-[#e8dcc4]'
+                      : 'border border-stone-800/70 bg-stone-900/40 text-stone-300 hover:border-stone-700/80 hover:bg-stone-900/75 hover:text-stone-100'
                   }`}
                 >
                   {label}
+                  {count !== undefined ? (
+                    <span className="ml-1.5 text-[11px] opacity-75">({count})</span>
+                  ) : null}
                 </button>
               );
             })}
@@ -136,28 +221,28 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                 role="tabpanel"
                 id="about-panel-roles"
                 aria-labelledby="about-tab-roles"
-                className="space-y-7 md:space-y-8"
+                className="space-y-8"
               >
-                <div className="group flex gap-6">
-                  <div className="h-full min-h-[48px] w-px bg-stone-800/80 transition-colors group-hover:bg-[#9a8260]/50" />
-                  <div className="flex-1">
-                    <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-[#b08d52]/90">
+                <div className="group flex gap-5">
+                  <div className="min-h-[48px] w-px bg-stone-800 transition-colors group-hover:bg-[#c4a77d]/55" />
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-3 font-mono text-xs uppercase tracking-[0.18em] text-[#d4af37]">
                       {aboutText.roleLabel}
                     </div>
-                    <div className="space-y-1">
+                    <div className="space-y-0.5">
                       {aboutText.roles.map((role, idx) => (
                         <div key={idx}>{renderListItem(role)}</div>
                       ))}
                     </div>
                   </div>
                 </div>
-                <div className="group flex gap-6">
-                  <div className="h-full min-h-[48px] w-px bg-stone-800/80 transition-colors group-hover:bg-stone-600/70" />
-                  <div className="flex-1">
-                    <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-stone-500">
+                <div className="group flex gap-5">
+                  <div className="min-h-[48px] w-px bg-stone-800 transition-colors group-hover:bg-stone-600" />
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-3 font-mono text-xs uppercase tracking-[0.18em] text-stone-400">
                       {aboutText.eduLabel}
                     </div>
-                    <div className="space-y-1">
+                    <div className="space-y-0.5">
                       {aboutText.edu.map((eduItem, idx) => (
                         <div key={idx}>{renderListItem(eduItem)}</div>
                       ))}
@@ -172,14 +257,14 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                 role="tabpanel"
                 id="about-panel-admin"
                 aria-labelledby="about-tab-admin"
-                className="group flex gap-6"
+                className="group flex gap-5"
               >
-                <div className="h-full min-h-[48px] w-px bg-stone-800/80 transition-colors group-hover:bg-[#9a8260]/45" />
-                <div className="flex-1">
-                  <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-stone-500">
+                <div className="min-h-[48px] w-px bg-stone-800 transition-colors group-hover:bg-[#c4a77d]/55" />
+                <div className="min-w-0 flex-1">
+                  <div className="mb-3 font-mono text-xs uppercase tracking-[0.18em] text-stone-400">
                     {aboutText.adminLabel}
                   </div>
-                  <div className="space-y-1">
+                  <div className="space-y-0.5">
                     {(isExpandedAdmin ? aboutText.admin : aboutText.admin.slice(0, 5)).map((item, idx) => (
                       <div key={idx}>{renderListItem(item)}</div>
                     ))}
@@ -188,7 +273,7 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                     <button
                       type="button"
                       onClick={() => setIsExpandedAdmin(!isExpandedAdmin)}
-                      className="mt-3 flex items-center gap-1 font-mono text-[10px] text-[#a8906a] transition-colors hover:text-[#d4c4a8]"
+                      className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-stone-700/70 bg-stone-900/50 px-4 py-1.5 font-mono text-xs text-[#e8dcc4] transition-colors hover:border-[#c4a77d]/55 hover:bg-stone-800/70"
                     >
                       {isExpandedAdmin
                         ? lang === 'zh'
@@ -208,14 +293,14 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                 role="tabpanel"
                 id="about-panel-service"
                 aria-labelledby="about-tab-service"
-                className="group flex gap-6"
+                className="group flex gap-5"
               >
-                <div className="h-full min-h-[48px] w-px bg-stone-800/80 transition-colors group-hover:bg-stone-600/60" />
-                <div className="flex-1">
-                  <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-stone-500">
+                <div className="min-h-[48px] w-px bg-stone-800 transition-colors group-hover:bg-stone-600" />
+                <div className="min-w-0 flex-1">
+                  <div className="mb-3 font-mono text-xs uppercase tracking-[0.18em] text-stone-400">
                     {aboutText.serviceLabel}
                   </div>
-                  <div className="space-y-1">
+                  <div className="space-y-0.5">
                     {(isExpandedService ? aboutText.service : aboutText.service.slice(0, 5)).map((item, idx) => (
                       <div key={idx}>{renderListItem(item)}</div>
                     ))}
@@ -224,7 +309,7 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                     <button
                       type="button"
                       onClick={() => setIsExpandedService(!isExpandedService)}
-                      className="mt-3 flex items-center gap-1 font-mono text-[10px] text-[#a8906a] transition-colors hover:text-[#d4c4a8]"
+                      className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-stone-700/70 bg-stone-900/50 px-4 py-1.5 font-mono text-xs text-[#e8dcc4] transition-colors hover:border-[#c4a77d]/55 hover:bg-stone-800/70"
                     >
                       {isExpandedService
                         ? lang === 'zh'
@@ -244,14 +329,14 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                 role="tabpanel"
                 id="about-panel-awards"
                 aria-labelledby="about-tab-awards"
-                className="group flex gap-6"
+                className="group flex gap-5"
               >
-                <div className="h-full min-h-[48px] w-px bg-stone-800/80 transition-colors group-hover:bg-[#9a8260]/45" />
-                <div className="flex-1">
-                  <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-[#b08d52]/90">
+                <div className="min-h-[48px] w-px bg-stone-800 transition-colors group-hover:bg-[#c4a77d]/55" />
+                <div className="min-w-0 flex-1">
+                  <div className="mb-3 font-mono text-xs uppercase tracking-[0.18em] text-[#d4af37]">
                     {aboutText.awardsLabel}
                   </div>
-                  <div className="space-y-1">
+                  <div className="space-y-0.5">
                     {aboutText.awards.map((item, idx) => (
                       <div key={idx}>{renderListItem(item)}</div>
                     ))}
