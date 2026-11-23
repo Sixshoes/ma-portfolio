@@ -1,0 +1,28 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 請將允許寫入論文資料的管理者 Google 信箱填在下方陣列中（全小寫）
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email.lower() in [
+          'yrma@gm.fgu.edu.tw',
+          // '你的信箱@gmail.com'
+        ];
+    }
+
+    // 公開論文彙總文件：全站僅讀此單一文件，極省讀取額度；僅管理者可寫入
+    match /siteData/publications {
+      allow read: if true;
+      allow write: if isAdmin()
+        && request.resource.data.items is list
+        && request.resource.data.totalPapers is int;
+    }
+
+    // 其他路徑一律預設拒絕
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

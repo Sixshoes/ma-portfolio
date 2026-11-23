@@ -8,8 +8,8 @@ type HeroLatticeBackgroundProps = {
 };
 
 /**
- * Canvas-based lattice background — renders on demand when the cursor moves or
- * container resizes, and pauses completely when scrolled outside the viewport.
+ * 細緻建築製圖點陣背景（象牙紙底石墨細點 + 滑鼠滑過泛出古銅金微光），
+ * 採可視區監測 + 按需重繪，零背景耗電。
  */
 export function HeroLatticeBackground({
   isMobile = false,
@@ -23,9 +23,9 @@ export function HeroLatticeBackground({
   const rafRef = useRef<number | null>(null);
   const reduced = prefersReducedMotion === true;
 
-  const cols = isMobile ? 16 : 26;
-  const rows = isMobile ? 10 : 12;
-  const interactionRadius = isMobile ? 110 : 150;
+  const cols = isMobile ? 16 : 28;
+  const rows = isMobile ? 10 : 14;
+  const interactionRadius = isMobile ? 110 : 160;
 
   const draw = useCallback(
     (ctx: CanvasRenderingContext2D, w: number, h: number) => {
@@ -51,33 +51,25 @@ export function HeroLatticeBackground({
           const isInteracting = !reduced && !isMobile && dist < ir;
           const intensity = isInteracting ? Math.max(0, 1 - dist / ir) : 0;
 
-          const scale = isInteracting ? 1 + intensity * 1.45 : 1;
-          const opacity = (isInteracting ? 0.28 + intensity * 0.72 : 0.12) * 0.55;
-          const radius = (1.5 * dpr * scale) / 2;
+          const scale = isInteracting ? 1 + intensity * 1.4 : 1;
+          const radius = (1.6 * dpr * scale) / 2;
 
           ctx.beginPath();
           ctx.arc(nx, ny, radius, 0, Math.PI * 2);
 
           if (isInteracting) {
-            ctx.fillStyle = `rgba(196,167,125,${opacity})`;
-            ctx.shadowColor = `rgba(196,167,125,${0.55 * intensity})`;
-            ctx.shadowBlur = (8 + intensity * 14) * dpr;
+            ctx.fillStyle = `rgba(154, 116, 46, ${0.28 + intensity * 0.52})`;
           } else {
-            ctx.fillStyle = `rgba(71,85,105,${opacity})`;
-            ctx.shadowColor = 'transparent';
-            ctx.shadowBlur = 0;
+            ctx.fillStyle = 'rgba(20, 19, 17, 0.11)';
           }
 
           ctx.fill();
         }
       }
-      ctx.shadowColor = 'transparent';
-      ctx.shadowBlur = 0;
     },
     [cols, rows, interactionRadius, reduced, isMobile],
   );
 
-  // Resize + viewport visibility tracking
   useEffect(() => {
     const container = containerRef.current;
     const canvas = canvasRef.current;
@@ -115,7 +107,6 @@ export function HeroLatticeBackground({
     };
   }, [draw]);
 
-  // On-demand redraw on pointer movement (desktop + motion enabled only)
   useEffect(() => {
     if (reduced || isMobile) return;
 
@@ -169,12 +160,8 @@ export function HeroLatticeBackground({
       className="pointer-events-none absolute inset-0 z-0 overflow-hidden bg-transparent"
       aria-hidden
     >
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-0 opacity-[0.55]"
-        style={{ imageRendering: 'auto' }}
-      />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(12,10,9,0.38)_55%,#0c0a09_92%)]" />
+      <canvas ref={canvasRef} className="absolute inset-0" style={{ imageRendering: 'auto' }} />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_25%,rgba(250,248,244,0.88)_92%)]" />
     </div>
   );
 }

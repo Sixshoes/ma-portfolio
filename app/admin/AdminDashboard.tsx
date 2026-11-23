@@ -1,0 +1,803 @@
+'use client';
+
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
+import { onAuthStateChanged, signInWithPopup, signOut, type User } from 'firebase/auth';
+import {
+  AlertTriangle,
+  CheckCircle2,
+  CloudDownload,
+  Download,
+  ExternalLink,
+  ImageOff,
+  Loader2,
+  LogIn,
+  LogOut,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Search,
+  ShieldAlert,
+  Star,
+  Trash2,
+  Upload,
+} from 'lucide-react';
+import {
+  computeHIndex,
+  getPublicationKey,
+  normalizePublicationsFromJson,
+  type Publication,
+} from '@/lib/publications';
+import { LEGACY_PORTAL_PAPERS_URL } from '@/lib/papersCache';
+import {
+  getFirebaseServices,
+  isEmailAllowedClient,
+  isFirebaseConfigured,
+  loadPublicationsBundleFromFirestore,
+  savePublicationsBundleToFirestore,
+  type PublicationsBundleDoc,
+} from '@/lib/firebase';
+import { PublicationEditorModal } from './PublicationEditorModal';
+
+type AdminFilter = 'all' | 'starred' | 'highCited' | 'missingCover';
+type AdminSort = 'newest' | 'citations' | 'title';
+
+const PAGE_SIZE = 25;
+
+export function AdminDashboard() {
+  const configured = isFirebaseConfigured();
+  const [user, setUser] = useState<User | null>(null);
+  const [authReady, setAuthReady] = useState(!configured);
+  const [bundle, setBundle] = useState<PublicationsBundleDoc | null>(null);
+  const [loadingData, setLoadingData] = useState(false);
+  const [busyAction, setBusyAction] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
+
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<AdminFilter>('all');
+  const [sort, setSort] = useState<AdminSort>('newest');
+  const [page, setPage] = useState(1);
+
+  const [editorTarget, setEditorTarget] = useState<{ open: boolean; pub: Publication | null }>({
+    open: false,
+    pub: null,
+  });
+
+  const fileImportRef = useRef<HTMLInputElement>(null);
+
+  const showToast = useCallback((type: 'ok' | 'err', text: string) => {
+    setToast({ type, text });
+  }, []);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timer = window.setTimeout(() => setToast(null), 5000);
+    return () => window.clearTimeout(timer);
+  }, [toast]);
+
+  // 監聽 Firebase Auth 登入狀態
+  useEffect(() => {
+    if (!configured) return;
+    const { auth } = getFirebaseServices();
+    const unsub = onAuthStateChanged(auth, (nextUser) => {
+      setUser(nextUser);
+      setAuthReady(true);
+    });
+    return () => unsub();
+  }, [configured]);
+
+  const isAllowed = useMemo(() => isEmailAllowedClient(user?.email), [user?.email]);
+
+  const fetchFirestoreData = useCallback(async () => {
+    setLoadingData(true);
+    try {
+      const doc = await loadPublicationsBundleFromFirestore();
+      setBundle(doc);
+    } catch (err) {
+      showToast(
+        'err',
+        `讀取 Firestore 失敗：${err instanceof Error ? err.message : '未知錯誤'}`,
+      );
+    } finally {
+      setLoadingData(false);
+    }
+  }, [showToast]);
+
+  useEffect(() => {
+    if (user && isAllowed) {
+      void fetchFirestoreData();
+    }
+  }, [user, isAllowed, fetchFirestoreData]);
+
+  const triggerRevalidate = useCallback(
+    async (currentUser: User) => {
+      try {
+        const token = await currentUser.getIdToken();
+        const res = await fetch('/api/revalidate', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) {
+          const body = (await res.json().catch(() => ({}))) as { error?: string };
+          return { ok: false, error: body.error ?? `HTTP ${res.status}` };
+        }
+        return { ok: true };
+      } catch (err) {
+        return { ok: false, error: err instanceof Error ? err.message : '網路錯誤' };
+      }
+    },
+    [],
+  );
+
+  const persistAndPublish = useCallback(
+    async (nextItems: Publication[], successLabel: string) => {
+      if (!user?.email) throw new Error('尚未登入管理者帳號');
+      setBusyAction('saving');
+      try {
+        const saved = await savePublicationsBundleToFirestore(nextItems, user.email);
+        setBundle(saved);
+        const rev = await triggerRevalidate(user);
+        if (rev.ok) {
+          showToast('ok', `${successLabel}，已同步刷新正式官網快取。`);
+        } else {
+          showToast(
+            'err',
+            `${successLabel}（Firestore 已存檔，但即時刷新快取失敗：${rev.error}，官網將於 ISR 週期自動更新）`,
+          );
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : '寫入失敗';
+        if (msg.includes('permission-denied') || msg.includes('PERMISSION_DENIED')) {
+          throw new Error(
+            '權限不足（permission-denied）：請確認已在 Firebase Console 部署 firestore.rules 且包含您的管理員信箱。',
+          );
+        }
+        throw err;
+      } finally {
+        setBusyAction(null);
+      }
+    },
+    [user, triggerRevalidate, showToast],
+  );
+
+  const handleSignIn = async () => {
+    setBusyAction('auth');
+    try {
+      const { auth, googleProvider } = getFirebaseServices();
+      await signInWithPopup(auth, googleProvider);
+    } catch (err) {
+      showToast('err', `Google 登入失敗：${err instanceof Error ? err.message : '已取消'}`);
+    } finally {
+      setBusyAction(null);
+    }
+  };
+
+  const handleSignOut = async () => {
+    const { auth } = getFirebaseServices();
+    await signOut(auth);
+    setBundle(null);
+  };
+
+  const handleImportFromPortal = async () => {
+    if (
+      bundle &&
+      bundle.items.length > 0 &&
+      !window.confirm(
+        `Firestore 目前已有 ${bundle.items.length} 筆資料。確定要從 B 站 papers.json 重新匯入並覆蓋嗎？（建議先按「匯出備份 JSON」）`,
+      )
+    ) {
+      return;
+    }
+
+    setBusyAction('importing');
+    try {
+      const res = await fetch(LEGACY_PORTAL_PAPERS_URL, { cache: 'no-cache' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const raw: unknown = await res.json();
+      const parsed = normalizePublicationsFromJson(raw).map((p) => ({
+        ...p,
+        id: p.id?.trim() || crypto.randomUUID(),
+      }));
+      if (parsed.length === 0) throw new Error('B 站資料為空');
+
+      await persistAndPublish(parsed, `已成功匯入 ${parsed.length} 篇論文`);
+    } catch (err) {
+      showToast('err', `匯入失敗：${err instanceof Error ? err.message : '未知錯誤'}`);
+    } finally {
+      setBusyAction(null);
+    }
+  };
+
+  const handleImportLocalJson = async (file: File | undefined) => {
+    if (!file) return;
+    setBusyAction('importing');
+    try {
+      const text = await file.text();
+      const raw = JSON.parse(text) as unknown;
+      const list = Array.isArray(raw)
+        ? raw
+        : raw && typeof raw === 'object' && Array.isArray((raw as { items?: unknown }).items)
+          ? (raw as { items: unknown[] }).items
+          : null;
+      if (!list) throw new Error('JSON 格式錯誤，需為論文陣列或含 items 陣列的備份檔。');
+
+      const parsed = normalizePublicationsFromJson(list).map((p) => ({
+        ...p,
+        id: p.id?.trim() || crypto.randomUUID(),
+      }));
+      if (parsed.length === 0) throw new Error('檔案中找不到有效論文資料。');
+
+      if (
+        bundle &&
+        bundle.items.length > 0 &&
+        !window.confirm(`即將匯入 ${parsed.length} 篇論文並覆蓋現有 ${bundle.items.length} 篇，確定嗎？`)
+      ) {
+        return;
+      }
+
+      await persistAndPublish(parsed, `已匯入 ${parsed.length} 篇論文`);
+    } catch (err) {
+      showToast('err', `匯入 JSON 失敗：${err instanceof Error ? err.message : '格式錯誤'}`);
+    } finally {
+      setBusyAction(null);
+    }
+  };
+
+  const handleExportJson = () => {
+    const items = bundle?.items ?? [];
+    const blob = new Blob([JSON.stringify(items, null, 2)], {
+      type: 'application/json;charset=utf-8',
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ma-publications-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleSaveOne = async (savedPub: Publication) => {
+    const current = bundle?.items ?? [];
+    const targetKey = getPublicationKey(savedPub);
+    const existsIndex = current.findIndex(
+      (item) => (savedPub.id && item.id === savedPub.id) || getPublicationKey(item) === targetKey,
+    );
+
+    const nextItems =
+      existsIndex >= 0
+        ? current.map((item, idx) => (idx === existsIndex ? savedPub : item))
+        : [savedPub, ...current];
+
+    await persistAndPublish(nextItems, existsIndex >= 0 ? '已更新論文資料' : '已新增論文');
+    setEditorTarget({ open: false, pub: null });
+  };
+
+  const handleDeleteOne = async (pub: Publication) => {
+    if (!window.confirm(`確定要刪除論文？\n\n「${pub.title}」`)) return;
+    const current = bundle?.items ?? [];
+    const targetKey = getPublicationKey(pub);
+    const nextItems = current.filter(
+      (item) => !((pub.id && item.id === pub.id) || getPublicationKey(item) === targetKey),
+    );
+    try {
+      await persistAndPublish(nextItems, '已刪除該篇論文');
+    } catch (err) {
+      showToast('err', err instanceof Error ? err.message : '刪除失敗');
+    }
+  };
+
+  const handleManualRevalidate = async () => {
+    if (!user) return;
+    setBusyAction('revalidating');
+    const rev = await triggerRevalidate(user);
+    setBusyAction(null);
+    if (rev.ok) {
+      showToast('ok', '正式官網快取已即時刷新！');
+    } else {
+      showToast('err', `刷新失敗：${rev.error}`);
+    }
+  };
+
+  const items = useMemo(() => bundle?.items ?? [], [bundle]);
+  const missingCoverCount = useMemo(
+    () => items.filter((p) => !p.cover_url && !p.file_img).length,
+    [items],
+  );
+  const totalCitations = useMemo(() => items.reduce((s, p) => s + p.citations, 0), [items]);
+  const hIndex = useMemo(() => computeHIndex(items), [items]);
+
+  const filteredItems = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    let list = items;
+    if (filter === 'starred') list = list.filter((p) => p.is_star === '是');
+    else if (filter === 'highCited') list = list.filter((p) => p.citations >= 50);
+    else if (filter === 'missingCover') list = list.filter((p) => !p.cover_url && !p.file_img);
+
+    if (q) {
+      list = list.filter((p) =>
+        `${p.title} ${p.journal} ${p.year} ${p.doi} ${p.authors ?? ''}`.toLowerCase().includes(q),
+      );
+    }
+
+    return [...list].sort((a, b) => {
+      if (sort === 'citations') return b.citations - a.citations || b.year - a.year;
+      if (sort === 'title') return a.title.localeCompare(b.title);
+      return b.year - a.year || b.citations - a.citations;
+    });
+  }, [items, filter, search, sort]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredItems.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const pageItems = filteredItems.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+  // 狀態 1：尚未設定 Firebase 環境變數
+  if (!configured) {
+    return (
+      <div className="mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center px-6 py-16">
+        <div className="w-full rounded-3xl border border-stone-700/70 bg-[#191715] p-8 shadow-2xl">
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-[#d4af37]/40 bg-[#2a241c] text-[#d4af37]">
+            <AlertTriangle className="h-6 w-6" />
+          </div>
+          <h1 className="font-heading-serif mb-3 text-2xl font-semibold text-stone-100">
+            Firebase 尚未設定環境變數
+          </h1>
+          <p className="mb-5 text-sm leading-relaxed text-stone-300">
+            目前官網仍正常使用 B 站備援資料運作。請依專案根目錄的{' '}
+            <code className="rounded bg-stone-800 px-1.5 py-0.5 text-[#e8dcc4]">FIREBASE_SETUP.md</code>{' '}
+            步驟，於 <code className="rounded bg-stone-800 px-1.5 py-0.5 text-[#e8dcc4]">.env.local</code> 與 Vercel
+            填入以下環境變數後重新整理：
+          </p>
+          <ul className="mb-6 space-y-1.5 rounded-2xl border border-stone-800 bg-[#121110] p-4 font-mono text-xs text-stone-300">
+            <li>NEXT_PUBLIC_FIREBASE_API_KEY</li>
+            <li>NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN</li>
+            <li>NEXT_PUBLIC_FIREBASE_PROJECT_ID</li>
+            <li>NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET</li>
+            <li>NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID</li>
+            <li>NEXT_PUBLIC_FIREBASE_APP_ID</li>
+            <li>ADMIN_EMAILS / NEXT_PUBLIC_ADMIN_EMAILS</li>
+          </ul>
+          <Link
+            href="/main"
+            className="inline-flex items-center gap-2 rounded-full border border-stone-700 bg-stone-900 px-5 py-2.5 text-sm text-stone-200 transition-colors hover:border-[#c4a77d] hover:text-[#e8dcc4]"
+          >
+            返回正式官網
+            <ExternalLink className="h-4 w-4" />
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // 載入 Auth 狀態中
+  if (!authReady) {
+    return (
+      <div className="flex min-h-screen items-center justify-center gap-3 text-stone-300">
+        <Loader2 className="h-5 w-5 animate-spin text-[#d4af37]" />
+        正在確認登入狀態...
+      </div>
+    );
+  }
+
+  // 狀態 2：未登入
+  if (!user) {
+    return (
+      <div className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center px-6">
+        <div className="w-full rounded-3xl border border-stone-700/70 bg-[#191715] p-8 text-center shadow-2xl">
+          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-[#d4af37]/40 bg-[#2a241c] text-[#d4af37]">
+            <LogIn className="h-6 w-6" />
+          </div>
+          <h1 className="font-heading-serif mb-2 text-2xl font-semibold text-stone-100">
+            著作管理後台
+          </h1>
+          <p className="mb-7 text-sm text-stone-300">
+            請使用已授權的管理者 Google 帳號登入，即可管理論文清單、上傳圖片並即時更新官網。
+          </p>
+          {toast ? (
+            <div className="mb-5 rounded-xl border border-red-500/40 bg-red-950/50 px-4 py-2.5 text-xs text-red-200">
+              {toast.text}
+            </div>
+          ) : null}
+          <button
+            type="button"
+            disabled={busyAction === 'auth'}
+            onClick={handleSignIn}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#dcc08e] to-[#c4a265] px-6 py-3 text-sm font-semibold text-stone-950 transition-all hover:brightness-105 disabled:opacity-50"
+          >
+            {busyAction === 'auth' ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
+            使用 Google 帳號登入
+          </button>
+          <Link
+            href="/main"
+            className="mt-4 inline-block text-xs text-stone-400 transition-colors hover:text-stone-200"
+          >
+            ← 返回正式官網
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // 狀態 3：已登入但非白名單帳號
+  if (!isAllowed) {
+    return (
+      <div className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center px-6">
+        <div className="w-full rounded-3xl border border-red-500/35 bg-[#191715] p-8 text-center shadow-2xl">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-red-500/40 bg-red-950/50 text-red-300">
+            <ShieldAlert className="h-6 w-6" />
+          </div>
+          <h1 className="font-heading-serif mb-2 text-2xl font-semibold text-stone-100">無管理權限</h1>
+          <p className="mb-6 text-sm text-stone-300">
+            目前登入帳號 <span className="font-mono text-stone-100">{user.email}</span> 不在管理者名單中。
+          </p>
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className="inline-flex items-center gap-2 rounded-full border border-stone-700 bg-stone-900 px-6 py-2.5 text-sm text-stone-200 hover:bg-stone-800"
+          >
+            <LogOut className="h-4 w-4" />
+            切換其他帳號
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 狀態 4：管理後台主介面
+  return (
+    <div className="mx-auto max-w-7xl px-6 py-8 md:py-10">
+      {/* 頂部導覽列 */}
+      <header className="mb-8 flex flex-col gap-4 border-b border-stone-800 pb-6 md:flex-row md:items-center md:justify-between">
+        <div>
+          <div className="font-mono text-xs uppercase tracking-[0.2em] text-[#d4af37]">
+            Firebase CMS • Firestore + Storage
+          </div>
+          <h1 className="font-heading-serif mt-1 text-3xl font-semibold text-stone-100">
+            馬遠榮副校長 著作管理後台
+          </h1>
+          <p className="mt-1 text-xs text-stone-400">
+            登入帳號：<span className="font-mono text-stone-200">{user.email}</span>
+            {bundle?.updatedAt ? (
+              <>
+                {' '}
+                • 最後發布：
+                <span className="font-mono text-stone-300">
+                  {new Date(bundle.updatedAt).toLocaleString('zh-TW')}
+                </span>
+              </>
+            ) : null}
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2.5">
+          <Link
+            href="/main"
+            target="_blank"
+            className="inline-flex items-center gap-1.5 rounded-full border border-stone-700 bg-stone-900 px-4 py-2 text-xs font-medium text-stone-200 transition-colors hover:border-[#c4a77d] hover:text-[#e8dcc4]"
+          >
+            查看正式官網
+            <ExternalLink className="h-3.5 w-3.5" />
+          </Link>
+          <button
+            type="button"
+            disabled={busyAction !== null}
+            onClick={handleManualRevalidate}
+            className="inline-flex items-center gap-1.5 rounded-full border border-stone-700 bg-stone-900 px-4 py-2 text-xs font-medium text-stone-200 transition-colors hover:border-[#c4a77d] hover:text-[#e8dcc4] disabled:opacity-50"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${busyAction === 'revalidating' ? 'animate-spin' : ''}`} />
+            刷新官網快取
+          </button>
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className="inline-flex items-center gap-1.5 rounded-full border border-stone-800 bg-stone-950 px-4 py-2 text-xs text-stone-300 transition-colors hover:border-red-500/40 hover:text-red-200"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            登出
+          </button>
+        </div>
+      </header>
+
+      {/* 即時訊息條 */}
+      {toast ? (
+        <div
+          role="status"
+          className={`mb-6 flex items-center gap-2.5 rounded-2xl border px-5 py-3.5 text-sm ${
+            toast.type === 'ok'
+              ? 'border-emerald-500/40 bg-emerald-950/45 text-emerald-200'
+              : 'border-red-500/40 bg-red-950/45 text-red-200'
+          }`}
+        >
+          {toast.type === 'ok' ? (
+            <CheckCircle2 className="h-4 w-4 shrink-0" />
+          ) : (
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+          )}
+          <span>{toast.text}</span>
+        </div>
+      ) : null}
+
+      {/* 統計總覽卡片 */}
+      <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {[
+          { label: '總論文數', value: items.length.toLocaleString('en-US') },
+          { label: '總引用次數', value: totalCitations.toLocaleString('en-US') },
+          { label: '即時 H-Index', value: String(hIndex) },
+          { label: '尚缺圖片篇數', value: String(missingCoverCount) },
+        ].map((card) => (
+          <div
+            key={card.label}
+            className="rounded-2xl border border-stone-800 bg-[#191715] px-5 py-4"
+          >
+            <div className="font-mono text-xs text-stone-400">{card.label}</div>
+            <div className="font-heading-serif mt-1.5 text-3xl font-semibold text-stone-100">
+              {card.value}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* 首次啟用導引：Firestore 尚無資料時顯示一鍵搬家按鈕 */}
+      {!loadingData && items.length === 0 ? (
+        <div className="mb-8 rounded-3xl border border-[#d4af37]/40 bg-gradient-to-br from-[#262017] to-[#171513] p-7">
+          <h2 className="font-heading-serif mb-2 text-2xl font-semibold text-[#f0e4cc]">
+            Firestore 尚未建立論文資料 — 一鍵完成 Notion / B 站搬家
+          </h2>
+          <p className="mb-5 max-w-2xl text-sm leading-relaxed text-stone-300">
+            點擊下方按鈕即可自動抓取目前 B 站的 218 篇論文並寫入 Firebase Firestore（單一彙總文件，官網讀取極省額度），完成後正式官網會立即切換為讀取 Firebase，即可安心退掉 Notion 與 B 站。
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              disabled={busyAction !== null}
+              onClick={handleImportFromPortal}
+              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#dcc08e] to-[#c4a265] px-6 py-2.5 text-sm font-semibold text-stone-950 transition-all hover:brightness-105 disabled:opacity-50"
+            >
+              {busyAction === 'importing' ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <CloudDownload className="h-4 w-4" />
+              )}
+              一鍵從 B 站匯入現有論文
+            </button>
+            <button
+              type="button"
+              disabled={busyAction !== null}
+              onClick={() => fileImportRef.current?.click()}
+              className="inline-flex items-center gap-2 rounded-full border border-stone-700 bg-stone-900 px-5 py-2.5 text-sm text-stone-200 hover:border-[#c4a77d]"
+            >
+              <Upload className="h-4 w-4" />
+              或從本機上傳 papers.json
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {/* 操作列與篩選 */}
+      <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-stone-800 bg-[#191715] p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => setEditorTarget({ open: true, pub: null })}
+              className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#dcc08e] to-[#c4a265] px-5 py-2 text-sm font-semibold text-stone-950 transition-all hover:brightness-105"
+            >
+              <Plus className="h-4 w-4" />
+              新增論文
+            </button>
+
+            <input
+              ref={fileImportRef}
+              type="file"
+              accept="application/json,.json"
+              className="hidden"
+              onChange={(e) => {
+                void handleImportLocalJson(e.target.files?.[0]);
+                e.target.value = '';
+              }}
+            />
+            <button
+              type="button"
+              disabled={busyAction !== null}
+              onClick={() => fileImportRef.current?.click()}
+              className="inline-flex items-center gap-1.5 rounded-full border border-stone-700 bg-stone-900 px-4 py-2 text-xs text-stone-200 hover:border-[#c4a77d]"
+            >
+              <Upload className="h-3.5 w-3.5" />
+              匯入 JSON
+            </button>
+            <button
+              type="button"
+              disabled={items.length === 0}
+              onClick={handleExportJson}
+              className="inline-flex items-center gap-1.5 rounded-full border border-stone-700 bg-stone-900 px-4 py-2 text-xs text-stone-200 hover:border-[#c4a77d] disabled:opacity-40"
+            >
+              <Download className="h-3.5 w-3.5" />
+              匯出備份 JSON
+            </button>
+            {items.length > 0 ? (
+              <button
+                type="button"
+                disabled={busyAction !== null}
+                onClick={handleImportFromPortal}
+                className="inline-flex items-center gap-1.5 rounded-full border border-stone-800 bg-stone-950 px-4 py-2 text-xs text-stone-400 hover:border-stone-600 hover:text-stone-200"
+              >
+                <CloudDownload className="h-3.5 w-3.5" />
+                從 B 站重同步
+              </button>
+            ) : null}
+          </div>
+
+          <div className="relative w-full sm:w-72">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              placeholder="搜尋標題、期刊、年份、DOI..."
+              className="w-full rounded-full border border-stone-700 bg-[#121110] py-2 pl-10 pr-4 text-sm text-stone-100 placeholder:text-stone-500 focus:border-[#d4af37] focus:outline-none"
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-stone-800/80 pt-3">
+          <div className="flex flex-wrap gap-2">
+            {(
+              [
+                ['all', `全部 (${items.length})`],
+                ['starred', '通訊作者'],
+                ['highCited', '高引用 (≥50)'],
+                ['missingCover', `缺圖 (${missingCoverCount})`],
+              ] as const
+            ).map(([key, label]) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => {
+                  setFilter(key);
+                  setPage(1);
+                }}
+                className={`rounded-full border px-3.5 py-1 font-mono text-xs transition-colors ${
+                  filter === key
+                    ? 'border-[#d4af37]/70 bg-[#332a1d] text-[#f0e4cc]'
+                    : 'border-stone-700/80 bg-[#121110] text-stone-300 hover:border-stone-600'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-3">
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value as AdminSort)}
+              aria-label="排序方式"
+              className="rounded-full border border-stone-700 bg-[#121110] px-3.5 py-1.5 font-mono text-xs text-stone-200 focus:border-[#d4af37] focus:outline-none"
+            >
+              <option value="newest">最新年份優先</option>
+              <option value="citations">引用次數高到低</option>
+              <option value="title">標題 A–Z</option>
+            </select>
+            <span className="font-mono text-xs text-stone-400">
+              符合 {filteredItems.length} 篇
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* 論文清單 */}
+      {loadingData ? (
+        <div className="flex items-center justify-center gap-2 py-20 text-stone-400">
+          <Loader2 className="h-5 w-5 animate-spin text-[#d4af37]" />
+          正在讀取 Firestore 資料...
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {pageItems.map((pub, idx) => {
+            const key = getPublicationKey(pub, idx);
+            const thumb = pub.cover_url || pub.file_img;
+            return (
+              <div
+                key={key}
+                className="flex flex-col gap-4 rounded-2xl border border-stone-800/85 bg-[#191715] p-4 transition-colors hover:border-stone-700 sm:flex-row sm:items-center"
+              >
+                <div className="flex h-16 w-24 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-stone-800 bg-[#121110]">
+                  {thumb ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={thumb}
+                      alt=""
+                      loading="lazy"
+                      referrerPolicy="no-referrer"
+                      className="h-full w-full object-contain p-1"
+                    />
+                  ) : (
+                    <span className="inline-flex items-center gap-1 font-mono text-[10px] text-stone-500">
+                      <ImageOff className="h-3.5 w-3.5" /> 缺圖
+                    </span>
+                  )}
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <div className="mb-1 flex flex-wrap items-center gap-2 text-xs">
+                    <span className="rounded bg-stone-800 px-2 py-0.5 font-mono font-semibold text-stone-200">
+                      {pub.year || '-'}
+                    </span>
+                    {pub.is_star === '是' ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[#332a1d] px-2.5 py-0.5 text-[11px] text-[#f0e4cc]">
+                        <Star className="h-3 w-3 fill-[#d4af37] text-[#d4af37]" />
+                        通訊作者
+                      </span>
+                    ) : null}
+                    <span className="font-mono text-stone-300">引用：{pub.citations}</span>
+                    <span className="truncate text-stone-400">• {pub.journal}</span>
+                  </div>
+                  <h3 className="line-clamp-2 font-medium text-stone-100">{pub.title}</h3>
+                </div>
+
+                <div className="flex shrink-0 items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditorTarget({ open: true, pub })}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-stone-700 bg-stone-900 px-3.5 py-1.5 text-xs text-stone-200 transition-colors hover:border-[#d4af37] hover:text-[#f0e4cc]"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                    編輯
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busyAction !== null}
+                    onClick={() => handleDeleteOne(pub)}
+                    className="inline-flex items-center gap-1 rounded-full border border-stone-800 bg-stone-950 px-3 py-1.5 text-xs text-stone-400 transition-colors hover:border-red-500/50 hover:text-red-300 disabled:opacity-40"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    刪除
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* 分頁控制 */}
+      {totalPages > 1 ? (
+        <div className="mt-8 flex items-center justify-center gap-3 font-mono text-xs">
+          <button
+            type="button"
+            disabled={safePage <= 1}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            className="rounded-full border border-stone-700 bg-stone-900 px-4 py-2 text-stone-200 disabled:opacity-40"
+          >
+            上一頁
+          </button>
+          <span className="text-stone-300">
+            第 {safePage} / {totalPages} 頁
+          </span>
+          <button
+            type="button"
+            disabled={safePage >= totalPages}
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            className="rounded-full border border-stone-700 bg-stone-900 px-4 py-2 text-stone-200 disabled:opacity-40"
+          >
+            下一頁
+          </button>
+        </div>
+      ) : null}
+
+      {/* 新增／編輯論文視窗 */}
+      {editorTarget.open ? (
+        <PublicationEditorModal
+          initial={editorTarget.pub}
+          isSaving={busyAction === 'saving'}
+          onClose={() => setEditorTarget({ open: false, pub: null })}
+          onSave={handleSaveOne}
+        />
+      ) : null}
+    </div>
+  );
+}

@@ -271,6 +271,7 @@ export function usePublications(
   }, [pageSize]);
 
   return {
+    allPublications: publications,
     pubFilter,
     pubSort,
     correspondingOnly,

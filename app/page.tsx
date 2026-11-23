@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
 import {
   motion,
   useMotionValue,
@@ -15,16 +16,18 @@ import { prefetchPapersJson } from '@/lib/papersCache';
 
 const dict = {
   en: {
+    affiliation: 'Fo Guang University · National Dong Hwa University',
     name: 'Prof. Yuan-Ron Ma',
-    title: 'Academic Portfolio',
+    title: 'Academic Monograph',
     subtitle: 'Advanced Materials & Quantum Devices',
     enter: 'Enter Portfolio',
   },
   zh: {
-    name: '馬遠榮 副校長／教授',
+    affiliation: '佛光大學副校長 · 國立東華大學特聘教授',
+    name: '馬遠榮 教授',
     title: '學術研究專頁',
-    subtitle: '先進材料與量子元件',
-    enter: '進入專頁',
+    subtitle: '先進材料與量子元件實驗室',
+    enter: '進入學術專頁',
   },
 };
 
@@ -38,30 +41,15 @@ export default function VisualsPage() {
 
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
-  const springX = useSpring(mouseX, { damping: 40, stiffness: 50, mass: 1 });
-  const springY = useSpring(mouseY, { damping: 40, stiffness: 50, mass: 1 });
-
-  const particles = useMemo(() => {
-    if (noMotion) return [];
-    const count = fullDesktop ? 24 : 10;
-    return Array.from({ length: count }).map((_, i) => ({
-      id: i,
-      size: ((i * 7) % 6) + 1,
-      x: (i * 13) % 100,
-      y: (i * 17) % 100,
-      duration: ((i * 3) % 15) + (fullDesktop ? 10 : 14),
-      delay: (i * 0.5) % 2,
-      color: i % 2 === 0 ? 'bg-stone-400' : 'bg-[#c4a77d]',
-      sinX: Math.sin(i) * (fullDesktop ? 105 : 64),
-    }));
-  }, [fullDesktop, noMotion]);
+  const springX = useSpring(mouseX, { damping: 45, stiffness: 55, mass: 1 });
+  const springY = useSpring(mouseY, { damping: 45, stiffness: 55, mass: 1 });
 
   useEffect(() => {
     if (!fullDesktop) return;
 
     const handleMouseMove = (e: MouseEvent) => {
-      mouseX.set(e.clientX - window.innerWidth / 2);
-      mouseY.set(e.clientY - window.innerHeight / 2);
+      mouseX.set((e.clientX - window.innerWidth / 2) * 0.08);
+      mouseY.set((e.clientY - window.innerHeight / 2) * 0.08);
     };
 
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
@@ -72,153 +60,104 @@ export default function VisualsPage() {
     prefetchPapersJson();
   }, []);
 
-  const orbitOuterDur = fullDesktop ? 38 : 95;
-  const orbitMidDur = fullDesktop ? 28 : 78;
-  const orbitInnerDur = fullDesktop ? 14 : 52;
+  const orbitOuterDur = fullDesktop ? 48 : 95;
+  const orbitMidDur = fullDesktop ? 34 : 78;
+  const orbitInnerDur = fullDesktop ? 20 : 52;
 
   return (
-    <main className="relative flex min-h-[100dvh] w-full flex-col items-center justify-between overflow-hidden bg-[#100f0e] px-6 py-8 font-sans">
-      {fullDesktop && (
-        <motion.div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(16,15,14,0.52)_72%,#0b0a09_100%)]"
-          animate={{ opacity: [0.65, 0.9, 0.65] }}
-          transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-        />
-      )}
+    <main className="relative flex min-h-[100dvh] w-full flex-col items-center justify-between overflow-hidden bg-[#faf8f4] px-6 py-7 font-sans text-[#141311] md:px-10 md:py-9">
+      {/* 細緻紙紋格線與古銅金邊框 */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-4 rounded-3xl border border-[#e5dfd5] md:inset-7"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-[0.35]"
+        style={{
+          backgroundImage:
+            'radial-gradient(circle at 50% 45%, rgba(154,116,46,0.09), transparent 55%), radial-gradient(#d8cfc0 0.75px, transparent 0.75px)',
+          backgroundSize: '100% 100%, 28px 28px',
+        }}
+      />
 
-      <div className="relative z-40 flex w-full max-w-7xl justify-end">
+      {/* 頂部刊頭與語系切換 */}
+      <header className="relative z-40 flex w-full max-w-6xl items-center justify-between gap-4 px-2 md:px-4">
+        <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#6b655d]">
+          {t.affiliation}
+        </span>
         <LanguageSwitcher layoutId="hetero-landing" />
-      </div>
+      </header>
 
-      {noMotion ? (
-        <div className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[60vw] w-[60vw] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#c4a77d]/10 md:h-[40vw] md:w-[40vw] md:blur-[100px]" />
-      ) : fullDesktop ? (
-        <div className="pointer-events-none absolute left-1/2 top-1/2 z-0 -translate-x-1/2 -translate-y-1/2">
-          <motion.div
-            className="h-[60vw] w-[60vw] rounded-full bg-[#c4a77d]/10 blur-[80px] md:h-[40vw] md:w-[40vw] md:blur-[100px]"
-            style={{ x: springX, y: springY }}
-          />
-        </div>
-      ) : (
-        <motion.div
-          className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[60vw] w-[60vw] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#c4a77d]/10 md:h-[40vw] md:w-[40vw]"
-          animate={{ x: [0, 18, -12, 0], y: [0, -14, 10, 0] }}
-          transition={{ duration: 24, repeat: Infinity, ease: 'easeInOut' }}
-        />
-      )}
-
-      <div className="relative z-10 my-auto flex items-center justify-center py-12">
-        {fullDesktop && (
-          <motion.div
-            aria-hidden
-            className="pointer-events-none absolute aspect-square w-[min(86vw,600px)] rounded-full border border-stone-700/30"
-            animate={{ scale: [1, 1.04, 1], opacity: [0.14, 0.3, 0.14] }}
-            transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
-          />
-        )}
-
+      {/* 中央古典科學軌道與襯線主標題 */}
+      <motion.div
+        style={fullDesktop ? { x: springX, y: springY } : undefined}
+        className="relative z-10 my-auto flex items-center justify-center py-12"
+      >
+        {/* 外軌道（虛線製圖線） */}
         <motion.div
           animate={noMotion ? { rotate: 0 } : { rotate: 360 }}
           transition={
             noMotion ? { duration: 0 } : { duration: orbitOuterDur, repeat: Infinity, ease: 'linear' }
           }
-          className="absolute h-[260px] w-[260px] rounded-full border border-dashed border-stone-500/20 md:h-[540px] md:w-[540px]"
+          className="absolute h-[270px] w-[270px] rounded-full border border-dashed border-[#cfc5b4] md:h-[520px] md:w-[520px]"
         />
 
+        {/* 中軌道（石墨細線 + 墨黑節點） */}
         <motion.div
           animate={noMotion ? { rotate: 0 } : { rotate: -360 }}
           transition={
             noMotion ? { duration: 0 } : { duration: orbitMidDur, repeat: Infinity, ease: 'linear' }
           }
-          className="absolute h-[190px] w-[190px] rounded-full border border-stone-600/35 md:h-[380px] md:w-[380px]"
+          className="absolute h-[200px] w-[200px] rounded-full border border-[#dfd7c9] md:h-[380px] md:w-[380px]"
         >
-          <div className="absolute left-1/2 top-0 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-stone-300 shadow-[0_0_12px_rgba(214,211,209,0.45)] md:h-3 md:w-3" />
+          <div className="absolute left-1/2 top-0 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#181614] md:h-2.5 md:w-2.5" />
         </motion.div>
 
+        {/* 內軌道（古銅金細線 + 暖金節點） */}
         <motion.div
           animate={noMotion ? { rotate: 0 } : { rotate: 360 }}
           transition={
             noMotion ? { duration: 0 } : { duration: orbitInnerDur, repeat: Infinity, ease: 'linear' }
           }
-          className="absolute h-[120px] w-[120px] rounded-full border border-[#c4a77d]/40 md:h-[200px] md:w-[200px]"
+          className="absolute h-[136px] w-[136px] rounded-full border border-[#9a742e]/45 md:h-[240px] md:w-[240px]"
         >
-          <div className="absolute bottom-0 left-1/2 h-3 w-3 -translate-x-1/2 translate-y-1/2 rounded-full bg-[#d4af37] shadow-[0_0_16px_rgba(212,175,55,0.45)] md:h-4 md:w-4" />
+          <div className="absolute bottom-0 left-1/2 h-2.5 w-2.5 -translate-x-1/2 translate-y-1/2 rounded-full bg-[#9a742e] shadow-[0_0_10px_rgba(154,116,46,0.4)] md:h-3 md:w-3" />
         </motion.div>
 
-        <motion.div
-          animate={
-            noMotion
-              ? { scale: 1, opacity: 0.85, rotate: 0 }
-              : fullDesktop
-                ? { scale: [1, 1.2, 1], opacity: [0.55, 0.95, 0.55], rotate: [0, 180, 360] }
-                : { scale: [1, 1.12, 1], opacity: [0.65, 0.95, 0.65], rotate: 0 }
-          }
-          transition={
-            noMotion
-              ? { duration: 0.2 }
-              : fullDesktop
-                ? { duration: 8, repeat: Infinity, ease: 'easeInOut' }
-                : { duration: 5.5, repeat: Infinity, ease: 'easeInOut' }
-          }
-          className={`h-24 w-24 rounded-full bg-gradient-to-tr from-[#7a5f2f]/45 to-stone-600/35 opacity-90 md:h-40 md:w-40 ${fullDesktop ? 'mix-blend-screen blur-2xl' : ''}`}
+        {/* 中央溫潤紙白暈底，讓標題清晰易讀 */}
+        <div
+          aria-hidden
+          className="h-44 w-44 rounded-full bg-[#faf8f4]/90 blur-xl md:h-64 md:w-64"
         />
 
         <div
           key={lang}
-          className="pointer-events-none absolute flex w-[88vw] flex-col items-center gap-2 text-center font-display font-light uppercase text-stone-100 md:w-[600px] md:gap-4"
+          className="pointer-events-none absolute flex w-[86vw] flex-col items-center gap-3 text-center md:w-[620px] md:gap-4"
         >
-          <span className="block text-xs tracking-[0.22em] text-stone-300 md:text-sm md:tracking-[0.28em]">
+          <span className="font-mono text-xs font-medium uppercase tracking-[0.26em] text-[#8a6522] md:text-sm">
             {t.name}
           </span>
-          <h1 className="font-heading-serif block text-2xl font-semibold tracking-[0.08em] text-[#e8dcc4] md:text-4xl md:tracking-[0.14em]">
+          <h1 className="font-heading-serif text-3xl font-semibold tracking-tight text-[#141311] md:text-5xl lg:text-6xl">
             {t.title}
           </h1>
-          <span className="mt-1 block text-xs tracking-[0.14em] text-stone-300 md:mt-2 md:text-sm md:tracking-[0.2em]">
+          <div className="h-px w-16 bg-[#9a742e]/60" aria-hidden />
+          <span className="font-display text-xs uppercase tracking-[0.18em] text-[#57524b] md:text-sm md:tracking-[0.22em]">
             {t.subtitle}
           </span>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Plain HTML flex item — never collides with center orbit on short screens */}
-      <div className="relative z-40 pb-4 md:pb-8">
+      {/* 底部進入按鈕 */}
+      <footer className="relative z-40 flex flex-col items-center gap-4 pb-4 md:pb-6">
         <Link
           href="/main"
-          className="group inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-[#c4a77d]/55 bg-stone-950/90 px-7 py-3 font-display text-xs font-medium uppercase tracking-[0.16em] text-[#e8dcc4] transition-colors hover:bg-[#d4b47c] hover:text-stone-950 active:scale-[0.98] md:bg-stone-950/60 md:px-9 md:py-3.5 md:text-sm md:tracking-[0.2em] md:backdrop-blur-md"
+          className="group inline-flex items-center gap-2.5 whitespace-nowrap rounded-full border border-[#181614] bg-[#181614] px-8 py-3.5 font-display text-xs font-semibold uppercase tracking-[0.18em] text-[#faf8f4] shadow-[0_10px_28px_rgba(20,19,17,0.16)] transition-all hover:border-[#8a6522] hover:bg-[#8a6522] active:scale-[0.98] md:px-10 md:py-4 md:text-sm"
         >
           {t.enter}
+          <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden />
         </Link>
-      </div>
-
-      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-        {particles.map((p) => (
-          <motion.div
-            key={p.id}
-            className={`absolute rounded-full ${p.color} opacity-30`}
-            style={{
-              width: p.size,
-              height: p.size,
-              left: `${p.x}%`,
-              top: `${p.y}%`,
-            }}
-            animate={{
-              y: [0, fullDesktop ? -620 : -420],
-              opacity: [0, 0.85, 0.85, 0],
-              x: [0, p.sinX, 0],
-              scale: [0, 1.5, 1.5, 0],
-            }}
-            transition={{
-              duration: p.duration,
-              repeat: Infinity,
-              delay: p.delay,
-              ease: 'linear',
-              times: [0, 0.1, 0.9, 1],
-            }}
-          />
-        ))}
-      </div>
-
-      <div className="pointer-events-none absolute inset-0 z-20 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.03),transparent_60%)] opacity-[0.25]" />
+      </footer>
     </main>
   );
 }

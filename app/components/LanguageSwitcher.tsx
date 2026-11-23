@@ -25,7 +25,7 @@ export function LanguageSwitcher({
 
   return (
     <div
-      className={`flex items-center rounded-full border border-stone-700/50 bg-stone-900/60 p-1 shadow-[0_6px_22px_rgba(0,0,0,0.28)] backdrop-blur-md ${className}`}
+      className={`flex items-center rounded-full border border-[#dcd4c7] bg-[#f3efe7]/90 p-1 shadow-[0_2px_10px_rgba(20,19,17,0.05)] backdrop-blur-md ${className}`}
       role="group"
       aria-label="Language"
     >
@@ -36,25 +36,23 @@ export function LanguageSwitcher({
             key={code}
             type="button"
             onClick={() => setLang(code)}
-            className="relative rounded-full px-4 py-1.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c4a77d]/50"
+            className="relative rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9a742e]/60 md:text-sm"
           >
             {active ? (
               <motion.div
                 layoutId={layoutId}
-                className="absolute inset-0 z-0 rounded-full bg-gradient-to-tr from-[#9a8260] to-[#c4a77d]"
+                className="absolute inset-0 z-0 rounded-full bg-[#181614]"
                 transition={{
                   type: 'spring',
-                  stiffness: 400,
-                  damping: 25,
+                  stiffness: 420,
+                  damping: 30,
                   mass: 0.8,
                 }}
-                initial={{ boxShadow: '0px 0px 0px rgba(196,167,125,0)' }}
-                animate={{ boxShadow: '0px 0px 15px rgba(196,167,125,0.4)' }}
               />
             ) : null}
             <span
-              className={`relative z-10 transition-colors duration-300 ${
-                active ? 'font-bold text-stone-950' : 'text-stone-400 hover:text-stone-200'
+              className={`relative z-10 transition-colors duration-200 ${
+                active ? 'font-semibold text-[#faf8f4]' : 'text-[#57524b] hover:text-[#141311]'
               }`}
             >
               {label}

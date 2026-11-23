@@ -1,19 +1,19 @@
 import { normalizePublicationsFromJson, type Publication } from '@/lib/publications';
+import { fetchPublicationsFromFirestoreServer } from '@/lib/firebaseServer';
 
 /**
- * B 站（Ma-Research-Portal）GitHub Pages 靜態資料端點。
- * 移除硬編碼 ?v= 版本號與 force-cache，改由 HTTP ETag / no-cache 條件驗證，
- * 確保 B 站自動同步 Notion 後，訪客能立即取得最新論文資料。
+ * 舊 B 站（Ma-Research-Portal）靜態資料端點：
+ * 在 Firebase 尚未填入環境變數或尚未匯入前自動作為備援；
+ * 正式啟用 Firebase 後可於 /admin 一鍵匯入並停用 B 站。
  */
-export const PAPERS_JSON_URL =
+export const LEGACY_PORTAL_PAPERS_URL =
   'https://sixshoes.github.io/Ma-Research-Portal/papers.json';
-export const PAPERS_META_URL =
-  'https://sixshoes.github.io/Ma-Research-Portal/meta.json';
+export const PAPERS_JSON_URL = LEGACY_PORTAL_PAPERS_URL;
 
-const CACHE_SCHEMA_VERSION = 2;
+const CACHE_SCHEMA_VERSION = 3;
 const STORAGE_KEY = `yrma_papers_cache_v${CACHE_SCHEMA_VERSION}`;
-const LEGACY_STORAGE_KEYS = ['yrma_papers_json_2026-04-14'];
-const PAPERS_CACHE_TTL_MS = 1000 * 60 * 60 * 24; // 24 小時軟過期（仍採 SWR 背景驗證）
+const LEGACY_STORAGE_KEYS = ['yrma_papers_json_2026-04-14', 'yrma_papers_cache_v2'];
+const PAPERS_CACHE_TTL_MS = 1000 * 60 * 60 * 24;
 
 type CachedPapersPayload = {
   schemaVersion: number;
@@ -38,7 +38,6 @@ export function readCachedPapers(): Publication[] | null {
       return null;
     }
 
-    // 超過軟 TTL 時依然先回傳舊資料加速首屏渲染，由 SWR 背景請求負責刷新
     if (typeof payload.fetchedAt !== 'number') return null;
     const ageMs = Date.now() - payload.fetchedAt;
     if (ageMs > PAPERS_CACHE_TTL_MS * 7) return null;
@@ -66,22 +65,35 @@ export function writeCachedPapers(papers: Publication[]): void {
     localStorage.setItem(STORAGE_KEY, serialized);
     sessionStorage.setItem(STORAGE_KEY, serialized);
   } catch {
-    /* 配額或私密模式 */
     try {
       sessionStorage.setItem(STORAGE_KEY, serialized);
     } catch {
-      /* 忽略 */
+      /* ignore */
     }
   }
 }
 
 /**
- * 瀏覽器端請求最新論文 JSON：
- * 使用 cache: 'no-cache' 強制與 GitHub Pages 做 ETag / 304 條件驗證，
- * 資料沒變幾乎零傳輸量，資料有變立即更新。
+ * 瀏覽器端拉取最新論文資料：
+ * 優先走同源 /api/publications（由伺服器統一從 Firestore 快取提供，零直接 Firestore 讀取量），
+ * 若同源端點失敗再退回 B 站靜態 JSON。
  */
 export async function fetchPapersFromRemote(signal?: AbortSignal): Promise<Publication[]> {
-  const res = await fetch(PAPERS_JSON_URL, {
+  try {
+    const apiRes = await fetch('/api/publications', {
+      cache: 'no-cache',
+      signal,
+    });
+    if (apiRes.ok) {
+      const payload = (await apiRes.json()) as { items?: unknown };
+      const normalized = normalizePublicationsFromJson(payload.items ?? payload);
+      if (normalized.length > 0) return normalized;
+    }
+  } catch (err) {
+    if (signal?.aborted) throw err;
+  }
+
+  const res = await fetch(LEGACY_PORTAL_PAPERS_URL, {
     cache: 'no-cache',
     signal,
   });
@@ -97,16 +109,22 @@ export async function fetchPapersFromRemote(signal?: AbortSignal): Promise<Publi
 }
 
 /**
- * 伺服器端（Next.js Server Component / ISR）拉取論文 JSON：
- * 內建 5 秒逾時與靜默失敗，確保離線或建置環境無法連線時不會中斷 build。
+ * 伺服器端（Next.js Server Component / ISR）拉取論文資料：
+ * 1. 優先讀 Firebase Firestore 單一彙總文件 siteData/publications（1 次讀取）
+ * 2. 若未設定或尚未匯入，無縫退回 B 站 papers.json
  */
 export async function fetchPapersServerSide(revalidateSeconds = 3600): Promise<Publication[] | null> {
+  const fromFirestore = await fetchPublicationsFromFirestoreServer(revalidateSeconds);
+  if (fromFirestore && fromFirestore.items.length > 0) {
+    return fromFirestore.items;
+  }
+
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 5000);
     try {
-      const res = await fetch(PAPERS_JSON_URL, {
-        next: { revalidate: revalidateSeconds },
+      const res = await fetch(LEGACY_PORTAL_PAPERS_URL, {
+        next: { revalidate: revalidateSeconds, tags: ['publications'] },
         signal: controller.signal,
       });
       if (!res.ok) return null;
@@ -121,10 +139,6 @@ export async function fetchPapersServerSide(revalidateSeconds = 3600): Promise<P
   }
 }
 
-/**
- * 在首頁（/）先於背景預抓並驗證最新 papers.json，
- * 進入 /main 時可立即從 sessionStorage/localStorage 呈現最新資料。
- */
 export function prefetchPapersJson(): void {
   if (typeof window === 'undefined') return;
   void fetchPapersFromRemote()
@@ -132,6 +146,6 @@ export function prefetchPapersJson(): void {
       writeCachedPapers(normalized);
     })
     .catch(() => {
-      /* 靜默失敗，進 /main 時仍會再請求 */
+      /* 靜默失敗 */
     });
 }

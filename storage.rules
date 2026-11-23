@@ -1,0 +1,29 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // 請與 firestore.rules 保持相同的管理者 Google 信箱名單（全小寫）
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email.lower() in [
+          'yrma@gm.fgu.edu.tw',
+          // '你的信箱@gmail.com'
+        ];
+    }
+
+    // 論文圖文摘要與期刊封面：公開讀取，僅管理者可上傳 5MB 以內的圖片檔
+    match /publications/{folder}/{fileName} {
+      allow read: if true;
+      allow write: if isAdmin()
+        && (folder == 'covers' || folder == 'journals')
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if isAdmin();
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

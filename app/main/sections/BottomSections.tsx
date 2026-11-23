@@ -65,11 +65,10 @@ type BottomSectionsProps = {
 function BottomSectionsComponent({ t, lang: _lang, isMobile = false, onDownloadVCard }: BottomSectionsProps) {
   useRenderProfiler('BottomSections');
   const [copiedField, setCopiedField] = useState<string | null>(null);
-  const cardSurface = isMobile ? uiTokens.surfaceCardSolid : uiTokens.surfaceCard;
   const fadeIn = isMobile
     ? {}
     : {
-        initial: { opacity: 0, y: 20 } as const,
+        initial: { opacity: 0, y: 18 } as const,
         whileInView: { opacity: 1, y: 0 } as const,
         viewport: { once: true } as const,
       };
@@ -102,16 +101,14 @@ function BottomSectionsComponent({ t, lang: _lang, isMobile = false, onDownloadV
       name: t.impact.ndhu,
       location: t.impact.ndhuLocation,
       metrics: impactData.ndhu,
-      accentBorder: 'hover:border-[#d4af37]/45',
-      iconBadge: 'border-[#c4a77d]/35 bg-[#2a241c]/65 text-[#d4af37]',
+      iconBadge: 'border-[#dfd5c4] bg-[#f7f2e7] text-[#8a6522]',
     },
     {
       key: 'fgu' as const,
       name: t.impact.fgu,
       location: t.impact.fguLocation,
       metrics: impactData.fgu,
-      accentBorder: 'hover:border-stone-500/50',
-      iconBadge: 'border-stone-600/50 bg-stone-800/60 text-stone-200',
+      iconBadge: 'border-[#dcd4c7] bg-[#f3efe7] text-[#292622]',
     },
   ];
 
@@ -144,14 +141,19 @@ function BottomSectionsComponent({ t, lang: _lang, isMobile = false, onDownloadV
 
   return (
     <>
-      <section id="impact" className="relative scroll-mt-24 overflow-hidden py-24 md:py-32">
+      {/* 04 / 學術影響力（暖羊皮紙底 + 白底評比卡片） */}
+      <section
+        id="impact"
+        className="relative scroll-mt-24 overflow-hidden border-t border-[#e5dfd5] bg-[#f3efe7] py-20 md:py-28"
+      >
         <div className="relative z-10 mx-auto max-w-7xl px-6">
-          <div className="mb-14 text-center md:mb-16">
-            <h2 className={`${uiTokens.sectionTitle} mb-5`}>
-              <span className={uiTokens.titleLight}>{t.impact.title}</span> <br />
+          <div className="mb-12 text-center md:mb-14">
+            <div className={`${uiTokens.sectionKicker} mb-3`}>04 / SCIENTIFIC IMPACT</div>
+            <h2 className={`${uiTokens.sectionTitle} mb-4`}>
+              <span className={uiTokens.titleLight}>{t.impact.title}</span>{' '}
               <span className={uiTokens.titleBold}>{t.impact.subtitle}</span>
             </h2>
-            <p className="mt-4 font-mono text-xs tracking-wider text-stone-300">{t.impact.source}</p>
+            <p className="font-mono text-xs tracking-wider text-[#6b655d]">{t.impact.source}</p>
           </div>
 
           <div className="grid grid-cols-1 gap-6 md:gap-7 lg:grid-cols-2">
@@ -159,85 +161,85 @@ function BottomSectionsComponent({ t, lang: _lang, isMobile = false, onDownloadV
               <motion.div
                 key={inst.key}
                 {...fadeIn}
-                transition={isMobile ? undefined : { delay: idx * 0.1 }}
-                className={`${cardSurface} p-7 transition-colors ${inst.accentBorder} md:p-8`}
+                transition={isMobile ? undefined : { delay: idx * 0.08 }}
+                className={`${uiTokens.surfaceCard} ${uiTokens.surfaceCardHover} p-7 md:p-8`}
               >
-                <div className="mb-8 flex items-center gap-4 border-b border-stone-800/75 pb-7">
+                <div className="mb-8 flex items-center gap-4 border-b border-[#efeae0] pb-6">
                   <div
-                    className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-full border ${inst.iconBadge}`}
+                    className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border ${inst.iconBadge}`}
                   >
-                    <GraduationCap className="h-8 w-8 stroke-[1.5]" aria-hidden />
+                    <GraduationCap className="h-7 w-7 stroke-[1.6]" aria-hidden />
                   </div>
                   <div>
-                    <h3 className="font-heading-serif text-xl font-semibold text-stone-100 md:text-2xl">
+                    <h3 className="font-heading-serif text-xl font-semibold text-[#141311] md:text-2xl">
                       {inst.name}
                     </h3>
-                    <p className="mt-1 font-mono text-sm text-stone-300">{inst.location}</p>
+                    <p className="mt-0.5 font-mono text-xs text-[#6b655d]">{inst.location}</p>
                   </div>
                 </div>
 
                 <div className="mb-8 grid grid-cols-3 gap-3 md:gap-4">
                   <div className="text-center">
-                    <div className="mx-auto mb-3 flex h-9 w-9 items-center justify-center rounded-full border border-stone-700/70 bg-stone-900/75 md:h-10 md:w-10">
-                      <Globe className="h-4 w-4 stroke-[1.5] text-stone-300 md:h-5 md:w-5" aria-hidden />
+                    <div className="mx-auto mb-2.5 flex h-9 w-9 items-center justify-center rounded-full border border-[#e5dfd5] bg-[#faf8f4]">
+                      <Globe className="h-4 w-4 stroke-[1.6] text-[#57524b]" aria-hidden />
                     </div>
-                    <div className="font-heading-serif text-xl font-semibold text-stone-100 md:text-2xl">
+                    <div className="font-heading-serif text-xl font-semibold text-[#141311] md:text-2xl">
                       {inst.metrics.worldRank}
                     </div>
-                    <div className="mt-1.5 text-[11px] font-medium uppercase tracking-wider text-stone-300 sm:text-xs">
+                    <div className="mt-1 text-[11px] font-medium uppercase tracking-wider text-[#6b655d] sm:text-xs">
                       {t.impact.worldRank}
                     </div>
                   </div>
                   <div className="text-center">
-                    <div className="mx-auto mb-3 flex h-9 w-9 items-center justify-center rounded-full border border-[#c4a77d]/35 bg-[#2a241c]/55 md:h-10 md:w-10">
-                      <MapPin className="h-4 w-4 stroke-[1.5] text-[#d4af37] md:h-5 md:w-5" aria-hidden />
+                    <div className="mx-auto mb-2.5 flex h-9 w-9 items-center justify-center rounded-full border border-[#dfd5c4] bg-[#f7f2e7]">
+                      <MapPin className="h-4 w-4 stroke-[1.6] text-[#8a6522]" aria-hidden />
                     </div>
-                    <div className="font-heading-serif text-xl font-semibold text-stone-100 md:text-2xl">
+                    <div className="font-heading-serif text-xl font-semibold text-[#141311] md:text-2xl">
                       {inst.metrics.countryRank}
                     </div>
-                    <div className="mt-1.5 text-[11px] font-medium uppercase tracking-wider text-stone-300 sm:text-xs">
+                    <div className="mt-1 text-[11px] font-medium uppercase tracking-wider text-[#6b655d] sm:text-xs">
                       {t.impact.countryRank}
                     </div>
                   </div>
                   <div className="text-center">
-                    <div className="mx-auto mb-3 flex h-9 w-9 items-center justify-center rounded-full border border-stone-700/70 bg-stone-900/75 md:h-10 md:w-10">
-                      <GraduationCap className="h-4 w-4 stroke-[1.5] text-stone-300 md:h-5 md:w-5" aria-hidden />
+                    <div className="mx-auto mb-2.5 flex h-9 w-9 items-center justify-center rounded-full border border-[#e5dfd5] bg-[#faf8f4]">
+                      <GraduationCap className="h-4 w-4 stroke-[1.6] text-[#57524b]" aria-hidden />
                     </div>
-                    <div className="font-heading-serif text-xl font-semibold text-stone-100 md:text-2xl">
+                    <div className="font-heading-serif text-xl font-semibold text-[#141311] md:text-2xl">
                       {inst.metrics.uniRank}
                     </div>
-                    <div className="mt-1.5 text-[11px] font-medium uppercase tracking-wider text-stone-300 sm:text-xs">
+                    <div className="mt-1 text-[11px] font-medium uppercase tracking-wider text-[#6b655d] sm:text-xs">
                       {t.impact.uniRank}
                     </div>
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-stone-800/75 bg-stone-950/55 p-5 md:p-6">
-                  <h4 className="mb-5 text-center font-mono text-xs uppercase tracking-widest text-stone-300 md:text-sm">
+                <div className="rounded-xl border border-[#ece6dc] bg-[#faf8f4] p-5">
+                  <h4 className="mb-4 text-center font-mono text-xs font-semibold uppercase tracking-[0.18em] text-[#57524b]">
                     {t.impact.hIndex}
                   </h4>
                   <div className="grid grid-cols-3 gap-3 text-center md:gap-4">
                     <div>
-                      <div className="font-heading-serif text-2xl font-semibold text-[#d4af37] md:text-3xl">
+                      <div className="font-heading-serif text-2xl font-semibold text-[#8a6522] md:text-3xl">
                         {inst.metrics.hIndex.total}
                       </div>
-                      <div className="mt-2 text-[11px] uppercase tracking-wider text-stone-300 sm:text-xs">
+                      <div className="mt-1.5 text-[11px] uppercase tracking-wider text-[#6b655d] sm:text-xs">
                         {t.impact.total}
                       </div>
                     </div>
                     <div>
-                      <div className="font-heading-serif text-2xl font-semibold text-stone-100 md:text-3xl">
+                      <div className="font-heading-serif text-2xl font-semibold text-[#141311] md:text-3xl">
                         {inst.metrics.hIndex.last5}
                       </div>
-                      <div className="mt-2 text-[11px] uppercase tracking-wider text-stone-300 sm:text-xs">
+                      <div className="mt-1.5 text-[11px] uppercase tracking-wider text-[#6b655d] sm:text-xs">
                         {t.impact.last5}
                       </div>
                     </div>
                     <div>
-                      <div className="font-heading-serif text-2xl font-semibold text-stone-100 md:text-3xl">
+                      <div className="font-heading-serif text-2xl font-semibold text-[#141311] md:text-3xl">
                         {inst.metrics.hIndex.ratio}
                       </div>
-                      <div className="mt-2 text-[11px] uppercase tracking-wider text-stone-300 sm:text-xs">
+                      <div className="mt-1.5 text-[11px] uppercase tracking-wider text-[#6b655d] sm:text-xs">
                         {t.impact.ratio}
                       </div>
                     </div>
@@ -249,48 +251,44 @@ function BottomSectionsComponent({ t, lang: _lang, isMobile = false, onDownloadV
         </div>
       </section>
 
+      {/* 05 / 聯絡資訊 */}
       <section
         id="contact"
-        className="relative scroll-mt-24 overflow-hidden border-t border-stone-800/70 bg-[var(--app-bg)] py-24 md:py-32"
+        className="relative scroll-mt-24 overflow-hidden border-t border-[#e5dfd5] bg-[#faf8f4] py-20 md:py-28"
       >
-        <div
-          className="pointer-events-none absolute left-1/2 top-0 h-full w-full max-w-5xl -translate-x-1/2 bg-[radial-gradient(circle_at_50%_42%,rgba(212,175,55,0.045),transparent_68%)]"
-          aria-hidden
-        />
-        <div className="absolute left-1/2 top-0 h-px w-full max-w-3xl -translate-x-1/2 bg-gradient-to-r from-transparent via-[#d4af37]/30 to-transparent" />
-
         <motion.div
           {...(isMobile
             ? { className: 'relative z-10 mx-auto max-w-6xl px-6' }
             : {
-                initial: { opacity: 0, y: 24 },
+                initial: { opacity: 0, y: 18 },
                 whileInView: { opacity: 1, y: 0 },
-                viewport: { once: true, margin: '-60px' },
-                transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] },
+                viewport: { once: true, margin: '-50px' },
+                transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] },
                 className: 'relative z-10 mx-auto max-w-6xl px-6',
               })}
         >
-          <div className="mb-14 text-center md:mb-16">
-            <h2 className="font-heading-serif mb-5 text-4xl tracking-tight text-stone-100 md:text-5xl">
-              <span className="font-normal italic text-[#e8dcc4]">{t.contact.title}</span>{' '}
-              <span className="font-semibold not-italic text-stone-100">{t.contact.subtitle}</span>
+          <div className="mb-12 text-center md:mb-14">
+            <div className={`${uiTokens.sectionKicker} mb-3`}>05 / CONTACT</div>
+            <h2 className="font-heading-serif mb-4 text-4xl tracking-tight text-[#141311] md:text-5xl">
+              <span className="font-normal italic text-[#8a6522]">{t.contact.title}</span>{' '}
+              <span className="font-semibold not-italic text-[#141311]">{t.contact.subtitle}</span>
             </h2>
-            <div className="mx-auto h-px w-20 bg-gradient-to-r from-transparent via-[#d4af37]/50 to-transparent" />
+            <div className={uiTokens.titleAccentBar} />
           </div>
 
-          <div className="mb-14 grid grid-cols-1 gap-6 md:mb-16 md:grid-cols-3 md:gap-8">
+          <div className="mb-12 grid grid-cols-1 gap-6 md:mb-14 md:grid-cols-3 md:gap-7">
             {contactItems.map(({ key, label, values, hrefs, copyValue, Icon }) => {
               const isCopied = copiedField === key;
               return (
                 <div
                   key={key}
-                  className="group relative flex flex-col justify-between rounded-2xl border border-stone-700/55 bg-stone-900/45 p-7 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-all duration-300 hover:border-[#c4a77d]/45 hover:bg-stone-900/70 md:p-8"
+                  className={`${uiTokens.surfaceCard} ${uiTokens.surfaceCardHover} group flex flex-col justify-between p-7`}
                 >
                   <div>
                     <div className="mb-5 flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2.5 text-[#d4af37]">
-                        <Icon className="h-5 w-5 shrink-0 stroke-[1.5]" aria-hidden />
-                        <span className="font-mono text-xs uppercase tracking-[0.18em] text-stone-300">
+                      <div className="flex items-center gap-2.5 text-[#8a6522]">
+                        <Icon className="h-5 w-5 shrink-0 stroke-[1.6]" aria-hidden />
+                        <span className="font-mono text-xs font-medium uppercase tracking-[0.16em] text-[#57524b]">
                           {label}
                         </span>
                       </div>
@@ -298,11 +296,11 @@ function BottomSectionsComponent({ t, lang: _lang, isMobile = false, onDownloadV
                         type="button"
                         onClick={() => handleCopy(key, copyValue)}
                         aria-label={`${t.contact.copyAction} ${label}`}
-                        className="inline-flex items-center gap-1 rounded-full border border-stone-700/75 bg-stone-950/65 px-2.5 py-1 font-mono text-[11px] text-stone-300 transition-colors hover:border-[#c4a77d]/60 hover:text-[#e8dcc4]"
+                        className="inline-flex items-center gap-1 rounded-full border border-[#dcd4c7] bg-[#faf8f4] px-2.5 py-1 font-mono text-[11px] text-[#3f3b36] transition-colors hover:border-[#9a742e] hover:text-[#7f5d1e]"
                       >
                         {isCopied ? (
                           <>
-                            <Check className="h-3 w-3 text-[#d4af37]" aria-hidden />
+                            <Check className="h-3 w-3 text-[#8a6522]" aria-hidden />
                             {t.contact.copiedAction}
                           </>
                         ) : (
@@ -321,12 +319,12 @@ function BottomSectionsComponent({ t, lang: _lang, isMobile = false, onDownloadV
                           <a
                             key={val}
                             href={href}
-                            className="break-words text-base font-medium leading-snug text-stone-100 transition-colors hover:text-[#e8dcc4] md:text-lg"
+                            className="break-words text-base font-semibold leading-snug text-[#141311] transition-colors hover:text-[#8a6522] md:text-lg"
                           >
                             {val}
                           </a>
                         ) : (
-                          <p key={val} className="text-base font-medium leading-snug text-stone-100 md:text-lg">
+                          <p key={val} className="text-base font-semibold leading-snug text-[#141311] md:text-lg">
                             {val}
                           </p>
                         );
@@ -343,22 +341,20 @@ function BottomSectionsComponent({ t, lang: _lang, isMobile = false, onDownloadV
               type="button"
               onClick={onDownloadVCard}
               title={t.contact.vcardModal.downloadTooltip}
-              className="group relative overflow-hidden rounded-full border border-[#d4af37]/45 bg-stone-900/50 px-10 py-4 transition-all duration-300 hover:border-[#d4af37]/75 hover:bg-[#2a241c]/55"
+              className="group inline-flex items-center gap-3 rounded-full border border-[#181614] bg-[#181614] px-9 py-4 font-heading-serif text-base font-medium tracking-wide text-[#faf8f4] shadow-[0_10px_28px_rgba(20,19,17,0.14)] transition-all hover:border-[#8a6522] hover:bg-[#8a6522]"
             >
-              <span className="relative flex items-center gap-3 font-heading-serif text-base tracking-wide text-[#f0e4cc]">
-                <Download
-                  className="h-4 w-4 text-[#d4af37] transition-transform duration-300 group-hover:translate-y-0.5"
-                  aria-hidden
-                />
-                {t.contact.vcard}
-              </span>
+              <Download
+                className="h-4 w-4 text-[#dcc08e] transition-transform duration-300 group-hover:translate-y-0.5 group-hover:text-white"
+                aria-hidden
+              />
+              {t.contact.vcard}
             </button>
-            <p className="font-mono text-xs tracking-wider text-stone-400">
+            <p className="font-mono text-xs tracking-wider text-[#6b655d]">
               {t.contact.vcardModal.click}
             </p>
           </div>
 
-          <footer className="mt-20 w-full border-t border-stone-800/70 py-10 md:mt-24">
+          <footer className="mt-16 w-full border-t border-[#e5dfd5] pt-10 md:mt-20">
             <div className="flex flex-col items-center text-center">
               <p className={uiTokens.footerLegal}>
                 {t.contact.footer.replace(/\{year\}/g, String(new Date().getFullYear()))}

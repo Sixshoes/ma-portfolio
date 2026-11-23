@@ -28,17 +28,20 @@ export function splitAuthorsHighlighted(authors: string): ReactNode[] {
   return segments.map((segment, i) => {
     const isLead = HIGHLIGHT_NAME.test(segment);
     const node = isLead ? (
-      <strong key={i} className="font-semibold text-[#f0e4cc]">
+      <strong
+        key={i}
+        className="font-semibold text-[#141311] underline decoration-[#9a742e]/60 underline-offset-4"
+      >
         {segment}
       </strong>
     ) : (
-      <span key={i} className="text-stone-300">
+      <span key={i} className="text-[#57524b]">
         {segment}
       </span>
     );
     return (
       <span key={`wrap-${i}`}>
-        {i > 0 ? <span className="text-stone-500">, </span> : null}
+        {i > 0 ? <span className="text-[#9a9287]">, </span> : null}
         {node}
       </span>
     );

@@ -2,7 +2,6 @@
 
 import React, { useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { motion } from 'motion/react';
 import { useLanguage } from '../LanguageContext';
 import { dict } from '@/lib/i18n';
 import { vcardData } from '@/lib/impactData';
@@ -19,7 +18,7 @@ const PublicationsSection = dynamic(
   () => import('./sections/PublicationsSection').then((mod) => mod.PublicationsSection),
   {
     loading: () => (
-      <section className="mx-auto max-w-7xl px-6 py-16 text-sm text-stone-400">
+      <section className="mx-auto max-w-7xl px-6 py-16 text-sm text-[#6b655d]">
         Loading publications...
       </section>
     ),
@@ -45,6 +44,7 @@ export function MainClient({ initialPublications = null }: MainClientProps) {
   const t = dict[lang];
 
   const {
+    allPublications,
     pubFilter,
     pubSort,
     correspondingOnly,
@@ -81,39 +81,14 @@ export function MainClient({ initialPublications = null }: MainClientProps) {
   }, []);
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden bg-[var(--app-bg)] bg-[radial-gradient(ellipse_120%_80%_at_50%_-18%,rgba(196,167,125,0.06),transparent_52%),radial-gradient(circle_at_88%_12%,rgba(212,175,55,0.05),transparent_45%)] font-sans text-stone-300">
-      {/* Dynamic Animated Background — unified warm charcoal-gold tint */}
-      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
-        {mainLite ? (
-          <>
-            <div className="absolute -left-[10%] -top-[20%] h-[70vw] w-[70vw] rounded-full bg-gradient-to-br from-stone-700/12 to-transparent opacity-60" />
-            <div className="absolute -right-[20%] top-[40%] h-[60vw] w-[60vw] rounded-full bg-gradient-to-tl from-[#6b5429]/12 to-transparent opacity-50" />
-          </>
-        ) : (
-          <>
-            <motion.div
-              style={{ willChange: 'transform, opacity' }}
-              animate={{ scale: [1, 1.1, 1], opacity: [0.04, 0.06, 0.04], rotate: [0, 60, 0] }}
-              transition={{ duration: 28, repeat: Infinity, ease: 'linear' }}
-              className="absolute -left-[10%] -top-[20%] h-[70vw] w-[70vw] transform-gpu rounded-full bg-gradient-to-br from-stone-600/14 to-transparent blur-[80px] md:blur-[100px]"
-            />
-            <motion.div
-              style={{ willChange: 'transform, opacity' }}
-              animate={{ scale: [1, 1.25, 1], opacity: [0.025, 0.045, 0.025], x: [0, 60, 0], y: [0, -30, 0] }}
-              transition={{ duration: 32, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute -right-[20%] top-[40%] h-[60vw] w-[60vw] transform-gpu rounded-full bg-gradient-to-tl from-[#6b5429]/16 to-transparent blur-[120px]"
-            />
-          </>
-        )}
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.02),transparent_65%)] opacity-[0.2]" />
-      </div>
-
+    <main className="relative min-h-screen overflow-x-hidden bg-[var(--app-bg)] font-sans text-[#3f3b36]">
       <Navbar navText={t.nav} isMobile={isMobile} />
 
       <HeroStatsResearchSection
         heroText={t.hero}
         statsText={t.stats}
         researchText={t.research}
+        lang={lang}
         totalPubs={totalPubs}
         totalCitations={totalCitations}
         hIndexValue={hIndexValue}
@@ -125,6 +100,7 @@ export function MainClient({ initialPublications = null }: MainClientProps) {
         <PublicationsSection
           pubsText={t.pubs}
           lang={lang}
+          allPublications={allPublications}
           pubFilter={pubFilter}
           pubSort={pubSort}
           correspondingOnly={correspondingOnly}

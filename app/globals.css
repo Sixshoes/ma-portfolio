@@ -7,14 +7,22 @@
 }
 
 :root {
-  color-scheme: dark;
-  /* 統一深炭暖黑底色，取代原先混雜的冷藍灰與紫調 */
-  --app-bg: #161514;
-  --app-surface: #1e1c1a;
+  color-scheme: light;
+  /* 歐美期刊象牙紙白與墨黑古銅金系統 */
+  --app-bg: #faf8f4;
+  --app-surface: #f3efe7;
+  --app-card: #ffffff;
+  --app-ink: #141311;
+  --app-body: #3f3b36;
+  --app-muted: #6b655d;
+  --app-border: #e5dfd5;
+  --app-gold: #9a742e;
+  --app-gold-deep: #7f5d1e;
   background-color: var(--app-bg);
+  color: var(--app-ink);
 }
 
-/* 重要標題：襯線（由 layout 注入 --font-playfair、--font-noto-serif-tc） */
+/* 襯線主標題（Playfair Display + Noto Serif TC） */
 @layer utilities {
   .font-heading-serif {
     font-family: var(--font-playfair), var(--font-noto-serif-tc), "Songti TC", "STSong", "Noto Serif TC",
@@ -22,12 +30,28 @@
   }
 }
 
-/* 學術沉穩主題：香檳金焦點 */
+/* 典雅古銅金鍵盤焦點框 */
 :focus-visible {
-  outline: 2px solid rgba(212, 175, 55, 0.75);
+  outline: 2px solid #9a742e;
   outline-offset: 2px;
 }
 
 :focus:not(:focus-visible) {
   outline: none;
+}
+
+/* 確保跨瀏覽器隱藏原生 select 箭頭，避免與自訂圖示重疊 */
+select.custom-select {
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+  background-image: none !important;
+}
+
+select.custom-select::-ms-expand {
+  display: none;
+}
+
+select.custom-select::picker-icon {
+  display: none;
 }

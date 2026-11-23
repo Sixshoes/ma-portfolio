@@ -22,20 +22,20 @@ function ScrollTopFab({
 
   return (
     <AnimatePresence>
-      {showScrollTop && pathname !== '/' && (
+      {showScrollTop && pathname !== '/' && pathname !== '/admin' && (
         <motion.button
-          initial={{ opacity: 0, scale: 0.8, y: 20 }}
+          initial={{ opacity: 0, scale: 0.85, y: 16 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.8, y: 20 }}
-          whileHover={{ scale: 1.05, backgroundColor: 'rgba(196, 167, 125, 0.12)' }}
+          exit={{ opacity: 0, scale: 0.85, y: 16 }}
+          whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={onScrollToTop}
           type="button"
-          className="group fixed bottom-4 right-4 z-[99999] flex min-h-11 min-w-11 flex-col items-center justify-center gap-0.5 rounded-xl border border-white/[0.08] bg-[#0c0a09]/92 p-2 text-stone-400 shadow-[0_0_28px_rgba(0,0,0,0.5)] backdrop-blur-xl transition-all duration-300 hover:border-[rgba(212,175,55,0.35)] hover:text-[#e8dcc4] md:bottom-10 md:right-10 md:min-h-0 md:min-w-0 md:rounded-2xl md:p-4"
+          className="group fixed bottom-5 right-5 z-[99999] flex min-h-11 min-w-11 flex-col items-center justify-center gap-0.5 rounded-full border border-[#d8cfc0] bg-white/95 p-3 text-[#292622] shadow-[0_8px_24px_rgba(20,19,17,0.12)] backdrop-blur-md transition-colors hover:border-[#9a742e] hover:bg-[#181614] hover:text-[#faf8f4] md:bottom-8 md:right-8 md:h-14 md:w-14"
           aria-label={ariaTop}
         >
-          <ArrowUp className="h-4 w-4 transition-transform duration-300 group-hover:-translate-y-1 md:h-5 md:w-5" />
-          <span className="font-mono text-[8px] font-bold uppercase tracking-tighter opacity-60 group-hover:opacity-100 md:text-[10px]">
+          <ArrowUp className="h-4 w-4 transition-transform duration-300 group-hover:-translate-y-0.5 md:h-5 md:w-5" />
+          <span className="font-mono text-[9px] font-bold uppercase tracking-tight opacity-75 group-hover:opacity-100">
             {labelTop}
           </span>
         </motion.button>
@@ -49,13 +49,13 @@ function ScrollToTopLenis() {
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   const lenis = useLenis(({ scroll }) => {
-    const nextShow = pathname !== '/' && scroll > 10;
+    const nextShow = pathname !== '/' && scroll > 240;
     setShowScrollTop((prev) => (prev === nextShow ? prev : nextShow));
   }, [pathname]);
 
   const handleScrollToTop = useCallback(() => {
     if (lenis) {
-      lenis.scrollTo(0, { duration: 1.0 });
+      lenis.scrollTo(0, { duration: 0.9 });
     } else {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -71,7 +71,7 @@ function ScrollToTopNative() {
   useEffect(() => {
     const onScroll = () => {
       const scroll = window.scrollY || document.documentElement.scrollTop;
-      const nextShow = pathname !== '/' && scroll > 10;
+      const nextShow = pathname !== '/' && scroll > 240;
       setShowScrollTop((prev) => (prev === nextShow ? prev : nextShow));
     };
     onScroll();
