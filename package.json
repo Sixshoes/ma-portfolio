@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "clean": "next clean",
-    "migrate:images": "tsx scripts/migrate-publication-images.ts"
+    "migrate:images": "tsx scripts/migrate-publication-images.ts",
+    "sync:metadata": "tsx scripts/sync-citations-metadata.ts"
   },
   "dependencies": {
     "firebase": "^13.4.0",

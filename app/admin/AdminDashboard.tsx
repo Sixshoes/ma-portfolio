@@ -338,6 +338,83 @@ export function AdminDashboard() {
     }
   };
 
+  const handleSyncMetadata = async () => {
+    if (!user || !bundle || bundle.items.length === 0) return;
+    setBusyAction('syncing');
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch('/api/admin/sync-metadata', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          items: bundle.items,
+          citationPolicy: 'crossref-floor',
+          fillAuthors: true,
+          fixKnownAnomalies: true,
+        }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        items?: Publication[];
+        report?: {
+          totalBefore: number;
+          totalAfter: number;
+          dedupedCount: number;
+          doiRecoveredCount: number;
+          titlesFixedCount: number;
+          authorsFilledCount: number;
+          citationsUpdatedCount: number;
+          localTotalCitations: number;
+          updatedTotalCitations: number;
+          localHIndex: number;
+          updatedHIndex: number;
+        };
+        error?: string;
+      };
+      if (!res.ok || !data.ok || !data.items || !data.report) {
+        showToast('err', `比對更新失敗：${data.error ?? `HTTP ${res.status}`}`);
+        return;
+      }
+
+      const r = data.report;
+      const totalChanges =
+        r.dedupedCount +
+        r.doiRecoveredCount +
+        r.titlesFixedCount +
+        r.authorsFilledCount +
+        r.citationsUpdatedCount;
+      if (totalChanges === 0) {
+        showToast('ok', '已完成 Crossref / OpenAlex 比對，目前所有引用數與作者名單皆已是最新！');
+        return;
+      }
+
+      const confirmMsg = [
+        '已完成 Crossref（最保守引用下限）與 OpenAlex 全量比對：',
+        `• 引用數更新：${r.citationsUpdatedCount} 篇（總引用 ${r.localTotalCitations} → ${r.updatedTotalCitations}，H-index ${r.localHIndex} → ${r.updatedHIndex}）`,
+        `• 自動補齊作者名單：${r.authorsFilledCount} 篇`,
+        `• 合併重複 / 補回 DOI / 修缺字標題：${r.dedupedCount} / ${r.doiRecoveredCount} / ${r.titlesFixedCount} 筆`,
+        '',
+        '確定寫入 Firestore 並立即刷新正式官網嗎？',
+      ].join('\n');
+
+      if (!window.confirm(confirmMsg)) {
+        return;
+      }
+
+      await persistAndPublish(
+        data.items,
+        `已同步更新 ${r.citationsUpdatedCount} 篇引用與 ${r.authorsFilledCount} 篇作者名單`,
+      );
+    } catch (err) {
+      showToast('err', `比對更新失敗：${err instanceof Error ? err.message : '網路錯誤'}`);
+    } finally {
+      setBusyAction(null);
+    }
+  };
+
   const getIdToken = useCallback(async () => {
     if (!user) throw new Error('尚未登入管理者帳號');
     return user.getIdToken();
@@ -674,6 +751,19 @@ export function AdminDashboard() {
             >
               <Upload className="h-3.5 w-3.5" />
               匯入 JSON
+            </button>
+            <button
+              type="button"
+              disabled={items.length === 0 || busyAction !== null}
+              onClick={() => void handleSyncMetadata()}
+              className="inline-flex items-center gap-1.5 rounded-md border border-[#0F4C81]/35 bg-[#EBF2F8] px-3.5 py-2 text-xs font-medium text-[#0F4C81] transition-colors hover:bg-[#0F4C81] hover:text-white disabled:opacity-40"
+            >
+              {busyAction === 'syncing' ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <RefreshCw className="h-3.5 w-3.5" />
+              )}
+              比對更新引用與作者（Crossref / OpenAlex）
             </button>
             <button
               type="button"
