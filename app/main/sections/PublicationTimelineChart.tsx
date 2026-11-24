@@ -136,10 +136,13 @@ function PublicationTimelineChartComponent({
   const hoveredIndex =
     hoveredYear !== null ? buckets.findIndex((b) => b.year === hoveredYear) : -1;
   const hoveredBucket = hoveredIndex >= 0 ? buckets[hoveredIndex] : null;
-  const hoveredPct =
-    hoveredIndex >= 0 && buckets.length > 0
-      ? Math.min(90, Math.max(10, ((hoveredIndex + 0.5) / buckets.length) * 100))
+  // 採 0%→100% 連續錨點搭配同等比例負向位移，確保最左(1993)與最右(2027)浮動標籤絕不超出裁切
+  const hoveredAnchorPct =
+    hoveredIndex >= 0 && buckets.length > 1
+      ? (hoveredIndex / (buckets.length - 1)) * 100
       : 50;
+  const activeIndex =
+    activeYearNum !== null ? buckets.findIndex((b) => b.year === activeYearNum) : -1;
 
   const isZh = lang === 'zh';
   const inPressLabel = isZh ? '預刊' : 'In Press';
@@ -308,10 +311,10 @@ function PublicationTimelineChartComponent({
           </div>
         </div>
 
-        {/* 右側可捲動柱狀繪圖區 */}
-        <div ref={scrollContainerRef} className="min-w-0 flex-1 overflow-x-auto pb-1">
-          <div className="relative min-w-[520px] pr-4 pt-8 lg:min-w-0">
-            <div className="pointer-events-none absolute left-0 right-4 top-0 h-7">
+        {/* 右側柱狀繪圖區（桌機滿寬零水平捲軸；手機窄螢幕保留平滑橫向滑動） */}
+        <div ref={scrollContainerRef} className="min-w-0 flex-1 overflow-x-auto pb-1 lg:overflow-x-visible">
+          <div className="relative min-w-[500px] pt-8 lg:min-w-0">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-7">
               <AnimatePresence>
                 {hoveredBucket && hoveredBucket.count > 0 ? (
                   <motion.div
@@ -320,11 +323,11 @@ function PublicationTimelineChartComponent({
                     animate={{
                       opacity: 1,
                       y: 0,
-                      left: `${hoveredPct}%`,
+                      left: `${hoveredAnchorPct}%`,
+                      x: `${-hoveredAnchorPct}%`,
                     }}
                     exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 3 }}
                     transition={{ duration: reduceMotion ? 0 : 0.18, ease: EDITORIAL_EASE }}
-                    style={{ transform: 'translateX(-50%)' }}
                     className="absolute top-0 whitespace-nowrap rounded-full border border-[var(--app-ink)] bg-[var(--app-surface-card)] px-3 py-0.5 font-mono text-xs text-[var(--app-ink)] shadow-sm [font-variant-numeric:tabular-nums]"
                   >
                     <span className="font-semibold">{hoveredBucket.year}</span>
@@ -449,27 +452,42 @@ function PublicationTimelineChartComponent({
               </div>
             </div>
 
-            {/* 獨立於 0 基線下方的 X 軸年份標籤列 */}
-            <div className="mt-2 flex h-5 items-center gap-[2.5px] sm:gap-[3px]">
+            {/* 獨立於 0 基線下方的 X 軸年份標籤列（左右端點貼齊邊界、過近刻度自動避讓，徹底消除桌機多餘捲軸與年份相撞） */}
+            <div className="relative mt-2 h-5 w-full select-none">
               {buckets.map((b, idx) => {
+                const isFirst = idx === 0;
+                const isLast = idx === buckets.length - 1;
                 const isSelected = activeYearNum === b.year;
                 const isFutureYear = b.year > currentYear;
-                const showLabel =
-                  idx === 0 || idx === buckets.length - 1 || b.year % 5 === 0 || isSelected;
+
+                const isFiveYearTick =
+                  b.year % 5 === 0 && idx >= 3 && idx <= buckets.length - 4;
+                const tooCloseToSelected =
+                  !isSelected && activeIndex >= 0 && Math.abs(idx - activeIndex) <= 2;
+
+                const showLabel = isSelected || ((isFirst || isLast || isFiveYearTick) && !tooCloseToSelected);
+                if (!showLabel) return null;
+
+                const centerPct = ((idx + 0.5) / buckets.length) * 100;
+                const positionStyle: React.CSSProperties = isFirst
+                  ? { left: 0 }
+                  : isLast
+                    ? { right: 0 }
+                    : { left: `${centerPct}%`, transform: 'translateX(-50%)' };
+
                 return (
                   <span
                     key={b.year}
-                    className={`min-w-0 flex-1 text-center font-mono text-[11px] leading-none [font-variant-numeric:tabular-nums] ${
+                    style={positionStyle}
+                    className={`absolute top-0 whitespace-nowrap font-mono text-[11px] leading-none [font-variant-numeric:tabular-nums] ${
                       isSelected
                         ? 'font-bold text-[var(--app-ink)]'
-                        : showLabel
-                          ? isFutureYear
-                            ? 'font-medium text-[var(--app-accent)]'
-                            : 'text-[var(--app-muted)]'
-                          : 'select-none text-transparent'
+                        : isFutureYear
+                          ? 'font-medium text-[var(--app-accent)]'
+                          : 'text-[var(--app-muted)]'
                     }`}
                   >
-                    {showLabel ? b.year : '·'}
+                    {b.year}
                   </span>
                 );
               })}
