@@ -169,18 +169,37 @@ export async function verifyAdminFirebaseToken(
     return { ok: false, status: 500, error: 'Server missing ADMIN_EMAILS whitelist.' };
   }
 
+  const trimmedToken = idToken.trim();
+  if (!trimmedToken || trimmedToken.length > 8192) {
+    return { ok: false, status: 401, error: 'Invalid Firebase ID token.' };
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
+
   try {
     const res = await fetch(
       `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${encodeURIComponent(apiKey)}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken }),
+        body: JSON.stringify({ idToken: trimmedToken }),
         cache: 'no-store',
+        signal: controller.signal,
       },
     );
 
     if (!res.ok) {
+      if (res.status >= 500) {
+        return { ok: false, status: 502, error: 'Google Identity Toolkit temporarily unavailable.' };
+      }
+      const errBody = (await res.json().catch(() => null)) as {
+        error?: { message?: string };
+      } | null;
+      const reason = errBody?.error?.message ?? '';
+      if (/API_KEY|REFERRER|IP_ADDRESS/i.test(reason)) {
+        return { ok: false, status: 500, error: `Firebase API key configuration error: ${reason}` };
+      }
       return { ok: false, status: 401, error: 'Invalid or expired Firebase ID token.' };
     }
 
@@ -200,5 +219,7 @@ export async function verifyAdminFirebaseToken(
     return { ok: true, email: normalizedEmail };
   } catch {
     return { ok: false, status: 502, error: 'Failed to contact Google Identity Toolkit.' };
+  } finally {
+    clearTimeout(timer);
   }
 }

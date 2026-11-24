@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import {
   computePublicationsMeta,
+  getPublicJsonCacheHeaders,
   loadPublicPublications,
   PUBLIC_API_REVALIDATE,
   PUBLIC_CORS_HEADERS,
-  PUBLIC_JSON_CACHE_HEADERS,
+  PUBLIC_NO_STORE_HEADERS,
 } from '@/lib/publicationsApi';
 
 export const revalidate = 3600;
@@ -31,7 +32,7 @@ export async function GET(request: Request) {
   if (!payload) {
     return NextResponse.json(
       { error: 'Unable to load publications from Firestore or fallback source.' },
-      { status: 503, headers: PUBLIC_CORS_HEADERS },
+      { status: 503, headers: PUBLIC_NO_STORE_HEADERS },
     );
   }
 
@@ -39,8 +40,8 @@ export async function GET(request: Request) {
   const format = (searchParams.get('format') ?? '').toLowerCase();
   const yearParam = searchParams.get('year');
   const sinceParam = searchParams.get('since');
-  const starredParam = searchParams.get('starred');
-  const limitParam = searchParams.get('limit');
+  const starredParam = (searchParams.get('starred') ?? '').toLowerCase();
+  const limitParam = searchParams.get('limit')?.trim() ?? '';
 
   let items = payload.items;
 
@@ -56,15 +57,17 @@ export async function GET(request: Request) {
     items = items.filter((p) => p.is_star === '是');
   }
 
-  if (limitParam) {
+  if (limitParam && /^\d+$/.test(limitParam)) {
     const limit = Number.parseInt(limitParam, 10);
     if (Number.isFinite(limit) && limit > 0) {
       items = items.slice(0, limit);
     }
   }
 
+  const cacheHeaders = getPublicJsonCacheHeaders(payload.source);
+
   if (format === 'array') {
-    return NextResponse.json(items, { headers: PUBLIC_JSON_CACHE_HEADERS });
+    return NextResponse.json(items, { headers: cacheHeaders });
   }
 
   const meta =
@@ -77,6 +80,6 @@ export async function GET(request: Request) {
       meta,
       items,
     },
-    { headers: PUBLIC_JSON_CACHE_HEADERS },
+    { headers: cacheHeaders },
   );
 }

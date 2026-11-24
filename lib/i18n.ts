@@ -146,6 +146,7 @@ export type ContactText = {
   /** Additional addresses shown under the same email block */
   emailAdditional?: string[];
   phone: string;
+  phoneHref?: string;
   fax: string;
   copyAction: string;
   copiedAction: string;
@@ -195,7 +196,7 @@ export const dict: Record<Lang, I18nDict> = {
       pubs: 'Publications',
       citations: 'Citations',
       hIndex: 'H-Index',
-      hIndexValue: '51',
+      hIndexValue: '52',
       scopusNote: '* Citation and publication data sourced from Scopus & ORCID',
     },
     research: {
@@ -237,7 +238,7 @@ export const dict: Record<Lang, I18nDict> = {
       loadMore: 'Load more',
       loadingPublications: 'Loading publications',
       emptyPublications:
-        'No publications match these filters. Try another year, switch to "All publications", or clear "Selected / highlighted".',
+        'No publications match these filters. Try another year, switch to "All publications", or clear active filters.',
       featuredSpotlight: 'Representative work',
       takeawayLabel: 'Research highlights',
       readAbstract: 'Read summary',
@@ -323,14 +324,14 @@ export const dict: Record<Lang, I18nDict> = {
         'Visiting Distinguished Professor, Indian Institute of Technology Indore (IITI) (2025)',
         'Fellow, International Association of Advanced Materials (IAAM) (2025)',
         'Vebleo Fellow (2025)',
-        'Visiting Distinguished Professor, USCI University, Malaysia (2023)',
+        'Visiting Distinguished Professor, UCSI University, Malaysia (2023)',
         'NDHU Top Talent Academic Award (2016-2025)',
         'ESI Highly Cited Researcher (Top 1%) in Science and Engineering (2016-2023)',
         'NDHU Research Breakthrough Award (2021, Paper published in Advanced Materials)',
         'NDHU First-Class Academic Award (2021)',
+        'NDHU College of Science and Engineering Excellent Teaching Award (2020)',
         'APSMR Award for Outstanding Research Achievement and Contribution to GREEN, Asia Pacific Society for Materials Research (2019)',
         'Outstanding Teacher and Public Servant Award, Ministry of Education (2013)',
-        'NDHU College of Science and Engineering Excellent Teaching Award (2020)',
         'NDHU University-Level Outstanding Teacher (2007)',
         'NDHU Outstanding Research Award (2004~2015)'
       ]
@@ -359,6 +360,7 @@ export const dict: Record<Lang, I18nDict> = {
       labelFax: 'Fax',
       email: 'yrma@gm.fgu.edu.tw',
       phone: '+886-3-9871000 ext. 11010',
+      phoneHref: 'tel:+886-3-9871000,11010',
       fax: '+886-3-9874815',
       copyAction: 'Copy',
       copiedAction: 'Copied',
@@ -397,7 +399,7 @@ export const dict: Record<Lang, I18nDict> = {
       citations: '引用次數',
       hIndex: 'h-索引',
       scopusNote: '* 引用與發表數據來源為 Scopus & ORCID',
-      hIndexValue: '51',
+      hIndexValue: '52',
     },
     research: {
       title: '專業',
@@ -438,7 +440,7 @@ export const dict: Record<Lang, I18nDict> = {
       loadMore: '載入更多',
       loadingPublications: '載入著作中…',
       emptyPublications:
-        '目前沒有符合此篩選條件的著作。請改選其他年份、改為「全部著作」，或關閉「精選／高引用」。',
+        '目前沒有符合此篩選條件的著作。請改選其他年份、改為「全部著作」，或清除目前的篩選條件。',
       featuredSpotlight: '代表著作',
       takeawayLabel: '研究亮點',
       readAbstract: '閱讀摘要',
@@ -522,14 +524,14 @@ export const dict: Record<Lang, I18nDict> = {
         '印度理工學院印多爾分校 (IITI) 訪問特聘教授 (2025)',
         '國際先進材料協會 (IAAM) Fellow (2025)',
         'Vebleo Fellow (2025)',
-        '馬來西亞 USCI 大學訪問特聘教授 (2023)',
+        '馬來西亞 UCSI 大學訪問特聘教授 (2023)',
         '東華頂尖人才學術獎勵 (2016-2025)',
         'ESI 科學與工程類 1% 高引用值 (2016-2023)',
         '東華研究突破獎 (2021，論文刊登於頂尖期刊 Advanced Materials)',
         '東華一等學術獎 (2021)',
+        '東華理工學院優良教學獎 (2020)',
         '亞太材料研究學會 (APSMR) GREEN 傑出研究成就與貢獻獎 (2019)',
         '教育部優良教師與公務人員獎 (2013)',
-        '東華理工學院優良教學獎 (2020)',
         '東華校級優良教師 (2007)',
         '東華研究優良獎勵 (2004~2015)'
       ]
@@ -558,6 +560,7 @@ export const dict: Record<Lang, I18nDict> = {
       labelFax: '傳真',
       email: 'yrma@gm.fgu.edu.tw',
       phone: '(03)9871000 分機 11010',
+      phoneHref: 'tel:+886-3-9871000,11010',
       fax: '(03)9874815',
       copyAction: '複製',
       copiedAction: '已複製',

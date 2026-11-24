@@ -17,6 +17,7 @@ type PublicationTimelineChartProps = {
   publications: Publication[];
   selectedFilter: string;
   lang: 'en' | 'zh';
+  serverYear?: number;
   onSelectYear: (yearOrAll: string) => void;
 };
 
@@ -25,6 +26,7 @@ function PublicationTimelineChartComponent({
   publications,
   selectedFilter,
   lang,
+  serverYear = 2026,
   onSelectYear,
 }: PublicationTimelineChartProps) {
   const [metric, setMetric] = useState<'papers' | 'citations'>('papers');
@@ -35,7 +37,7 @@ function PublicationTimelineChartComponent({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(chartRef, { once: true, margin: '-60px' });
   const reduceMotion = useReducedMotion();
-  const currentYear = new Date().getFullYear();
+  const currentYear = serverYear;
 
   const { buckets, minYear, maxYear, peakBucket, totalStarred, maxMetricValue, hasInPress } =
     useMemo(() => {
@@ -334,7 +336,7 @@ function PublicationTimelineChartComponent({
                     <span className="mx-1.5 text-[var(--app-muted)]">·</span>
                     <span className="text-[var(--app-accent)]">
                       {metric === 'papers'
-                        ? `${hoveredBucket.count} ${isZh ? '篇' : 'pubs'}`
+                        ? `${hoveredBucket.count} ${isZh ? '篇' : hoveredBucket.count === 1 ? 'pub' : 'pubs'}`
                         : `${hoveredBucket.citations.toLocaleString('en-US')} ${isZh ? '引' : 'cit.'}`}
                     </span>
                   </motion.div>
@@ -363,7 +365,12 @@ function PublicationTimelineChartComponent({
                   const isEmpty = b.count === 0;
                   const isFutureYear = b.year > currentYear;
 
-                  const targetHeight = isInView || reduceMotion ? `${heightPct}%` : '0%';
+                  const targetHeight =
+                    isInView || reduceMotion
+                      ? value > 0
+                        ? `${heightPct}%`
+                        : '2px'
+                      : '0%';
                   const barTransition = reduceMotion
                     ? { duration: 0 }
                     : waveFinished
@@ -382,10 +389,10 @@ function PublicationTimelineChartComponent({
                         aria-label={
                           isZh
                             ? `${b.year} 年${isFutureYear ? '（預刊）' : ''}：${b.count} 篇論文，${b.citations} 次引用`
-                            : `${b.year}${isFutureYear ? ' (In Press)' : ''}: ${b.count} papers, ${b.citations} citations`
+                            : `${b.year}${isFutureYear ? ' (In Press)' : ''}: ${b.count} ${b.count === 1 ? 'paper' : 'papers'}, ${b.citations} ${b.citations === 1 ? 'citation' : 'citations'}`
                         }
                         aria-pressed={isSelected}
-                        className={`group flex h-full w-full items-end justify-center pt-1 focus:outline-none ${
+                        className={`group flex h-full w-full items-end justify-center rounded-t-[4px] pt-1 focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] ${
                           isEmpty ? 'cursor-default' : 'cursor-pointer'
                         }`}
                       >

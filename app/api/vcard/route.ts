@@ -21,6 +21,7 @@ export function GET() {
       ...PUBLIC_CORS_HEADERS,
       'Content-Type': 'text/vcard; charset=utf-8',
       'Content-Disposition': 'attachment; filename="Yuan-Ron_Ma.vcf"',
+      'X-Content-Type-Options': 'nosniff',
       'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=604800',
     },
   });

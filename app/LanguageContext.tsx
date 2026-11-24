@@ -17,6 +17,7 @@ type Lang = 'en' | 'zh';
 
 const LANG_STORAGE_KEY = 'preferred_lang';
 const LANG_CHANGE_EVENT = 'preferred-lang-change';
+let memoryLang: Lang | null = null;
 
 function detectDefaultLang(): Lang {
   if (typeof navigator === 'undefined') return 'en';
@@ -32,11 +33,14 @@ function readStoredLang(): Lang {
   if (typeof window === 'undefined') return 'en';
   try {
     const saved = localStorage.getItem(LANG_STORAGE_KEY) as Lang | null;
-    if (saved === 'en' || saved === 'zh') return saved;
+    if (saved === 'en' || saved === 'zh') {
+      memoryLang = saved;
+      return saved;
+    }
   } catch {
     /* localStorage unavailable */
   }
-  return detectDefaultLang();
+  return memoryLang ?? detectDefaultLang();
 }
 
 function subscribeLang(onStoreChange: () => void) {
@@ -52,11 +56,14 @@ function subscribeLang(onStoreChange: () => void) {
 }
 
 function persistLang(lang: Lang) {
+  memoryLang = lang;
   try {
     localStorage.setItem(LANG_STORAGE_KEY, lang);
-    window.dispatchEvent(new Event(LANG_CHANGE_EVENT));
   } catch {
-    /* ignore */
+    /* ignore storage restrictions; memoryLang keeps session state */
+  }
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event(LANG_CHANGE_EVENT));
   }
 }
 
@@ -98,13 +105,22 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
 
   const setLang = useCallback(
     (newLang: Lang) => {
-      if (newLang === lang) return;
+      if (swapTimerRef.current !== null) {
+        window.clearTimeout(swapTimerRef.current);
+        swapTimerRef.current = null;
+      }
+      if (clearTimerRef.current !== null) {
+        window.clearTimeout(clearTimerRef.current);
+        clearTimerRef.current = null;
+      }
+      if (newLang === lang) {
+        setIsTransitioning(false);
+        return;
+      }
       if (skipTransition) {
         persistLang(newLang);
         return;
       }
-      if (swapTimerRef.current !== null) window.clearTimeout(swapTimerRef.current);
-      if (clearTimerRef.current !== null) window.clearTimeout(clearTimerRef.current);
       setIsTransitioning(true);
       swapTimerRef.current = window.setTimeout(() => persistLang(newLang), SWAP_MS);
       clearTimerRef.current = window.setTimeout(() => setIsTransitioning(false), CLEAR_MS);

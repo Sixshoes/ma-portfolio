@@ -34,7 +34,10 @@ function isSafeImagePath(raw: unknown): string {
   if (typeof raw !== 'string') return '';
   const trimmed = raw.trim();
   if (!trimmed) return '';
-  if (trimmed.startsWith('/') || /^https?:\/\//i.test(trimmed)) return trimmed;
+  // 禁止 protocol-relative URL (//evil.example/...)
+  if ((trimmed.startsWith('/') && !trimmed.startsWith('//')) || /^https?:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
   return '';
 }
 

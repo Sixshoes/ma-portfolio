@@ -14,8 +14,8 @@ export type ResearchDomainConfig = {
   formulaTag: string;
   /** 展開抽屜與藍圖展櫃顯示的可點擊核心材料／物理關鍵字標籤 */
   keywords: Array<{ label: string; query: string }>;
-  /** 主要歸類比對關鍵詞清單（互斥歸類確保各領域篇數加總精準等於全站總篇數） */
-  matchTerms: string[];
+  /** 主要歸類比對正則清單（使用單字邊界防止 spin→spinel、nio→anion、electrode→electrodeposition 誤判） */
+  matchPatterns: RegExp[];
 };
 
 export const RESEARCH_DOMAINS: ResearchDomainConfig[] = [
@@ -24,7 +24,7 @@ export const RESEARCH_DOMAINS: ResearchDomainConfig[] = [
     index: 0,
     roman: 'I',
     color: '#1B4965',
-    chalkColor: '#F3DF87',
+    chalkColor: '#7FB3D5',
     labelZh: '一維奈米材料',
     labelEn: '1D Nanomaterials',
     formulaTag: 'ZnO · WO₃ [001] Nanorods',
@@ -35,26 +35,20 @@ export const RESEARCH_DOMAINS: ResearchDomainConfig[] = [
       { label: 'ZnO', query: 'zno' },
       { label: 'NiO', query: 'nio' },
     ],
-    matchTerms: [
-      'nanorod',
-      'nanowire',
-      'nanotube',
-      'one-dimensional',
-      '1d ',
-      '1d-',
-      'nanobelt',
-      'nanoneedle',
-      'nanofiber',
-      'nanocolumn',
-      'nanostructur',
-      'nanoparticle',
-      'nanoflower',
-      'wo3',
-      'moo3',
-      'zno',
-      'nio',
-      'tio2',
-      'tungsten oxide',
+    matchPatterns: [
+      /\bnanorod/i,
+      /\bnanowire/i,
+      /\bnanotube/i,
+      /\bone-dimensional\b/i,
+      /\b1d\b/i,
+      /\bnanobelt/i,
+      /\bnanoneedle/i,
+      /\bnanofiber/i,
+      /\bnanocolumn/i,
+      /\bnanobranched\b/i,
+      /\bnanostructur/i,
+      /\b(?:wo3|moo3|moo2|zno|nio|tio2|cuo)\b/i,
+      /\btungsten oxide\b/i,
     ],
   },
   {
@@ -73,22 +67,18 @@ export const RESEARCH_DOMAINS: ResearchDomainConfig[] = [
       { label: '2D Layered', query: '2d' },
       { label: 'Spin / Magnon', query: 'magnon' },
     ],
-    matchTerms: [
-      'ferromagnet',
-      'magnetic',
-      'magnon',
-      'spin',
-      'cri3',
-      'monolayer',
-      'two-dimensional',
-      '2d ',
-      '2d-',
-      'van der waals',
-      'graphene',
-      'mos2',
-      'mxene',
-      'layered',
-      'ws2',
+    matchPatterns: [
+      /\bferromagnet/i,
+      /\bantiferromagnet/i,
+      /\bmagnet(?:ic|ism|ization|o)\b/i,
+      /\bmagnon/i,
+      /\bspintronic/i,
+      /\bspin\b(?!-?coat)/i,
+      /\bcri3\b/i,
+      /\bcrte2\b/i,
+      /\bvan der waals\b/i,
+      /\b(?:two-dimensional|2d)\b.*\b(?:magnet|spin|ferro|monolayer)/i,
+      /\bmonolayer\b/i,
     ],
   },
   {
@@ -96,7 +86,7 @@ export const RESEARCH_DOMAINS: ResearchDomainConfig[] = [
     index: 2,
     roman: 'III',
     color: '#C88A2B',
-    chalkColor: '#E88D84',
+    chalkColor: '#F3DF87',
     labelZh: '電致變色',
     labelEn: 'Electrochromism',
     formulaTag: 'WO₃ + xLi⁺ + xe⁻ ⇄ LiₓWO₃',
@@ -107,12 +97,12 @@ export const RESEARCH_DOMAINS: ResearchDomainConfig[] = [
       { label: 'MoO3', query: 'moo3' },
       { label: 'Optical Modulation', query: 'optical' },
     ],
-    matchTerms: [
-      'electrochrom',
-      'smart window',
-      'optical modulation',
-      'coloration',
-      'bleaching',
+    matchPatterns: [
+      /\belectrochrom/i,
+      /\bsmart window/i,
+      /\boptical modulation\b/i,
+      /\bcoloration efficiency\b/i,
+      /\bphotochrom/i,
     ],
   },
   {
@@ -120,7 +110,7 @@ export const RESEARCH_DOMAINS: ResearchDomainConfig[] = [
     index: 3,
     roman: 'IV',
     color: '#9E3B33',
-    chalkColor: '#F3DF87',
+    chalkColor: '#E88D84',
     labelZh: '超級電容器',
     labelEn: 'Supercapacitors',
     formulaTag: 'C = εA / d · Pseudocapacitance',
@@ -131,19 +121,17 @@ export const RESEARCH_DOMAINS: ResearchDomainConfig[] = [
       { label: 'Electrode', query: 'electrode' },
       { label: 'Battery', query: 'battery' },
     ],
-    matchTerms: [
-      'supercapacitor',
-      'supercapacitance',
-      'pseudocapacit',
-      'energy storage',
-      'capacitance',
-      'battery',
-      'batteries',
-      'lithium-ion',
-      'sodium-ion',
-      'electrochemical performance',
-      'charge storage',
-      'electrode',
+    matchPatterns: [
+      /\bsupercapacit/i,
+      /\bpseudocapacit/i,
+      /\benergy storage\b/i,
+      /\bcapacitance\b/i,
+      /\bbatter(?:y|ies)\b/i,
+      /\blithium-ion\b/i,
+      /\bsodium-ion\b/i,
+      /\bcharge storage\b/i,
+      /\bsymmetric(?:al)?\s+(?:cell|device|capacitor)/i,
+      /\belectrochemical performance\b/i,
     ],
   },
   {
@@ -151,7 +139,7 @@ export const RESEARCH_DOMAINS: ResearchDomainConfig[] = [
     index: 4,
     roman: 'V',
     color: '#4A586E',
-    chalkColor: '#E88D84',
+    chalkColor: '#A9BCD6',
     labelZh: '量子電腦',
     labelEn: 'Quantum Computer',
     formulaTag: 'T = |F/A|² · |ψ⟩ = α|0⟩ + β|1⟩',
@@ -162,22 +150,19 @@ export const RESEARCH_DOMAINS: ResearchDomainConfig[] = [
       { label: 'Band Gap', query: 'band gap' },
       { label: 'Ultraviolet', query: 'ultraviolet' },
     ],
-    matchTerms: [
-      'quantum',
-      'qubit',
-      'exciton',
-      'photodetector',
-      'topological',
-      'band gap',
-      'bandgap',
-      'photoluminescence',
-      'luminescence',
-      'ultraviolet',
-      'laser',
-      'raman',
-      'optical propert',
-      'plasmonic',
-      'dielectric',
+    matchPatterns: [
+      /\bquantum\b/i,
+      /\bqubit/i,
+      /\bexciton/i,
+      /\bphotodetector/i,
+      /\btopological\b/i,
+      /\btunneling\b/i,
+      /\bphotoluminescence\b/i,
+      /\bluminescence\b/i,
+      /\bultraviolet\b/i,
+      /\blaser\b/i,
+      /\bplasmonic/i,
+      /\bphotonic/i,
     ],
   },
 ];
@@ -197,7 +182,7 @@ export const OTHER_MATERIALS_DOMAIN: ResearchDomainConfig = {
     { label: 'Photocatalytic', query: 'photocatal' },
     { label: 'Gas Sensor', query: 'sensor' },
   ],
-  matchTerms: [],
+  matchPatterns: [],
 };
 
 export const ALL_DONUT_DOMAINS: ResearchDomainConfig[] = [
@@ -205,12 +190,12 @@ export const ALL_DONUT_DOMAINS: ResearchDomainConfig[] = [
   OTHER_MATERIALS_DOMAIN,
 ];
 
-/** 依應用專一性決定互斥主領域順序（電致變色 → 超級電容 → 量子光電 → 二維鐵磁 → 一維奈米 → 光電催化與薄膜） */
+/** 依應用專一性決定互斥主領域順序（電致變色 → 超級電容 → 二維鐵磁 → 量子光電 → 一維奈米 → 光電催化與薄膜） */
 const PRIMARY_CLASSIFICATION_ORDER = [
   'electrochromism',
   'supercapacitors',
-  'quantum-computer',
   '2d-ferromagnetic',
+  'quantum-computer',
   '1d-nanomaterials',
 ] as const;
 
@@ -221,10 +206,19 @@ export function getResearchDomainById(id: string | null): ResearchDomainConfig |
 
 /** 將每篇論文唯一歸入單一主領域，確保環狀圖扇區加總與全站總篇數 100% 精準一致 */
 export function classifyPublicationPrimaryDomain(pub: Publication): string {
-  const haystack = `${pub.title} ${pub.journal} ${pub.takeaway ?? ''} ${pub.abstract_excerpt ?? ''}`.toLowerCase();
+  const haystack = `${pub.title} ${pub.journal} ${pub.takeaway ?? ''} ${pub.abstract_excerpt ?? ''}`;
+  // 氣體感測／電催化／光催化／水分解優先歸類至第六類「光電催化與薄膜」，避免被材料名稱劫持
+  const isCatalysisOrSensor =
+    /\b(?:gas\s+sens|chemiresist|h2s|no2\s+gas|electrocatal|photocatal|water\s+splitting|oxygen\s+evolution|hydrogen\s+evolution|photodegradation|dye\s+degradation)\b/i.test(
+      pub.title,
+    );
+  if (isCatalysisOrSensor && !/\b(?:electrochrom|supercapacit|ferromagnet|quantum)\b/i.test(pub.title)) {
+    return OTHER_MATERIALS_DOMAIN.id;
+  }
+
   for (const domainId of PRIMARY_CLASSIFICATION_ORDER) {
     const domain = RESEARCH_DOMAINS.find((d) => d.id === domainId);
-    if (domain && domain.matchTerms.some((term) => haystack.includes(term))) {
+    if (domain && domain.matchPatterns.some((pattern) => pattern.test(haystack))) {
       return domain.id;
     }
   }

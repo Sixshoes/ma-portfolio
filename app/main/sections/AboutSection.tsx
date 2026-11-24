@@ -1,9 +1,10 @@
 'use client';
 
-import React, { memo, useCallback, useRef, useState } from 'react';
+import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from 'motion/react';
 import { Award } from 'lucide-react';
 import { EDITORIAL_EASE, InkRule } from '@/app/components/EditorialMotion';
+import { getPreferredScrollBehavior } from '@/lib/clientUtils';
 import { useRenderProfiler } from './useRenderProfiler';
 import { uiTokens } from './uiTokens';
 
@@ -39,11 +40,14 @@ function splitTitleAndDate(text: string): { main: string; period: string | null 
   return { main: text.trim(), period: null };
 }
 
-function renderChronoRow(text: string) {
+function renderChronoRow(text: string, key: number) {
   const { main, period } = splitTitleAndDate(text);
   if (period) {
     return (
-      <div className="flex flex-col gap-1 border-b border-[var(--app-rule)]/70 px-3 py-4 transition-colors duration-150 last:border-b-0 hover:bg-[var(--app-hover)]/60 sm:flex-row sm:items-baseline sm:gap-5">
+      <div
+        key={key}
+        className="flex flex-col gap-1 border-b border-[var(--app-rule)]/70 px-3 py-4 transition-colors duration-150 last:border-b-0 hover:bg-[var(--app-hover)]/60 sm:flex-row sm:items-baseline sm:gap-5"
+      >
         <span className="font-mono text-sm leading-snug text-[var(--app-muted)] [font-variant-numeric:tabular-nums] sm:w-48 sm:shrink-0">
           {period}
         </span>
@@ -54,7 +58,10 @@ function renderChronoRow(text: string) {
     );
   }
   return (
-    <div className="border-b border-[var(--app-rule)]/70 px-3 py-4 text-base leading-relaxed text-[var(--app-ink)] last:border-b-0 hover:bg-[var(--app-hover)]/60">
+    <div
+      key={key}
+      className="border-b border-[var(--app-rule)]/70 px-3 py-4 text-base leading-relaxed text-[var(--app-ink)] last:border-b-0 hover:bg-[var(--app-hover)]/60"
+    >
       {main}
     </div>
   );
@@ -67,12 +74,31 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
   const [isExpandedAdmin, setIsExpandedAdmin] = useState(false);
   const [isExpandedService, setIsExpandedService] = useState(false);
   const [portraitError, setPortraitError] = useState(false);
+  const portraitImgRef = useRef<HTMLImageElement>(null);
+  const panelWrapRef = useRef<HTMLDivElement>(null);
   const tabRefs = useRef<Record<AboutTab, HTMLButtonElement | null>>({
     roles: null,
     admin: null,
     service: null,
     awards: null,
   });
+
+  useEffect(() => {
+    const img = portraitImgRef.current;
+    if (img && img.complete && img.naturalWidth === 0) {
+      setPortraitError(true);
+    }
+  }, []);
+
+  const handleViewAllAwards = useCallback(() => {
+    setTab('awards');
+    window.requestAnimationFrame(() => {
+      panelWrapRef.current?.scrollIntoView({
+        behavior: getPreferredScrollBehavior(),
+        block: 'start',
+      });
+    });
+  }, []);
 
   const isZh = lang === 'zh';
   const tablistLabel = isZh ? '學術履歷分類' : 'Resume categories';
@@ -124,13 +150,13 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
         {highlightedHonors.length > 0 ? (
           <div className="mb-10">
             <div className="mb-4 flex items-center justify-between gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#C88A2B]/15 px-3.5 py-1 font-mono text-xs font-semibold text-[#A46B15] dark:text-[#F3DF87]">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#C88A2B]/15 px-3.5 py-1 font-mono text-xs font-semibold text-[#8A560B] dark:text-[#F3DF87]">
                 <Award className="h-4 w-4" aria-hidden />
                 {isZh ? '重點國際榮譽與院士頭銜' : 'FEATURED HONORS & FELLOWSHIPS'}
               </span>
               <button
                 type="button"
-                onClick={() => setTab('awards')}
+                onClick={handleViewAllAwards}
                 className="text-sm font-medium text-[var(--app-accent)] hover:underline"
               >
                 {isZh ? `查看全部 ${aboutText.awards.length} 項 →` : `View all ${aboutText.awards.length} →`}
@@ -142,7 +168,7 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                 const { main, period } = splitTitleAndDate(honor);
                 return (
                   <motion.div
-                    key={honor}
+                    key={idx}
                     initial={reduceMotion ? false : { opacity: 0, y: 10 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: '-40px' }}
@@ -153,7 +179,7 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                     }}
                     className="flex items-start gap-3 rounded-2xl border border-[var(--app-rule)] bg-[var(--app-surface-card)] p-4 shadow-xs transition-colors hover:border-[#C88A2B]/60"
                   >
-                    <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#C88A2B]/15 text-[#B4771D] dark:text-[#F3DF87]">
+                    <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#C88A2B]/15 text-[#8A560B] dark:text-[#F3DF87]">
                       <Award className="h-4 w-4" aria-hidden />
                     </span>
                     <div className="min-w-0 flex-1">
@@ -186,6 +212,7 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                   ) : (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
+                      ref={portraitImgRef}
                       src="/profile-avatar.webp"
                       alt={isZh ? '馬遠榮副校長肖像照' : 'Portrait of Prof. Yuan-Ron Ma'}
                       width={80}
@@ -217,6 +244,7 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                 <div
                   role="tablist"
                   aria-label={tablistLabel}
+                  aria-orientation="vertical"
                   className="space-y-1 border-t border-[var(--app-rule)] pt-4"
                 >
                   {tabs.map(({ id, label, count }) => {
@@ -262,12 +290,13 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
           </div>
 
           {/* 右側溫潤圓角編年履歷卡片 */}
-          <div className="min-h-[18rem] lg:col-span-8">
+          <div ref={panelWrapRef} className="min-h-[18rem] scroll-mt-24 lg:col-span-8">
             <AnimatePresence mode="wait" initial={false}>
               {tab === 'roles' ? (
                 <motion.div
                   key="panel-roles"
                   role="tabpanel"
+                  tabIndex={0}
                   id="about-panel-roles"
                   aria-labelledby="about-tab-roles"
                   initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 6 }}
@@ -280,21 +309,13 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                     <h4 className="font-editorial mb-3 text-lg font-semibold text-[var(--app-ink)]">
                       {aboutText.roleLabel}
                     </h4>
-                    <div>
-                      {aboutText.roles.map((role, idx) => (
-                        <div key={idx}>{renderChronoRow(role)}</div>
-                      ))}
-                    </div>
+                    <div>{aboutText.roles.map((role, idx) => renderChronoRow(role, idx))}</div>
                   </div>
                   <div className="atlas-card p-5 sm:p-6">
                     <h4 className="font-editorial mb-3 text-lg font-semibold text-[var(--app-ink)]">
                       {aboutText.eduLabel}
                     </h4>
-                    <div>
-                      {aboutText.edu.map((eduItem, idx) => (
-                        <div key={idx}>{renderChronoRow(eduItem)}</div>
-                      ))}
-                    </div>
+                    <div>{aboutText.edu.map((eduItem, idx) => renderChronoRow(eduItem, idx))}</div>
                   </div>
                 </motion.div>
               ) : null}
@@ -303,6 +324,7 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                 <motion.div
                   key="panel-admin"
                   role="tabpanel"
+                  tabIndex={0}
                   id="about-panel-admin"
                   aria-labelledby="about-tab-admin"
                   initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 6 }}
@@ -316,9 +338,7 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                   </h4>
                   <div>
                     {(isExpandedAdmin ? aboutText.admin : aboutText.admin.slice(0, 6)).map(
-                      (item, idx) => (
-                        <div key={idx}>{renderChronoRow(item)}</div>
-                      ),
+                      (item, idx) => renderChronoRow(item, idx),
                     )}
                   </div>
                   {aboutText.admin.length > 6 && (
@@ -343,6 +363,7 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                 <motion.div
                   key="panel-service"
                   role="tabpanel"
+                  tabIndex={0}
                   id="about-panel-service"
                   aria-labelledby="about-tab-service"
                   initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 6 }}
@@ -356,9 +377,7 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                   </h4>
                   <div>
                     {(isExpandedService ? aboutText.service : aboutText.service.slice(0, 6)).map(
-                      (item, idx) => (
-                        <div key={idx}>{renderChronoRow(item)}</div>
-                      ),
+                      (item, idx) => renderChronoRow(item, idx),
                     )}
                   </div>
                   {aboutText.service.length > 6 && (
@@ -383,6 +402,7 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                 <motion.div
                   key="panel-awards"
                   role="tabpanel"
+                  tabIndex={0}
                   id="about-panel-awards"
                   aria-labelledby="about-tab-awards"
                   initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 6 }}
@@ -394,11 +414,7 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                   <h4 className="font-editorial mb-3 text-lg font-semibold text-[var(--app-ink)]">
                     {aboutText.awardsLabel}
                   </h4>
-                  <div>
-                    {aboutText.awards.map((item, idx) => (
-                      <div key={idx}>{renderChronoRow(item)}</div>
-                    ))}
-                  </div>
+                  <div>{aboutText.awards.map((item, idx) => renderChronoRow(item, idx))}</div>
                 </motion.div>
               ) : null}
             </AnimatePresence>

@@ -50,7 +50,8 @@ function ChalkboardGallerySectionComponent({
       >
         {chalkboards.map((item, idx) => {
           const plateNum = `PLATE ${String(idx + 1).padStart(2, '0')}`;
-          const imgFailed = Boolean(failedIds[item.id]);
+          const failKey = `${item.id}:${item.imageUrl}`;
+          const imgFailed = Boolean(failedIds[failKey]);
           const title = isZh ? item.titleZh : item.titleEn;
           const secondaryTitle = isZh ? item.titleEn : item.titleZh;
           const layoutId = `chalkboard-plate-${item.id}`;
@@ -98,7 +99,7 @@ function ChalkboardGallerySectionComponent({
                           alt={title}
                           loading="lazy"
                           onError={() =>
-                            setFailedIds((prev) => ({ ...prev, [item.id]: true }))
+                            setFailedIds((prev) => ({ ...prev, [failKey]: true }))
                           }
                           className="h-full w-full object-cover object-[70%_35%] transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]"
                         />
@@ -197,7 +198,7 @@ function ChalkboardGallerySectionComponent({
                       alt={title}
                       loading="lazy"
                       onError={() =>
-                        setFailedIds((prev) => ({ ...prev, [item.id]: true }))
+                        setFailedIds((prev) => ({ ...prev, [failKey]: true }))
                       }
                       className="h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04]"
                     />
@@ -226,7 +227,9 @@ function ChalkboardGallerySectionComponent({
               <div className="flex flex-1 flex-col justify-between p-5">
                 <div>
                   <div className="flex items-center justify-between gap-2 text-xs text-[#9FB8AC]">
-                    <span className="truncate font-mono">{item.courseOrTopic || 'Physics Lecture'}</span>
+                    <span className="truncate font-mono">
+                      {item.courseOrTopic || (isZh ? '物理講堂手稿' : 'Physics Lecture')}
+                    </span>
                     {item.year ? (
                       <span className="shrink-0 font-mono text-[#E88D84]">{item.year}</span>
                     ) : null}

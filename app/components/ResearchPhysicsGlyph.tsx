@@ -199,7 +199,7 @@ function ElectrochromismGlyph({
         fill={palette.accent}
         initial={{ fillOpacity: 0.06 }}
         animate={{ fillOpacity: isActive ? 0.2 : 0.08 }}
-        transition={{ duration: 0.45, ease: EDITORIAL_EASE }}
+        transition={{ duration: reduce ? 0 : 0.45, ease: EDITORIAL_EASE }}
       />
       <motion.path
         d="M20 16 L38 6 L38 40 L20 50 Z M20 16 L18 15 L18 49 L20 50 M18 15 L36 5 L38 6"
@@ -209,13 +209,12 @@ function ElectrochromismGlyph({
         strokeLinejoin="round"
         {...drawProps(isActive, reduce, 0)}
       />
-      <motion.path
+      <path
         d="M5 42 L51 16"
         stroke={palette.ink}
         strokeWidth="0.85"
         strokeDasharray="2 2.5"
         strokeOpacity="0.6"
-        {...drawProps(isActive, reduce, 0.05)}
       />
       <motion.path
         d="M6 41 C9 30, 12 30, 15 36 C18 42, 20 39, 23 30 C26 20, 29 22, 32 27 C35 32, 37 26, 40 20 C42.5 15, 45 16, 48 18"
@@ -331,7 +330,7 @@ function BlochSphereGlyph({
         strokeWidth="1.25"
         {...drawProps(isActive, reduce, 0)}
       />
-      <motion.ellipse
+      <ellipse
         cx="28"
         cy="28"
         rx="17"
@@ -340,7 +339,6 @@ function BlochSphereGlyph({
         strokeWidth="0.95"
         strokeDasharray="2.2 2"
         strokeOpacity="0.7"
-        {...drawProps(isActive, reduce, 0.04)}
       />
       <motion.ellipse
         cx="28"
@@ -430,7 +428,7 @@ function ResearchPhysicsGlyphComponent({
         opacity: isBlueprint ? (isActive ? 1 : 0.86) : isActive ? 1 : 0.15,
         scale: isActive && !reduce ? 1.05 : 1,
       }}
-      transition={{ duration: 0.35, ease: EDITORIAL_EASE }}
+      transition={{ duration: reduce ? 0 : 0.35, ease: EDITORIAL_EASE }}
       className={
         isBlueprint
           ? 'flex h-28 w-28 shrink-0 items-center justify-center bg-transparent'

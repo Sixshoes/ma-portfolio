@@ -18,6 +18,7 @@ import { getPublicationKey } from '@/lib/publications';
 import type { NavText } from '@/lib/i18n';
 import { useLanguage } from '@/app/LanguageContext';
 import { useTheme } from '@/app/ThemeContext';
+import { lockBodyScroll, unlockBodyScroll } from '@/lib/clientUtils';
 import { EDITORIAL_EASE } from './EditorialMotion';
 
 type CommandPaletteProps = {
@@ -66,17 +67,28 @@ export function CommandPalette({
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const themeTimerRef = useRef<number | null>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (themeTimerRef.current !== null) {
+        window.clearTimeout(themeTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!open) return;
+    previousFocusRef.current = document.activeElement as HTMLElement | null;
     setQuery('');
     setActiveIndex(0);
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    lockBodyScroll();
     const focusTimer = window.setTimeout(() => inputRef.current?.focus(), 20);
     return () => {
-      document.body.style.overflow = prevOverflow;
+      unlockBodyScroll();
       window.clearTimeout(focusTimer);
+      previousFocusRef.current?.focus?.();
     };
   }, [open]);
 
@@ -144,10 +156,12 @@ export function CommandPalette({
         meta: theme === 'dark' ? (isZh ? '晝' : 'Light') : isZh ? '夜' : 'Dark',
         onSelect: (e) => {
           onClose();
-          const origin = e
+          const hasClickCoords = e && (e.clientX !== 0 || e.clientY !== 0);
+          const origin = hasClickCoords
             ? { clientX: e.clientX, clientY: e.clientY }
             : { clientX: window.innerWidth / 2, clientY: 160 };
-          window.setTimeout(() => toggleTheme(origin), 30);
+          if (themeTimerRef.current !== null) window.clearTimeout(themeTimerRef.current);
+          themeTimerRef.current = window.setTimeout(() => toggleTheme(origin), 30);
         },
       },
       {
@@ -174,15 +188,19 @@ export function CommandPalette({
       },
     ];
 
+    const actionKeywords: Record<string, string[]> = {
+      'act-theme': ['dark', 'light', 'theme', 'mode', 'night', 'day', '晝', '夜', '黑', '白', '深色', '淺色'],
+      'act-lang': ['lang', 'language', 'en', 'zh', 'english', 'chinese', '中文', '英文', '語系'],
+      'act-vcard': ['vcard', 'vcf', 'contact', '名片', '聯絡'],
+    };
+
+    const tokens = q ? q.split(/\s+/).filter(Boolean) : [];
     const filteredActions = q
-      ? actionItems.filter(
-          (a) =>
-            a.title.toLowerCase().includes(q) ||
-            (a.subtitle?.toLowerCase().includes(q) ?? false) ||
-            ['dark', 'light', 'theme', '晝', '夜', '黑', '白', 'lang', 'en', '中文', 'vcard'].some(
-              (kw) => kw.includes(q) && a.id.includes(kw === 'vcard' ? 'vcard' : kw.includes('en') || kw.includes('中') || kw === 'lang' ? 'lang' : 'theme'),
-            ),
-        )
+      ? actionItems.filter((a) => {
+          const kws = actionKeywords[a.id] ?? [];
+          const hay = `${a.title} ${a.subtitle ?? ''} ${kws.join(' ')}`.toLowerCase();
+          return tokens.every((tok) => hay.includes(tok));
+        })
       : actionItems;
     list.push(...filteredActions);
 
@@ -205,10 +223,27 @@ export function CommandPalette({
     setActiveIndex(0);
   }, [query]);
 
+  const safeActiveIndex = items.length > 0 ? Math.min(activeIndex, items.length - 1) : 0;
+
+  // 全域監聽 Escape 關閉，確保點擊非聚焦區域後按 ESC 依然生效
+  useEffect(() => {
+    if (!open) return;
+    const onGlobalKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', onGlobalKey);
+    return () => window.removeEventListener('keydown', onGlobalKey);
+  }, [open, onClose]);
+
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
+        e.stopPropagation();
         onClose();
         return;
       }
@@ -222,17 +257,17 @@ export function CommandPalette({
         setActiveIndex((prev) => (prev - 1 + items.length) % items.length);
       } else if (e.key === 'Enter') {
         e.preventDefault();
-        items[activeIndex]?.onSelect();
+        items[safeActiveIndex]?.onSelect();
       }
     },
-    [items, activeIndex, onClose],
+    [items, safeActiveIndex, onClose],
   );
 
   useEffect(() => {
     if (!open || !listRef.current) return;
     const activeEl = listRef.current.querySelector<HTMLElement>('[data-active="true"]');
     activeEl?.scrollIntoView({ block: 'nearest' });
-  }, [activeIndex, open]);
+  }, [safeActiveIndex, open]);
 
   const groupLabels: Record<PaletteItem['group'], string> = {
     publications: isZh
@@ -280,6 +315,10 @@ export function CommandPalette({
                 id="cmdk-search-input"
                 name="cmdk-search"
                 type="search"
+                role="combobox"
+                aria-expanded={open}
+                aria-controls="cmdk-listbox"
+                aria-activedescendant={items[safeActiveIndex] ? `cmdk-opt-${items[safeActiveIndex].id}` : undefined}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={
@@ -310,7 +349,13 @@ export function CommandPalette({
             </div>
 
             {/* 檢索結果目錄 */}
-            <div ref={listRef} className="min-h-0 flex-1 overflow-y-auto py-2">
+            <div
+              ref={listRef}
+              id="cmdk-listbox"
+              role="listbox"
+              aria-label={isZh ? '快速檢索結果' : 'Quick search results'}
+              className="min-h-0 flex-1 overflow-y-auto py-2"
+            >
               {items.length === 0 ? (
                 <div className="px-6 py-12 text-center text-base text-[var(--app-muted)]">
                   {isZh
@@ -321,7 +366,7 @@ export function CommandPalette({
                 items.map((item, idx) => {
                   const showHeader = item.group !== lastGroup;
                   lastGroup = item.group;
-                  const isActive = idx === activeIndex;
+                  const isActive = idx === safeActiveIndex;
 
                   const Icon =
                     item.group === 'publications'
@@ -344,7 +389,10 @@ export function CommandPalette({
                         </div>
                       ) : null}
                       <button
+                        id={`cmdk-opt-${item.id}`}
                         type="button"
+                        role="option"
+                        aria-selected={isActive}
                         data-active={isActive ? 'true' : undefined}
                         onMouseEnter={() => setActiveIndex(idx)}
                         onClick={(e) => item.onSelect(e)}

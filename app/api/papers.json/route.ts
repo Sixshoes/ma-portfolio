@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import {
+  getPublicJsonCacheHeaders,
   loadPublicPublications,
   PUBLIC_API_REVALIDATE,
   PUBLIC_CORS_HEADERS,
-  PUBLIC_JSON_CACHE_HEADERS,
+  PUBLIC_NO_STORE_HEADERS,
 } from '@/lib/publicationsApi';
 
 export const revalidate = 3600;
@@ -25,9 +26,11 @@ export async function GET() {
   if (!payload) {
     return NextResponse.json(
       { error: 'Unable to load publications from Firestore or fallback source.' },
-      { status: 503, headers: PUBLIC_CORS_HEADERS },
+      { status: 503, headers: PUBLIC_NO_STORE_HEADERS },
     );
   }
 
-  return NextResponse.json(payload.items, { headers: PUBLIC_JSON_CACHE_HEADERS });
+  return NextResponse.json(payload.items, {
+    headers: getPublicJsonCacheHeaders(payload.source),
+  });
 }

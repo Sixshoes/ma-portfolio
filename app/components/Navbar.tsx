@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   AnimatePresence,
   motion,
@@ -12,6 +12,7 @@ import { Menu, Moon, Search, Sun, X } from 'lucide-react';
 import { LanguageSwitcher } from '@/app/components/LanguageSwitcher';
 import { EDITORIAL_EASE } from '@/app/components/EditorialMotion';
 import { useTheme } from '@/app/ThemeContext';
+import { getPreferredScrollBehavior } from '@/lib/clientUtils';
 import type { NavText } from '@/lib/i18n';
 
 type NavbarProps = {
@@ -34,8 +35,27 @@ const SECTION_NUMBERS: Record<SectionId, string> = {
 export function Navbar({ navText, lang, onOpenCommandPalette }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<SectionId | null>(null);
+  const navRef = useRef<HTMLElement>(null);
   const { theme, toggleTheme } = useTheme();
   const reduceMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (!isMenuOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsMenuOpen(false);
+    };
+    const onPointerDown = (e: PointerEvent) => {
+      if (navRef.current && !navRef.current.contains(e.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('pointerdown', onPointerDown);
+    };
+  }, [isMenuOpen]);
 
   const { scrollYProgress } = useScroll();
   const smoothProgress = useSpring(scrollYProgress, {
@@ -93,9 +113,9 @@ export function Navbar({ navText, lang, onOpenCommandPalette }: NavbarProps) {
     e.preventDefault();
     setIsMenuOpen(false);
     setActiveSection(null);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: getPreferredScrollBehavior() });
     if (window.location.hash) {
-      window.history.replaceState(null, '', '/');
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
     }
   }, []);
 
@@ -106,7 +126,7 @@ export function Navbar({ navText, lang, onOpenCommandPalette }: NavbarProps) {
       e.preventDefault();
       setIsMenuOpen(false);
       setActiveSection(id);
-      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      target.scrollIntoView({ behavior: getPreferredScrollBehavior(), block: 'start' });
       window.history.replaceState(null, '', `#${id}`);
     },
     [],
@@ -114,7 +134,15 @@ export function Navbar({ navText, lang, onOpenCommandPalette }: NavbarProps) {
 
   const handleThemeToggleClick = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
-      toggleTheme({ clientX: e.clientX, clientY: e.clientY });
+      let clientX = e.clientX;
+      let clientY = e.clientY;
+      // 鍵盤 Enter/Space 觸發時 clientX/Y 為 (0,0)，改取按鈕中心座標
+      if (clientX === 0 && clientY === 0) {
+        const rect = e.currentTarget.getBoundingClientRect();
+        clientX = rect.left + rect.width / 2;
+        clientY = rect.top + rect.height / 2;
+      }
+      toggleTheme({ clientX, clientY });
     },
     [toggleTheme],
   );
@@ -124,7 +152,11 @@ export function Navbar({ navText, lang, onOpenCommandPalette }: NavbarProps) {
   const isDark = theme === 'dark';
 
   return (
-    <nav className="fixed left-0 top-0 z-50 w-full border-b border-[var(--app-rule)] bg-[color-mix(in_srgb,var(--app-bg)_92%,transparent)] backdrop-blur-sm">
+    <nav
+      ref={navRef}
+      aria-label={isZh ? '主導覽列' : 'Primary navigation'}
+      className="fixed left-0 top-0 z-50 w-full border-b border-[var(--app-rule)] bg-[color-mix(in_srgb,var(--app-bg)_92%,transparent)] backdrop-blur-sm"
+    >
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4">
         <div className="flex min-w-0 items-baseline gap-2.5">
           <a
@@ -165,6 +197,7 @@ export function Navbar({ navText, lang, onOpenCommandPalette }: NavbarProps) {
             <a
               href="#top"
               onClick={handleScrollTop}
+              aria-current={activeSection === null ? 'page' : undefined}
               className={`whitespace-nowrap border-b-2 py-0.5 transition-colors ${
                 activeSection === null
                   ? 'border-[var(--app-ink)] font-medium text-[var(--app-ink)]'
@@ -244,7 +277,15 @@ export function Navbar({ navText, lang, onOpenCommandPalette }: NavbarProps) {
 
             <button
               type="button"
-              aria-label={isMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+              aria-label={
+                isMenuOpen
+                  ? isZh
+                    ? '關閉導覽選單'
+                    : 'Close navigation menu'
+                  : isZh
+                    ? '開啟導覽選單'
+                    : 'Open navigation menu'
+              }
               aria-expanded={isMenuOpen}
               aria-controls="mobile-nav-menu"
               className="rounded-full p-1.5 text-[var(--app-ink)] transition-colors hover:bg-[var(--app-hover)] lg:hidden"

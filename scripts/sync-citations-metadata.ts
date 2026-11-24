@@ -155,7 +155,13 @@ async function loadSourcePapers(
   return { items: normalizePublicationsFromJson(await res.json()), origin: LEGACY_PORTAL_URL };
 }
 
-function buildMarkdownReport(report: MetadataSyncReport, origin: string, mode: CitationSyncPolicy): string {
+function buildMarkdownReport(
+  report: MetadataSyncReport,
+  origin: string,
+  mode: CitationSyncPolicy,
+  initialAuthorsCount: number,
+  finalAuthorsCount: number,
+): string {
   const lines: string[] = [
     '# ma-portfolio 論文引用數、DOI 與作者名單健檢報告',
     '',
@@ -173,7 +179,7 @@ function buildMarkdownReport(report: MetadataSyncReport, origin: string, mode: C
     `| DOI 有效核對率 | — | Crossref ${report.matchedCrossref} 筆 / OpenAlex ${report.matchedOpenAlex} 筆 | 100% 有效 |`,
     `| 補齊缺失 DOI | — | ${report.doiRecoveredCount} 筆 | — |`,
     `| 修復殘缺標題 | — | ${report.titlesFixedCount} 筆 | — |`,
-    `| 自動補齊作者名單 | 0 篇 | **${report.authorsFilledCount} / ${report.totalAfter} 篇** | — |`,
+    `| 完整作者名單覆蓋率 | ${initialAuthorsCount} 篇 | **${finalAuthorsCount} / ${report.totalAfter} 篇**（本次新補 ${report.authorsFilledCount} 篇） | — |`,
     `| 確定過時（低於 Crossref 下限） | **${report.outdatedVsCrossref.length} 篇** | 已更新 ${report.citationsUpdatedCount} 篇 | — |`,
     '',
     '## 二、抓出的異常、重複與提醒條目',
@@ -223,31 +229,39 @@ async function main() {
   const { items: rawItems, origin } = await loadSourcePapers(opts.source, projectId);
   console.log(`來源: ${origin}（共 ${rawItems.length} 篇），模式: ${opts.mode}\n`);
 
+  const initialAuthorsCount = rawItems.filter((p) => Boolean(p.authors?.trim())).length;
   const { items: upgraded, report } = await syncPublicationsMetadata(rawItems, {
     citationPolicy: opts.mode,
     fillAuthors: opts.fillAuthors,
     fixKnownAnomalies: opts.fixAnomalies,
   });
+  const finalAuthorsCount = upgraded.filter((p) => Boolean(p.authors?.trim())).length;
 
   console.log('================ 健檢統計 ================');
   console.log(`篇數變化:          ${report.totalBefore} -> ${report.totalAfter}（合併重複 ${report.dedupedCount} 筆）`);
   console.log(`Crossref / OA 命中: ${report.matchedCrossref} / ${report.matchedOpenAlex}`);
   console.log(`補回缺失 DOI:       ${report.doiRecoveredCount} 筆`);
   console.log(`修復殘缺標題:       ${report.titlesFixedCount} 筆`);
-  console.log(`補齊完整作者名單:    ${report.authorsFilledCount} / ${report.totalAfter} 篇`);
+  console.log(`作者名單覆蓋:       ${initialAuthorsCount} -> ${finalAuthorsCount} / ${report.totalAfter} 篇（新補 ${report.authorsFilledCount} 篇）`);
   console.log(`低於 Crossref 下限: ${report.outdatedVsCrossref.length} 篇（更新 ${report.citationsUpdatedCount} 篇）`);
   console.log(`總引用數變化:       ${report.localTotalCitations} (H=${report.localHIndex}) -> ${report.updatedTotalCitations} (H=${report.updatedHIndex}) [OpenAlex=${report.openalexTotalCitations}, H=${report.openalexHIndex}]`);
   console.log('==========================================');
 
   if (opts.exportJsonPath) {
     const outPath = path.resolve(process.cwd(), opts.exportJsonPath);
+    fs.mkdirSync(path.dirname(outPath), { recursive: true });
     fs.writeFileSync(outPath, JSON.stringify(upgraded, null, 2), 'utf8');
     console.log(`\n✓ 已輸出升級版 JSON（可直接於 /admin 匯入）：${outPath}`);
   }
 
   if (opts.reportMdPath) {
     const mdPath = path.resolve(process.cwd(), opts.reportMdPath);
-    fs.writeFileSync(mdPath, buildMarkdownReport(report, origin, opts.mode), 'utf8');
+    fs.mkdirSync(path.dirname(mdPath), { recursive: true });
+    fs.writeFileSync(
+      mdPath,
+      buildMarkdownReport(report, origin, opts.mode, initialAuthorsCount, finalAuthorsCount),
+      'utf8',
+    );
     console.log(`✓ 已輸出完整 Markdown 健檢報告：${mdPath}`);
   }
 }

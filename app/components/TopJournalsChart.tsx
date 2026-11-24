@@ -4,6 +4,7 @@ import React, { memo, useMemo, useRef } from 'react';
 import { motion, useInView, useReducedMotion } from 'motion/react';
 import { X } from 'lucide-react';
 import type { Publication } from '@/lib/publications';
+import { useTheme } from '@/app/ThemeContext';
 import { EDITORIAL_EASE } from './EditorialMotion';
 
 type TopJournalsChartProps = {
@@ -19,7 +20,7 @@ type JournalRow = {
   citations: number;
 };
 
-const BAR_COLORS = [
+const BAR_COLORS_LIGHT = [
   '#1B4965',
   '#235A70',
   '#2A6F68',
@@ -32,6 +33,20 @@ const BAR_COLORS = [
   '#4A586E',
 ];
 
+/** 夜間模式高對比柔和礦物色譜（對 #1A1E23 卡片皆 ≥ 4.5:1 對比度） */
+const BAR_COLORS_DARK = [
+  '#6FA3C7',
+  '#68B0B5',
+  '#6CC0A9',
+  '#7DC59C',
+  '#9ABFA8',
+  '#C4BA78',
+  '#DFB562',
+  '#E09F63',
+  '#DF8478',
+  '#9BAAC4',
+];
+
 /** Top 10 核心發表國際期刊互動橫向排行圖（圓潤端點長條，點擊即時篩選下方論文） */
 function TopJournalsChartComponent({
   publications,
@@ -39,6 +54,8 @@ function TopJournalsChartComponent({
   lang,
   onSelectJournal,
 }: TopJournalsChartProps) {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const cardRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(cardRef, { once: true, amount: 0.15 });
   const reduceMotion = useReducedMotion();
@@ -93,7 +110,8 @@ function TopJournalsChartComponent({
           {rows.map((row, idx) => {
             const pct = Math.max(8, Math.round((row.count / maxCount) * 100));
             const isSelected = selectedJournal === row.journal;
-            const barColor = BAR_COLORS[idx % BAR_COLORS.length];
+            const palette = isDark ? BAR_COLORS_DARK : BAR_COLORS_LIGHT;
+            const barColor = palette[idx % palette.length];
 
             return (
               <button

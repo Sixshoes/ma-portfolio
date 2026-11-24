@@ -1,7 +1,7 @@
 'use client';
 
-import React, { memo } from 'react';
-import { motion, useReducedMotion } from 'motion/react';
+import React, { memo, useRef } from 'react';
+import { motion, useInView, useReducedMotion } from 'motion/react';
 import { EDITORIAL_EASE } from './EditorialMotion';
 
 type RadialRankGaugeProps = {
@@ -11,21 +11,25 @@ type RadialRankGaugeProps = {
   label: string;
 };
 
-/** 270 度純 SVG 動態圓弧全校排名儀表環（圓潤筆觸、進視窗平滑推進） */
+/** 270 度純 SVG 動態圓弧全校排名儀表環（由外層容器觸發進視窗平滑推進，相容 Safari/WebKit） */
 function RadialRankGaugeComponent({
   universityRank,
   ratio,
   accentColor = '#F3DF87',
   label,
 }: RadialRankGaugeProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(containerRef, { once: true, amount: 0.05 });
   const reduceMotion = useReducedMotion();
-  const clamped = Math.min(1, Math.max(0.08, ratio));
+  const safeRatio = Number.isFinite(ratio) ? ratio : 0.08;
+  const clamped = Math.min(1, Math.max(0.08, safeRatio));
   const r = 56;
   const C = 2 * Math.PI * r;
   const arcMax = C * 0.75;
+  const targetDash = `${arcMax * clamped} ${C}`;
 
   return (
-    <div className="relative flex shrink-0 items-center justify-center">
+    <div ref={containerRef} className="relative flex shrink-0 items-center justify-center">
       <svg
         viewBox="0 0 150 142"
         className="h-36 w-36 overflow-visible sm:h-40 sm:w-40"
@@ -55,11 +59,10 @@ function RadialRankGaugeComponent({
           strokeLinecap="round"
           initial={
             reduceMotion
-              ? { strokeDasharray: `${arcMax * clamped} ${C}` }
+              ? { strokeDasharray: targetDash }
               : { strokeDasharray: `0 ${C}` }
           }
-          whileInView={{ strokeDasharray: `${arcMax * clamped} ${C}` }}
-          viewport={{ once: true, amount: 0.05 }}
+          animate={{ strokeDasharray: isInView || reduceMotion ? targetDash : `0 ${C}` }}
           transition={{ duration: reduceMotion ? 0 : 0.85, ease: EDITORIAL_EASE }}
           transform="rotate(135 75 75)"
         />

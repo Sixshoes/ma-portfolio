@@ -63,14 +63,18 @@ export function usePublications(
         ? PUB_PAGE_MOBILE
         : PUB_PAGE_DESKTOP;
 
+  // 僅於需要放大時擴充顯示筆數，避免桌機掛載 10→6→10 閃動或旋轉螢幕重置已載入分頁
   useEffect(() => {
-    setVisibleCount(pageSize);
+    setVisibleCount((prev) => Math.max(prev, pageSize));
   }, [pageSize]);
 
-  // Synchronous cache restore when SSR initial data wasn't provided
+  // 同步伺服器刷新之 initialPublications 或還原本地快取
   useEffect(() => {
     if (hasInitial) {
       writeCachedPapers(initialPublications);
+      setPublications((prev) => (prev === initialPublications ? prev : initialPublications));
+      setIsUsingFallback(false);
+      setIsLoading(false);
       return;
     }
     const cached = readCachedPapers();
@@ -203,7 +207,7 @@ export function usePublications(
 
     if (normalizedQuery) {
       list = list.filter((p) => {
-        const haystack = `${p.title} ${p.journal} ${p.year} ${p.authors ?? ''}`.toLowerCase();
+        const haystack = `${p.title} ${p.journal} ${p.year} ${p.authors ?? ''} ${p.doi}`.toLowerCase();
         return haystack.includes(normalizedQuery);
       });
     }
@@ -243,11 +247,20 @@ export function usePublications(
 
   // 進入本地精選 10 篇 fallback 時，不應把總論文數降成 10 篇誤導訪客
   const hasFullMetrics = !isUsingFallback && publications.length > 0;
-  const totalPubs: number | string = hasFullMetrics ? publications.length : '200+';
-  const totalCitations: number | string = hasFullMetrics
-    ? publications.reduce((sum, p) => sum + p.citations, 0)
-    : '8,000+';
-  const hIndexValue: number | string = hasFullMetrics ? computeHIndex(publications) : '51';
+  const { totalPubs, totalCitations, hIndexValue } = useMemo<{
+    totalPubs: number | string;
+    totalCitations: number | string;
+    hIndexValue: number | string;
+  }>(() => {
+    if (!hasFullMetrics) {
+      return { totalPubs: '200+', totalCitations: '8,000+', hIndexValue: '52' };
+    }
+    return {
+      totalPubs: publications.length,
+      totalCitations: publications.reduce((sum, p) => sum + p.citations, 0),
+      hIndexValue: computeHIndex(publications),
+    };
+  }, [hasFullMetrics, publications]);
 
   const handlePubFilterChange = useCallback(
     (value: string) => {
@@ -270,9 +283,15 @@ export function usePublications(
     setVisibleCount(pageSize);
   }, [pageSize]);
 
-  const handleViewModeChange = useCallback((mode: PubViewMode) => {
-    setViewMode(mode);
-  }, []);
+  const handleViewModeChange = useCallback(
+    (mode: PubViewMode) => {
+      setViewMode(mode);
+      setVisibleCount(
+        mode === 'compact' ? PUB_PAGE_COMPACT : isMobile ? PUB_PAGE_MOBILE : PUB_PAGE_DESKTOP,
+      );
+    },
+    [isMobile],
+  );
 
   const handleSearchChange = useCallback(
     (value: string) => {
@@ -284,12 +303,16 @@ export function usePublications(
 
   const handleDomainFilterChange = useCallback(
     (domainId: string | null) => {
-      setActiveDomainId(domainId);
-      if (domainId !== null) {
-        setPubFilter('All');
-        setSelectedJournal(null);
-        setSearchQuery('');
-      }
+      setActiveDomainId((prev) => {
+        const next = domainId !== null && prev === domainId ? null : domainId;
+        if (next !== null) {
+          setPubFilter('All');
+          setSelectedJournal(null);
+          setCorrespondingOnly(false);
+          setSearchQuery('');
+        }
+        return next;
+      });
       setVisibleCount(pageSize);
     },
     [pageSize],
@@ -310,6 +333,7 @@ export function usePublications(
     (keyword: string) => {
       setActiveDomainId(null);
       setSelectedJournal(null);
+      setCorrespondingOnly(false);
       setPubFilter('All');
       setSearchQuery(keyword);
       setVisibleCount(pageSize);

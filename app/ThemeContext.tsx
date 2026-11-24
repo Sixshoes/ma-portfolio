@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { flushSync } from 'react-dom';
 
 export type ThemeMode = 'light' | 'dark';
@@ -124,8 +124,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     [theme, persistTheme],
   );
 
+  const value = useMemo(
+    () => ({ theme, setTheme: persistTheme, toggleTheme }),
+    [theme, persistTheme, toggleTheme],
+  );
+
   return (
-    <ThemeContext.Provider value={{ theme, setTheme: persistTheme, toggleTheme }}>
+    <ThemeContext.Provider value={value}>
       {children}
     </ThemeContext.Provider>
   );

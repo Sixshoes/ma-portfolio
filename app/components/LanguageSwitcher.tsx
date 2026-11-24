@@ -21,7 +21,7 @@ export function LanguageSwitcher({ className = '' }: LanguageSwitcherProps) {
         type="button"
         onClick={() => setLang(code)}
         aria-pressed={active}
-        className={`pb-0.5 text-[15px] transition-colors duration-150 ${
+        className={`px-1.5 py-1 text-[15px] transition-colors duration-150 ${
           active
             ? 'border-b-2 border-[var(--app-ink)] font-semibold text-[var(--app-ink)]'
             : 'border-b-2 border-transparent text-[var(--app-muted)] hover:text-[var(--app-ink)]'

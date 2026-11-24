@@ -15,13 +15,14 @@ import { useRenderProfiler } from './sections/useRenderProfiler';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useLiteVisuals } from '@/hooks/use-lite-visuals';
 import { usePublications } from '@/hooks/usePublications';
+import { getPreferredScrollBehavior, isAnyModalOpen } from '@/lib/clientUtils';
 
 const PublicationsSection = dynamic(
   () => import('./sections/PublicationsSection').then((mod) => mod.PublicationsSection),
   {
     loading: () => (
       <section className="mx-auto max-w-6xl px-6 py-16 text-sm text-[var(--app-muted)]">
-        Loading publications...
+        載入著作目錄中… / Loading publications…
       </section>
     ),
   },
@@ -36,11 +37,13 @@ const BottomSections = dynamic(
 type MainClientProps = {
   initialPublications?: Publication[] | null;
   initialChalkboards?: ChalkboardItem[] | null;
+  serverYear?: number;
 };
 
 export function MainClient({
   initialPublications = null,
   initialChalkboards = null,
+  serverYear = 2026,
 }: MainClientProps) {
   useRenderProfiler('MainPage');
   const { lang } = useLanguage();
@@ -85,12 +88,16 @@ export function MainClient({
     handleLoadMore,
   } = usePublications(isMobile, initialPublications);
 
-  // 全域監聽 ⌘K / Ctrl+K 快捷喚出學術檢索窗
+  // 全域監聽 ⌘K / Ctrl+K 快捷喚出學術檢索窗（若已有其他燈箱開啟則不重複疊加）
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        setIsPaletteOpen((prev) => !prev);
+        setIsPaletteOpen((prev) => {
+          if (prev) return false;
+          if (isAnyModalOpen()) return false;
+          return true;
+        });
       }
     };
     window.addEventListener('keydown', onKeyDown);
@@ -98,10 +105,15 @@ export function MainClient({
   }, []);
 
   const scrollToElement = useCallback((id: string) => {
-    const target = document.getElementById(id);
-    if (!target) return;
-    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    window.history.replaceState(null, '', `#${id}`);
+    // 以雙重 rAF 等候彈窗解除 body 捲動鎖定與篩選重排後再捲動（確保 Safari / iOS 正常定位）
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        const target = document.getElementById(id);
+        if (!target) return;
+        target.scrollIntoView({ behavior: getPreferredScrollBehavior(), block: 'start' });
+        window.history.replaceState(null, '', `#${id}`);
+      });
+    });
   }, []);
 
   const handleResearchDomainSelect = useCallback(
@@ -149,11 +161,11 @@ export function MainClient({
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   }, []);
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden bg-[var(--app-bg)] font-sans text-[var(--app-body)]">
+    <div className="relative min-h-screen overflow-x-clip bg-[var(--app-bg)] font-sans text-[var(--app-body)]">
       <Navbar
         navText={t.nav}
         lang={lang}
@@ -170,7 +182,7 @@ export function MainClient({
         onDownloadVCard={handleDownloadVCard}
       />
 
-      <div>
+      <main>
         <HeroStatsResearchSection
           heroText={t.hero}
           statsText={t.stats}
@@ -190,6 +202,7 @@ export function MainClient({
           <PublicationsSection
             pubsText={t.pubs}
             lang={lang}
+            serverYear={serverYear}
             allPublications={allPublications}
             pubFilter={pubFilter}
             pubSort={pubSort}
@@ -225,8 +238,14 @@ export function MainClient({
 
         <AboutSection aboutText={t.about} lang={lang} />
 
-        <BottomSections t={t} lang={lang} onDownloadVCard={handleDownloadVCard} />
-      </div>
-    </main>
+        <BottomSections
+          t={t}
+          lang={lang}
+          serverYear={serverYear}
+          hIndexValue={hIndexValue}
+          onDownloadVCard={handleDownloadVCard}
+        />
+      </main>
+    </div>
   );
 }

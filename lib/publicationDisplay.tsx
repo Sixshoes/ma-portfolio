@@ -21,10 +21,12 @@ export function parseTakeawayLines(takeaway?: string): string[] {
 }
 
 const HIGHLIGHT_NAME =
-  /(馬遠榮|Yuan[\u2010-\u2015-]Ron\s+Ma|Y\.\s*[\u2010-\u2015-]?\s*R\.\s*Ma|Y\.\s*R\.\s*Ma|\bMa\s*,\s*Y\.?\s*[\u2010-\u2015-]?\s*R\.?)/i;
+  /(馬遠榮|Yuan[\s\u2010-\u2015\u2212-]+Ron\s+Ma|Y\.?\s*[\u2010-\u2015\u2212-]?\s*R\.?\s+Ma|\bMa\s*,\s*(?:Yuan[\s\u2010-\u2015\u2212-]+Ron|Y\.?\s*[\u2010-\u2015\u2212-]?\s*R\.?))/i;
 
 export function splitAuthorsHighlighted(authors: string): ReactNode[] {
-  const segments = authors.split(/,\s*/).filter(Boolean);
+  const delimiter = authors.includes(';') ? /;\s*/ : /,\s*/;
+  const separator = authors.includes(';') ? '; ' : ', ';
+  const segments = authors.split(delimiter).filter(Boolean);
   return segments.map((segment, i) => {
     const isLead = HIGHLIGHT_NAME.test(segment);
     const node = isLead ? (
@@ -41,7 +43,7 @@ export function splitAuthorsHighlighted(authors: string): ReactNode[] {
     );
     return (
       <span key={`wrap-${i}`}>
-        {i > 0 ? <span className="text-[var(--app-muted)]/70">, </span> : null}
+        {i > 0 ? <span className="text-[var(--app-muted)]/70">{separator}</span> : null}
         {node}
       </span>
     );

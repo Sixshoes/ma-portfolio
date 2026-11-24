@@ -42,8 +42,16 @@ import { ChalkboardManagerTab } from './ChalkboardManagerTab';
 type AdminFilter = 'all' | 'starred' | 'highCited' | 'missingCover';
 type AdminSort = 'newest' | 'citations' | 'title';
 type AdminSectionTab = 'publications' | 'chalkboards';
+type DataLoadState = 'idle' | 'loading' | 'loaded' | 'error';
 
 const PAGE_SIZE = 25;
+
+function createClientUuid(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `pub-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
 
 export function AdminDashboard() {
   const configured = isFirebaseConfigured();
@@ -52,7 +60,8 @@ export function AdminDashboard() {
   const [adminStatus, setAdminStatus] = useState<'idle' | 'checking' | 'allowed' | 'denied'>('idle');
   const [adminDenyReason, setAdminDenyReason] = useState<string | null>(null);
   const [bundle, setBundle] = useState<PublicationsBundleDoc | null>(null);
-  const [loadingData, setLoadingData] = useState(false);
+  const [loadState, setLoadState] = useState<DataLoadState>('idle');
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [busyAction, setBusyAction] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
 
@@ -61,6 +70,7 @@ export function AdminDashboard() {
   const [sort, setSort] = useState<AdminSort>('newest');
   const [page, setPage] = useState(1);
   const [sectionTab, setSectionTab] = useState<AdminSectionTab>('publications');
+  const [chalkboardsDirty, setChalkboardsDirty] = useState(false);
 
   const [editorTarget, setEditorTarget] = useState<{ open: boolean; pub: Publication | null }>({
     open: false,
@@ -133,17 +143,17 @@ export function AdminDashboard() {
   }, [user, verifyServerAdmin]);
 
   const fetchFirestoreData = useCallback(async () => {
-    setLoadingData(true);
+    setLoadState('loading');
+    setLoadError(null);
     try {
       const doc = await loadPublicationsBundleFromFirestore();
       setBundle(doc);
+      setLoadState('loaded');
     } catch (err) {
-      showToast(
-        'err',
-        `讀取 Firestore 失敗：${err instanceof Error ? err.message : '未知錯誤'}`,
-      );
-    } finally {
-      setLoadingData(false);
+      const msg = err instanceof Error ? err.message : '未知錯誤';
+      setLoadError(msg);
+      setLoadState('error');
+      showToast('err', `讀取 Firestore 失敗：${msg}`);
     }
   }, [showToast]);
 
@@ -214,12 +224,48 @@ export function AdminDashboard() {
   };
 
   const handleSignOut = async () => {
-    const { auth } = getFirebaseServices();
-    await signOut(auth);
-    setBundle(null);
+    setBusyAction('auth');
+    try {
+      const { auth } = getFirebaseServices();
+      await signOut(auth);
+      setBundle(null);
+      setLoadState('idle');
+      setLoadError(null);
+      setAdminStatus('idle');
+      setAdminDenyReason(null);
+      setEditorTarget({ open: false, pub: null });
+      setSectionTab('publications');
+      setChalkboardsDirty(false);
+      setSearch('');
+      setFilter('all');
+      setPage(1);
+    } catch (err) {
+      showToast('err', `登出失敗：${err instanceof Error ? err.message : '未知錯誤'}`);
+    } finally {
+      setBusyAction(null);
+    }
+  };
+
+  const handleSwitchSectionTab = (nextTab: AdminSectionTab) => {
+    if (nextTab === sectionTab) return;
+    if (
+      sectionTab === 'chalkboards' &&
+      chalkboardsDirty &&
+      !window.confirm('黑板手稿相簿尚有未儲存的變更，確定要切換分頁並放棄未儲存內容嗎？')
+    ) {
+      return;
+    }
+    if (sectionTab === 'chalkboards') {
+      setChalkboardsDirty(false);
+    }
+    setSectionTab(nextTab);
   };
 
   const handleImportFromPortal = async () => {
+    if (loadState !== 'loaded') {
+      showToast('err', '尚未完成 Firestore 資料讀取，請先重新載入後再進行匯入。');
+      return;
+    }
     if (
       bundle &&
       bundle.items.length > 0 &&
@@ -237,7 +283,7 @@ export function AdminDashboard() {
       const raw: unknown = await res.json();
       const parsed = normalizePublicationsFromJson(raw).map((p) => ({
         ...p,
-        id: p.id?.trim() || crypto.randomUUID(),
+        id: p.id?.trim() || createClientUuid(),
       }));
       if (parsed.length === 0) throw new Error('B 站資料為空');
 
@@ -251,6 +297,10 @@ export function AdminDashboard() {
 
   const handleImportLocalJson = async (file: File | undefined) => {
     if (!file) return;
+    if (loadState !== 'loaded') {
+      showToast('err', '尚未完成 Firestore 資料讀取，請先重新載入後再進行匯入。');
+      return;
+    }
     setBusyAction('importing');
     try {
       const text = await file.text();
@@ -264,7 +314,7 @@ export function AdminDashboard() {
 
       const parsed = normalizePublicationsFromJson(list).map((p) => ({
         ...p,
-        id: p.id?.trim() || crypto.randomUUID(),
+        id: p.id?.trim() || createClientUuid(),
       }));
       if (parsed.length === 0) throw new Error('檔案中找不到有效論文資料。');
 
@@ -296,15 +346,27 @@ export function AdminDashboard() {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
   const handleSaveOne = async (savedPub: Publication) => {
+    if (loadState !== 'loaded') {
+      throw new Error('尚未完成 Firestore 資料讀取，為避免覆蓋現有論文清單已取消寫入，請先重試讀取。');
+    }
     const current = bundle?.items ?? [];
-    const targetKey = getPublicationKey(savedPub);
-    const existsIndex = current.findIndex(
-      (item) => (savedPub.id && item.id === savedPub.id) || getPublicationKey(item) === targetKey,
-    );
+    const original = editorTarget.pub;
+    const existsIndex = original
+      ? current.findIndex(
+          (item) =>
+            item === original ||
+            (Boolean(original.id) && item.id === original.id) ||
+            getPublicationKey(item) === getPublicationKey(original),
+        )
+      : current.findIndex(
+          (item) =>
+            (Boolean(savedPub.id) && item.id === savedPub.id) ||
+            getPublicationKey(item) === getPublicationKey(savedPub),
+        );
 
     const nextItems =
       existsIndex >= 0
@@ -316,12 +378,21 @@ export function AdminDashboard() {
   };
 
   const handleDeleteOne = async (pub: Publication) => {
+    if (loadState !== 'loaded') {
+      showToast('err', '尚未完成 Firestore 資料讀取，無法執行刪除。');
+      return;
+    }
     if (!window.confirm(`確定要刪除論文？\n\n「${pub.title}」`)) return;
     const current = bundle?.items ?? [];
     const targetKey = getPublicationKey(pub);
-    const nextItems = current.filter(
-      (item) => !((pub.id && item.id === pub.id) || getPublicationKey(item) === targetKey),
+    const targetIdx = current.findIndex(
+      (item) =>
+        item === pub ||
+        (Boolean(pub.id) && item.id === pub.id) ||
+        getPublicationKey(item) === targetKey,
     );
+    if (targetIdx < 0) return;
+    const nextItems = current.filter((_, idx) => idx !== targetIdx);
     try {
       await persistAndPublish(nextItems, '已刪除該篇論文');
     } catch (err) {
@@ -620,6 +691,7 @@ export function AdminDashboard() {
           <Link
             href="/"
             target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 rounded-md border border-[#C5CFD8] bg-white px-3.5 py-2 text-xs font-medium text-[#11161C] transition-colors hover:border-[#0F4C81] hover:text-[#0F4C81]"
           >
             查看正式官網
@@ -667,18 +739,18 @@ export function AdminDashboard() {
       <div className="mb-6 flex flex-wrap items-center gap-2 border-b border-[#DCE2E8] pb-4">
         <button
           type="button"
-          onClick={() => setSectionTab('publications')}
+          onClick={() => handleSwitchSectionTab('publications')}
           className={`rounded-full px-5 py-2 text-sm font-semibold transition-colors ${
             sectionTab === 'publications'
               ? 'bg-[#0F4C81] text-white'
               : 'border border-[#DCE2E8] bg-white text-[#5A6775] hover:border-[#0F4C81] hover:text-[#0F4C81]'
           }`}
         >
-          論文著作管理（{items.length}）
+          論文著作管理（{loadState === 'loaded' ? items.length : '—'}）
         </button>
         <button
           type="button"
-          onClick={() => setSectionTab('chalkboards')}
+          onClick={() => handleSwitchSectionTab('chalkboards')}
           className={`rounded-full px-5 py-2 text-sm font-semibold transition-colors ${
             sectionTab === 'chalkboards'
               ? 'bg-[#1B3329] text-[#F3DF87]'
@@ -694,6 +766,7 @@ export function AdminDashboard() {
           user={user}
           onTriggerRevalidate={triggerRevalidate}
           onToast={showToast}
+          onDirtyChange={setChalkboardsDirty}
         />
       ) : (
         <>
@@ -721,14 +794,37 @@ export function AdminDashboard() {
         ))}
       </div>
 
+      {/* 讀取失敗阻斷警示（防止於空狀態下寫入覆蓋整個集合） */}
+      {loadState === 'error' ? (
+        <div className="mb-8 rounded-lg border border-red-200 bg-red-50 p-6">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h2 className="mb-1.5 flex items-center gap-2 text-base font-semibold text-red-800">
+                <AlertTriangle className="h-4 w-4 shrink-0" />
+                Firestore 資料讀取失敗，已暫時鎖定寫入以保護既有資料
+              </h2>
+              <p className="font-mono text-xs text-red-700">{loadError}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void fetchFirestoreData()}
+              className="inline-flex items-center gap-1.5 rounded-md border border-red-300 bg-white px-4 py-2 text-xs font-semibold text-red-700 transition-colors hover:bg-red-100"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              重試讀取
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       {/* 首次啟用導引 */}
-      {!loadingData && items.length === 0 ? (
+      {loadState === 'loaded' && items.length === 0 ? (
         <div className="mb-8 rounded-lg border border-[#0F4C81]/30 bg-[#EBF2F8] p-6">
           <h2 className="mb-2 text-lg font-semibold text-[#11161C]">
             Firestore 尚未建立論文資料 — 一鍵匯入資料
           </h2>
           <p className="mb-4 max-w-2xl text-sm leading-relaxed text-[#2B3642]">
-            點擊下方按鈕即可自動抓取現有 218 篇論文並寫入 Firebase Firestore（單一彙總文件，全站讀取極省額度），或匯入清洗後的本機 JSON。
+            點擊下方按鈕即可自動抓取現有論文清單並寫入 Firebase Firestore（單一彙總文件，全站讀取極省額度），或匯入清洗後的本機 JSON。
           </p>
           <div className="flex flex-wrap gap-3">
             <button
@@ -763,8 +859,9 @@ export function AdminDashboard() {
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
+              disabled={loadState !== 'loaded' || busyAction !== null}
               onClick={() => setEditorTarget({ open: true, pub: null })}
-              className="inline-flex items-center gap-1.5 rounded-md bg-[#0F4C81] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0B3A63]"
+              className="inline-flex items-center gap-1.5 rounded-md bg-[#0F4C81] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0B3A63] disabled:cursor-not-allowed disabled:opacity-45"
             >
               <Plus className="h-4 w-4" />
               新增論文
@@ -782,18 +879,18 @@ export function AdminDashboard() {
             />
             <button
               type="button"
-              disabled={busyAction !== null}
+              disabled={loadState !== 'loaded' || busyAction !== null}
               onClick={() => fileImportRef.current?.click()}
-              className="inline-flex items-center gap-1.5 rounded-md border border-[#C5CFD8] bg-white px-3.5 py-2 text-xs font-medium text-[#2B3642] hover:border-[#0F4C81] hover:text-[#0F4C81]"
+              className="inline-flex items-center gap-1.5 rounded-md border border-[#C5CFD8] bg-white px-3.5 py-2 text-xs font-medium text-[#2B3642] hover:border-[#0F4C81] hover:text-[#0F4C81] disabled:cursor-not-allowed disabled:opacity-40"
             >
               <Upload className="h-3.5 w-3.5" />
               匯入 JSON
             </button>
             <button
               type="button"
-              disabled={items.length === 0 || busyAction !== null}
+              disabled={loadState !== 'loaded' || items.length === 0 || busyAction !== null}
               onClick={() => void handleSyncMetadata()}
-              className="inline-flex items-center gap-1.5 rounded-md border border-[#0F4C81]/35 bg-[#EBF2F8] px-3.5 py-2 text-xs font-medium text-[#0F4C81] transition-colors hover:bg-[#0F4C81] hover:text-white disabled:opacity-40"
+              className="inline-flex items-center gap-1.5 rounded-md border border-[#0F4C81]/35 bg-[#EBF2F8] px-3.5 py-2 text-xs font-medium text-[#0F4C81] transition-colors hover:bg-[#0F4C81] hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
             >
               {busyAction === 'syncing' ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -804,19 +901,19 @@ export function AdminDashboard() {
             </button>
             <button
               type="button"
-              disabled={items.length === 0}
+              disabled={loadState !== 'loaded' || items.length === 0}
               onClick={handleExportJson}
               className="inline-flex items-center gap-1.5 rounded-md border border-[#C5CFD8] bg-white px-3.5 py-2 text-xs font-medium text-[#2B3642] hover:border-[#0F4C81] hover:text-[#0F4C81] disabled:opacity-40"
             >
               <Download className="h-3.5 w-3.5" />
               匯出備份 JSON
             </button>
-            {items.length > 0 ? (
+            {loadState === 'loaded' && items.length > 0 ? (
               <button
                 type="button"
                 disabled={busyAction !== null}
                 onClick={handleImportFromPortal}
-                className="inline-flex items-center gap-1.5 rounded-md border border-[#DCE2E8] bg-[#F6F7F8] px-3.5 py-2 text-xs text-[#5A6775] hover:border-[#94A3B8] hover:text-[#11161C]"
+                className="inline-flex items-center gap-1.5 rounded-md border border-[#DCE2E8] bg-[#F6F7F8] px-3.5 py-2 text-xs text-[#5A6775] hover:border-[#94A3B8] hover:text-[#11161C] disabled:opacity-40"
               >
                 <CloudDownload className="h-3.5 w-3.5" />
                 從 B 站重同步
@@ -886,12 +983,12 @@ export function AdminDashboard() {
       </div>
 
       {/* 論文清單 */}
-      {loadingData ? (
+      {loadState === 'idle' || loadState === 'loading' ? (
         <div className="flex items-center justify-center gap-2 py-20 text-[#5A6775]">
           <Loader2 className="h-5 w-5 animate-spin text-[#0F4C81]" />
           正在讀取 Firestore 資料...
         </div>
-      ) : (
+      ) : loadState === 'error' ? null : (
         <div className="divide-y divide-[#DCE2E8] overflow-hidden rounded-lg border border-[#DCE2E8] bg-white">
           {pageItems.map((pub, idx) => {
             const key = getPublicationKey(pub, idx);
@@ -938,17 +1035,18 @@ export function AdminDashboard() {
                 <div className="flex shrink-0 items-center gap-2">
                   <button
                     type="button"
+                    disabled={loadState !== 'loaded' || busyAction !== null}
                     onClick={() => setEditorTarget({ open: true, pub })}
-                    className="inline-flex items-center gap-1.5 rounded-md border border-[#C5CFD8] bg-white px-3 py-1.5 text-xs font-medium text-[#11161C] transition-colors hover:border-[#0F4C81] hover:text-[#0F4C81]"
+                    className="inline-flex items-center gap-1.5 rounded-md border border-[#C5CFD8] bg-white px-3 py-1.5 text-xs font-medium text-[#11161C] transition-colors hover:border-[#0F4C81] hover:text-[#0F4C81] disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <Pencil className="h-3.5 w-3.5" />
                     編輯
                   </button>
                   <button
                     type="button"
-                    disabled={busyAction !== null}
+                    disabled={loadState !== 'loaded' || busyAction !== null}
                     onClick={() => handleDeleteOne(pub)}
-                    className="inline-flex items-center gap-1 rounded-md border border-[#DCE2E8] bg-white px-3 py-1.5 text-xs text-[#5A6775] transition-colors hover:border-red-300 hover:text-red-600 disabled:opacity-40"
+                    className="inline-flex items-center gap-1 rounded-md border border-[#DCE2E8] bg-white px-3 py-1.5 text-xs text-[#5A6775] transition-colors hover:border-red-300 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                     刪除
@@ -988,6 +1086,7 @@ export function AdminDashboard() {
       {/* 新增／編輯論文視窗 */}
       {editorTarget.open ? (
         <PublicationEditorModal
+          key={editorTarget.pub ? getPublicationKey(editorTarget.pub) : 'new'}
           initial={editorTarget.pub}
           isSaving={busyAction === 'saving'}
           getIdToken={getIdToken}

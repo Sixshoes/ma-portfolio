@@ -14,10 +14,12 @@ export default async function HomePage() {
     fetchPapersServerSide(revalidate),
     fetchChalkboardsFromFirestoreServer(revalidate),
   ]);
+  const serverYear = new Date().getFullYear();
   return (
     <MainClient
       initialPublications={initialPublications}
       initialChalkboards={chalkboardResult.items}
+      serverYear={serverYear}
     />
   );
 }

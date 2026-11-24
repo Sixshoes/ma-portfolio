@@ -18,6 +18,7 @@ import type { PublicationsText } from '@/lib/i18n';
 import type { PubSort, PubViewMode } from '@/hooks/usePublications';
 import { parseTakeawayLines, splitAuthorsHighlighted } from '@/lib/publicationDisplay';
 import { getResearchDomainById } from '@/lib/researchDomains';
+import { copyTextToClipboard } from '@/lib/clientUtils';
 import { EDITORIAL_EASE, InkRule } from '@/app/components/EditorialMotion';
 import {
   FigureLightboxModal,
@@ -37,6 +38,7 @@ type LightboxState = FigureLightboxPayload | null;
 type PublicationsSectionProps = {
   pubsText: PublicationsText;
   lang: Lang;
+  serverYear?: number;
   allPublications: Publication[];
   pubFilter: string;
   pubSort: PubSort;
@@ -242,7 +244,7 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
           </div>
 
           {featuredRank !== undefined ? (
-            <span className="rounded-full bg-[#C88A2B]/15 px-2.5 py-0.5 text-xs font-semibold text-[#B4771D] dark:text-[#F3DF87]">
+            <span className="rounded-full bg-[#C88A2B]/15 px-2.5 py-0.5 text-xs font-semibold text-[#8A560B] dark:text-[#F3DF87]">
               {pubsText.featuredSpotlight} {String(featuredRank).padStart(2, '0')}
             </span>
           ) : null}
@@ -445,7 +447,7 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
                   }}
                   aria-label={pubsText.zoomFigure}
                   title={pubsText.zoomFigure}
-                  className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-[var(--app-rule)] bg-[var(--app-bg)]/95 text-[var(--app-ink)] opacity-85 transition-colors hover:border-[var(--app-ink)] hover:bg-[var(--app-ink)] hover:text-[var(--app-bg)] group-hover/img:opacity-100 md:opacity-0"
+                  className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-[var(--app-rule)] bg-[var(--app-bg)]/95 text-[var(--app-ink)] opacity-85 transition-colors hover:border-[var(--app-ink)] hover:bg-[var(--app-ink)] hover:text-[var(--app-bg)] focus-visible:opacity-100 group-hover/img:opacity-100 md:opacity-0"
                 >
                   <ZoomIn className="h-3.5 w-3.5" aria-hidden />
                 </button>
@@ -528,7 +530,12 @@ const PublicationCompactRow = memo(function PublicationCompactRow({
           </span>
         ) : null}
         {pub.is_star === '是' ? (
-          <span className="text-sm text-[var(--app-accent)]" aria-label={pubsText.corresponding}>
+          <span
+            role="img"
+            className="text-sm text-[var(--app-accent)]"
+            aria-label={pubsText.corresponding}
+            title={pubsText.corresponding}
+          >
             ★
           </span>
         ) : null}
@@ -615,6 +622,7 @@ function PublicationsListSkeleton({
 function PublicationsSectionComponent({
   pubsText,
   lang,
+  serverYear = 2026,
   allPublications,
   pubFilter,
   pubSort,
@@ -648,7 +656,7 @@ function PublicationsSectionComponent({
   const [copiedState, setCopiedState] = useState<CopiedState>(null);
   const [lightbox, setLightbox] = useState<LightboxState>(null);
   const locale = lang === 'zh' ? 'zh-TW' : 'en-US';
-  const currentYear = new Date().getFullYear();
+  const currentYear = serverYear;
   const activeDomain = getResearchDomainById(activeDomainId);
   const isZh = lang === 'zh';
 
@@ -659,19 +667,9 @@ function PublicationsSectionComponent({
   const onCopyCitation = useCallback(
     (key: string, pub: Publication, format: CitationFormat) => {
       const citation = format === 'bibtex' ? formatBibTeXString(pub) : formatCitationString(pub);
-      if (navigator.clipboard?.writeText) {
-        void navigator.clipboard.writeText(citation).then(() => setCopiedState({ key, format }));
-      } else {
-        const textarea = document.createElement('textarea');
-        textarea.value = citation;
-        textarea.style.position = 'fixed';
-        textarea.style.opacity = '0';
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
-        setCopiedState({ key, format });
-      }
+      void copyTextToClipboard(citation).then((ok) => {
+        if (ok) setCopiedState({ key, format });
+      });
     },
     [],
   );
@@ -715,6 +713,7 @@ function PublicationsSectionComponent({
                 publications={allPublications}
                 selectedFilter={pubFilter}
                 lang={lang}
+                serverYear={currentYear}
                 onSelectYear={onFilterChange}
               />
             </div>
@@ -792,7 +791,7 @@ function PublicationsSectionComponent({
                 aria-pressed={correspondingOnly}
                 className={`rounded-full border px-3.5 py-2 text-sm font-medium whitespace-nowrap transition-colors ${
                   correspondingOnly
-                    ? 'border-[var(--app-accent)] bg-[var(--app-accent)] text-white'
+                    ? 'border-[var(--app-accent)] bg-[var(--app-accent)] text-[var(--app-bg)]'
                     : 'border-[var(--app-rule)] bg-[var(--app-bg)] text-[var(--app-muted)] hover:border-[var(--app-ink)] hover:text-[var(--app-ink)]'
                 }`}
               >
@@ -814,7 +813,7 @@ function PublicationsSectionComponent({
                   onChange={(e) => onSearchChange(e.target.value)}
                   placeholder={pubsText.searchPlaceholder}
                   aria-label={pubsText.searchAriaLabel}
-                  className="w-full rounded-full border border-[var(--app-rule)] bg-[var(--app-bg)] py-2 pl-9 pr-8 text-sm text-[var(--app-ink)] placeholder:text-[var(--app-muted)]/75 focus:border-[var(--app-accent)] focus:outline-none"
+                  className="w-full rounded-full border border-[var(--app-rule)] bg-[var(--app-bg)] py-2 pl-9 pr-8 text-sm text-[var(--app-ink)] placeholder:text-[var(--app-muted)] focus:border-[var(--app-accent)] focus:outline-none"
                 />
                 {searchQuery ? (
                   <button
@@ -830,7 +829,7 @@ function PublicationsSectionComponent({
 
               <div
                 role="group"
-                aria-label="View mode"
+                aria-label={isZh ? '檢視模式切換' : 'View mode'}
                 className="inline-flex shrink-0 rounded-full border border-[var(--app-rule)] bg-[var(--app-bg)] p-0.5 text-sm"
               >
                 <button
@@ -1008,14 +1007,14 @@ function PublicationsSectionComponent({
                     })
                 : null}
             </div>
-
-            <FigureLightboxModal
-              lightbox={lightbox}
-              closeLabel={pubsText.closeLightbox}
-              onClose={onCloseLightbox}
-            />
           </LayoutGroup>
         )}
+
+        <FigureLightboxModal
+          lightbox={lightbox}
+          closeLabel={pubsText.closeLightbox}
+          onClose={onCloseLightbox}
+        />
 
         {!isLoading && filteredCount > 0 && visiblePublications.length < listRowCount && (
           <div className="mt-10 flex justify-center">

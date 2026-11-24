@@ -1,6 +1,6 @@
 'use client';
 
-import { useLayoutEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useReducedMotion } from 'motion/react';
 import { detectIOS } from './use-is-ios';
 
@@ -33,7 +33,7 @@ export function useLiteVisuals() {
   const prefersReducedMotion = useReducedMotion();
   const [lite, setLite] = useState(true);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     const update = () => setLite(detectLiteVisuals());
     update();
 

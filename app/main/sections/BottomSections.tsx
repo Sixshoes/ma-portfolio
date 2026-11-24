@@ -5,6 +5,7 @@ import { motion, useInView, useReducedMotion } from 'motion/react';
 import { Check, Copy, Download, Mail } from 'lucide-react';
 import { EDITORIAL_EASE, InkRule } from '@/app/components/EditorialMotion';
 import { RadialRankGauge } from '@/app/components/RadialRankGauge';
+import { copyTextToClipboard } from '@/lib/clientUtils';
 import { useRenderProfiler } from './useRenderProfiler';
 import { uiTokens } from './uiTokens';
 import { impactData } from '@/lib/impactData';
@@ -40,6 +41,7 @@ type BottomSectionsProps = {
       email: string;
       emailAdditional?: string[];
       phone: string;
+      phoneHref?: string;
       fax: string;
       copyAction: string;
       copiedAction: string;
@@ -55,10 +57,18 @@ type BottomSectionsProps = {
     };
   };
   lang: 'en' | 'zh';
+  serverYear?: number;
+  hIndexValue?: number | string;
   onDownloadVCard: () => void;
 };
 
-function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsProps) {
+function BottomSectionsComponent({
+  t,
+  lang,
+  serverYear = 2026,
+  hIndexValue = 52,
+  onDownloadVCard,
+}: BottomSectionsProps) {
   useRenderProfiler('BottomSections');
   const reduceMotion = useReducedMotion();
   const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -68,19 +78,9 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
   const isZh = lang === 'zh';
 
   const handleCopy = useCallback((key: string, text: string) => {
-    if (navigator.clipboard?.writeText) {
-      void navigator.clipboard.writeText(text).then(() => setCopiedField(key));
-    } else {
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      textarea.style.position = 'fixed';
-      textarea.style.opacity = '0';
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
-      setCopiedField(key);
-    }
+    void copyTextToClipboard(text).then((ok) => {
+      if (ok) setCopiedField(key);
+    });
   }, []);
 
   useEffect(() => {
@@ -124,7 +124,7 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
       key: 'phone',
       label: t.contact.labelPhone,
       values: [t.contact.phone],
-      hrefs: [`tel:${t.contact.phone.replace(/[^0-9+]/g, '')}`],
+      hrefs: [t.contact.phoneHref ?? 'tel:+886-3-9871000,11010'],
       copyValue: t.contact.phone,
     },
     {
@@ -159,8 +159,8 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
             </div>
             <p className="mt-2.5 text-sm text-[var(--app-muted)]">
               {isZh
-                ? '註：本區採 AD Scientific Index（Google Scholar 基準），與首頁總覽之 Scopus 資料庫統計口徑（H-Index 52）不同。'
-                : 'Note: Metrics below follow AD Scientific Index (Google Scholar), whereas the overview stats above are sourced from Scopus (H-Index 52).'}
+                ? `註：本區採 AD Scientific Index（Google Scholar 基準），與首頁總覽之 Scopus 資料庫統計口徑（H-Index ${hIndexValue}）不同。`
+                : `Note: Metrics below follow AD Scientific Index (Google Scholar), whereas the overview stats above are sourced from Scopus (H-Index ${hIndexValue}).`}
             </p>
           </div>
           <InkRule thick className="mb-8" />
@@ -344,7 +344,7 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
           <footer className="mt-16 border-t border-[var(--app-rule)] pb-12 pt-6 text-base text-[var(--app-muted)]">
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
               <p>
-                {t.contact.footer.replace(/\{year\}/g, String(new Date().getFullYear()))}
+                {t.contact.footer.replace(/\{year\}/g, String(serverYear))}
               </p>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                 <span className="inline-flex items-center gap-1.5">
@@ -352,7 +352,11 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
                     {isZh ? '網頁設計與開發：' : 'Designed & Developed by '}
                     <a
                       href={DEVELOPER_MAILTO}
-                      title={`寄信聯絡陳奕廷 (${DEVELOPER_EMAIL})`}
+                      title={
+                        isZh
+                          ? `寄信聯絡陳奕廷 (${DEVELOPER_EMAIL})`
+                          : `Email Yiting Chen (${DEVELOPER_EMAIL})`
+                      }
                       className="font-medium text-[var(--app-ink)] underline decoration-[var(--app-rule)] underline-offset-4 transition-colors hover:text-[var(--app-accent)] hover:decoration-[var(--app-ink)]"
                     >
                       {isZh ? '陳奕廷' : 'Yiting Chen'}

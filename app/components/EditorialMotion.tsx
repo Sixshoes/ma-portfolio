@@ -14,7 +14,7 @@ type InkRuleProps = {
   className?: string;
 };
 
-/** 鋼筆尺規水平繪線：由左向右平滑繪出，viewport once 不重複閃爍 */
+/** 鋼筆尺規水平繪線：監測外層滿寬容器而非 scaleX(0) 本體，確保絕不漏觸發 */
 export function InkRule({
   thick = false,
   dark = false,
@@ -22,6 +22,8 @@ export function InkRule({
   immediate = false,
   className = '',
 }: InkRuleProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, amount: 0.05 });
   const reduce = useReducedMotion();
   const barClass = thick
     ? 'h-[2px] w-full bg-[var(--app-ink)]'
@@ -34,19 +36,15 @@ export function InkRule({
   }
 
   return (
-    <motion.div
-      aria-hidden="true"
-      initial={{ scaleX: 0 }}
-      {...(immediate
-        ? { animate: { scaleX: 1 } }
-        : {
-            whileInView: { scaleX: 1 },
-            viewport: { once: true, margin: '-60px' },
-          })}
-      transition={{ duration: 0.7, delay, ease: EDITORIAL_EASE }}
-      style={{ transformOrigin: 'left' }}
-      className={`${barClass} ${className}`.trim()}
-    />
+    <div ref={ref} aria-hidden="true" className={`w-full ${className}`.trim()}>
+      <motion.div
+        initial={{ scaleX: 0 }}
+        animate={{ scaleX: immediate || inView ? 1 : 0 }}
+        transition={{ duration: 0.7, delay, ease: EDITORIAL_EASE }}
+        style={{ transformOrigin: 'left' }}
+        className={barClass}
+      />
+    </div>
   );
 }
 
@@ -59,7 +57,7 @@ type MaskedTextRevealProps = {
   innerClassName?: string;
 };
 
-/** 活字遮罩揭幕：外包 overflow-hidden，內層文字自裁切線平順升起 */
+/** 活字遮罩揭幕：監測外層遮罩容器，避免 y: 105% 被裁切時不觸發 IntersectionObserver */
 export function MaskedTextReveal({
   children,
   delay = 0.12,
@@ -68,6 +66,8 @@ export function MaskedTextReveal({
   className = '',
   innerClassName = '',
 }: MaskedTextRevealProps) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, amount: 0.05 });
   const reduce = useReducedMotion();
 
   if (reduce) {
@@ -79,15 +79,10 @@ export function MaskedTextReveal({
   }
 
   return (
-    <span className={`block overflow-hidden pb-[0.06em] ${className}`.trim()}>
+    <span ref={ref} className={`block overflow-hidden pb-[0.06em] ${className}`.trim()}>
       <motion.span
         initial={{ y: '105%', opacity: 0.01 }}
-        {...(immediate
-          ? { animate: { y: '0%', opacity: 1 } }
-          : {
-              whileInView: { y: '0%', opacity: 1 },
-              viewport: { once: true, margin: '-60px' },
-            })}
+        animate={immediate || inView ? { y: '0%', opacity: 1 } : { y: '105%', opacity: 0.01 }}
         transition={{ duration, delay, ease: EDITORIAL_EASE }}
         className={`block will-change-transform ${innerClassName}`.trim()}
       >
@@ -115,10 +110,7 @@ function parseNumericStat(value: number | string): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-/** 記錄已執行過進場跳表的目標值，避免切換晝夜主題或捲離後重設閃回 0 */
-const animatedNumericTargets = new Set<number>();
-
-/** 精密等寬滾動跳表：以隱藏終值鎖定寬度並搭 tabular-nums，計數過程零左右晃動 */
+/** 精密等寬滾動跳表：元件獨立狀態、以隱藏終值鎖定寬度並搭 tabular-nums，計數過程零左右晃動 */
 export function RollingNumber({
   value,
   delay = 0.25,
@@ -136,26 +128,26 @@ export function RollingNumber({
     return String(value);
   }, [numericTarget, value, locale]);
 
-  // 初始顯示終值（確保 SSR 與離屏切換主題絕不閃回 0），僅在首次進入頂部視口時平滑遞增
   const [displayValue, setDisplayValue] = useState<number>(() =>
     numericTarget !== null ? numericTarget : 0,
   );
-  const hasAnimatedRef = useRef(
-    numericTarget !== null && animatedNumericTargets.has(numericTarget),
-  );
+  const hasAnimatedRef = useRef(false);
 
   useEffect(() => {
     if (numericTarget === null) return;
-    if (reduce || animatedNumericTargets.has(numericTarget)) {
+    if (reduce) {
       setDisplayValue(numericTarget);
       hasAnimatedRef.current = true;
       return;
     }
-    if (!inView) return;
+    if (!inView) {
+      // 尚未進入視口時直接保持真實終值，避免非數字初值切換為數字時停留在 0
+      setDisplayValue(numericTarget);
+      return;
+    }
 
     const alreadyRan = hasAnimatedRef.current;
     hasAnimatedRef.current = true;
-    animatedNumericTargets.add(numericTarget);
 
     const startFrom = alreadyRan ? displayValue : 0;
     const effectiveDelay = alreadyRan ? 0 : delay;

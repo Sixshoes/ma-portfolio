@@ -1,13 +1,16 @@
-/** Canonical site URL — Vercel in production, GitHub Pages as fallback. */
+/** Canonical site URL — Vercel in production, falling back to primary Vercel preview domain. */
 export function getSiteUrl(): string {
-  if (process.env.NEXT_PUBLIC_SITE_URL) {
-    return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, '');
+  const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (explicit) {
+    return explicit.replace(/\/+$/, '');
   }
-  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
-    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  const prodHost = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
+  if (prodHost) {
+    return `https://${prodHost.replace(/^https?:\/\//i, '').replace(/\/+$/, '')}`;
   }
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
+  const previewHost = process.env.VERCEL_URL?.trim();
+  if (previewHost) {
+    return `https://${previewHost.replace(/^https?:\/\//i, '').replace(/\/+$/, '')}`;
   }
-  return 'https://sixshoes.github.io/ma-portfolio';
+  return 'https://ma-portfolio-alpha.vercel.app';
 }

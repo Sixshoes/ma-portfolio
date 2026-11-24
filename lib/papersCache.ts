@@ -28,26 +28,39 @@ type CachedPapersPayload = {
 
 export function readCachedPapers(): Publication[] | null {
   if (typeof window === 'undefined') return null;
-  try {
-    const raw = sessionStorage.getItem(STORAGE_KEY) ?? localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
 
-    const parsed = JSON.parse(raw) as unknown;
-    const payload = parsed as Partial<CachedPapersPayload>;
-    if (
-      !payload ||
-      payload.schemaVersion !== CACHE_SCHEMA_VERSION ||
-      !Array.isArray(payload.data) ||
-      payload.data.length === 0
-    ) {
+  const parseRaw = (raw: string | null): Publication[] | null => {
+    if (!raw) return null;
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      const payload = parsed as Partial<CachedPapersPayload>;
+      if (
+        !payload ||
+        payload.schemaVersion !== CACHE_SCHEMA_VERSION ||
+        !Array.isArray(payload.data) ||
+        payload.data.length === 0 ||
+        typeof payload.fetchedAt !== 'number'
+      ) {
+        return null;
+      }
+      const ageMs = Date.now() - payload.fetchedAt;
+      if (ageMs > PAPERS_CACHE_TTL_MS * 7) return null;
+
+      const normalized = normalizePublicationsFromJson(payload.data);
+      return normalized.length > 0 ? normalized : null;
+    } catch {
       return null;
     }
+  };
 
-    if (typeof payload.fetchedAt !== 'number') return null;
-    const ageMs = Date.now() - payload.fetchedAt;
-    if (ageMs > PAPERS_CACHE_TTL_MS * 7) return null;
-
-    return normalizePublicationsFromJson(payload.data);
+  try {
+    const fromSession = parseRaw(sessionStorage.getItem(STORAGE_KEY));
+    if (fromSession) return fromSession;
+  } catch {
+    /* ignore storage errors */
+  }
+  try {
+    return parseRaw(localStorage.getItem(STORAGE_KEY));
   } catch {
     return null;
   }

@@ -14,21 +14,25 @@ export const maxDuration = 60;
  * - 需驗證管理員 Bearer Token
  * - 回傳升級後論文清單與完整差異摘要報告，由管理者確認後再寫入 Firestore
  */
+const NO_STORE_HEADERS = { 'Cache-Control': 'no-store' };
+const MAX_SYNC_ITEMS = 500;
+
 export async function POST(request: Request) {
   const authHeader = request.headers.get('authorization') ?? '';
   const match = authHeader.match(/^Bearer\s+(.+)$/i);
-  if (!match || !match[1]) {
+  const idToken = match?.[1]?.trim() ?? '';
+  if (!idToken) {
     return NextResponse.json(
       { ok: false, error: 'Missing Authorization Bearer token.' },
-      { status: 401 },
+      { status: 401, headers: NO_STORE_HEADERS },
     );
   }
 
-  const verified = await verifyAdminFirebaseToken(match[1].trim());
+  const verified = await verifyAdminFirebaseToken(idToken);
   if (!verified.ok) {
     return NextResponse.json(
       { ok: false, error: verified.error },
-      { status: verified.status },
+      { status: verified.status, headers: NO_STORE_HEADERS },
     );
   }
 
@@ -41,14 +45,23 @@ export async function POST(request: Request) {
   try {
     body = (await request.json()) as typeof body;
   } catch {
-    return NextResponse.json({ ok: false, error: 'Invalid JSON body.' }, { status: 400 });
+    return NextResponse.json(
+      { ok: false, error: 'Invalid JSON body.' },
+      { status: 400, headers: NO_STORE_HEADERS },
+    );
   }
 
   const normalized = normalizePublicationsFromJson(body.items);
   if (normalized.length === 0) {
     return NextResponse.json(
       { ok: false, error: '論文清單為空，無法執行比對更新。' },
-      { status: 400 },
+      { status: 400, headers: NO_STORE_HEADERS },
+    );
+  }
+  if (normalized.length > MAX_SYNC_ITEMS) {
+    return NextResponse.json(
+      { ok: false, error: `單次比對上限為 ${MAX_SYNC_ITEMS} 筆論文。` },
+      { status: 400, headers: NO_STORE_HEADERS },
     );
   }
 
@@ -56,15 +69,28 @@ export async function POST(request: Request) {
   const citationPolicy: CitationSyncPolicy =
     policyRaw === 'openalex' || policyRaw === 'keep' ? policyRaw : 'crossref-floor';
 
-  const result = await syncPublicationsMetadata(normalized, {
-    citationPolicy,
-    fillAuthors: body.fillAuthors !== false,
-    fixKnownAnomalies: body.fixKnownAnomalies !== false,
-  });
+  try {
+    const result = await syncPublicationsMetadata(normalized, {
+      citationPolicy,
+      fillAuthors: body.fillAuthors !== false,
+      fixKnownAnomalies: body.fixKnownAnomalies !== false,
+    });
 
-  return NextResponse.json({
-    ok: true,
-    items: result.items,
-    report: result.report,
-  });
+    return NextResponse.json(
+      {
+        ok: true,
+        items: result.items,
+        report: result.report,
+      },
+      { headers: NO_STORE_HEADERS },
+    );
+  } catch (err) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: err instanceof Error ? err.message : '外部學術資料庫比對過程發生未預期錯誤。',
+      },
+      { status: 502, headers: NO_STORE_HEADERS },
+    );
+  }
 }

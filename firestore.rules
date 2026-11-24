@@ -6,25 +6,33 @@ service cloud.firestore {
     function isAdmin() {
       return request.auth != null
         && request.auth.token.email_verified == true
+        && request.auth.token.email is string
         && request.auth.token.email.lower() in [
           'yrma@gm.fgu.edu.tw',
           // '你的信箱@gmail.com'
         ];
     }
 
-    // 公開論文彙總文件：全站僅讀此單一文件，極省讀取額度；僅管理者可寫入
+    // 公開論文彙總文件：全站僅讀此單一文件，極省讀取額度；僅管理者可建立與更新、禁止誤刪
     match /siteData/publications {
       allow read: if true;
-      allow write: if isAdmin()
+      allow create, update: if isAdmin()
         && request.resource.data.items is list
-        && request.resource.data.totalPapers is int;
+        && request.resource.data.totalPapers is int
+        && request.resource.data.totalPapers == request.resource.data.items.size()
+        && request.resource.data.updatedAt is string
+        && request.resource.data.updatedBy is string;
+      allow delete: if false;
     }
 
-    // 親筆黑板手稿相簿彙總文件：公開可讀，僅管理者可寫入
+    // 親筆黑板手稿相簿彙總文件：公開可讀，僅管理者可建立與更新、禁止誤刪
     match /siteData/chalkboards {
       allow read: if true;
-      allow write: if isAdmin()
-        && request.resource.data.items is list;
+      allow create, update: if isAdmin()
+        && request.resource.data.items is list
+        && request.resource.data.updatedAt is string
+        && request.resource.data.updatedBy is string;
+      allow delete: if false;
     }
 
     // 其他路徑一律預設拒絕

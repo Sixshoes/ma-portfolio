@@ -2,10 +2,10 @@
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 @theme inline {
-  /* 直接寫明 "Noto Sans TC" 與 "Noto Serif TC" 真實家族字串，徹底封殺空變數與新細明體 PMingLiU */
-  --font-sans: var(--font-jakarta), "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
-  --font-serif: var(--font-source-serif), "Noto Serif TC", "PingFang TC", Georgia, serif;
-  --font-mono: var(--font-jetbrains-mono), "Noto Sans TC", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  /* 直接寫明真實字體家族名稱，徹底封殺空變數與新細明體 PMingLiU */
+  --font-sans: "Plus Jakarta Sans", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --font-serif: "Source Serif 4", "Noto Serif TC", "PingFang TC", Georgia, serif;
+  --font-mono: "JetBrains Mono", "Noto Sans TC", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 /* 關閉 View Transitions 預設交叉淡化並鎖定圖層順序，消除切換夜間時左下角白色三角殘影 */
@@ -31,6 +31,9 @@
 :root,
 [data-theme="light"] {
   color-scheme: light;
+  --font-source-serif: "Source Serif 4";
+  --font-jakarta: "Plus Jakarta Sans";
+  --font-jetbrains-mono: "JetBrains Mono";
   --app-bg: #F2EFE7;
   --app-bg-alt: #F8F7F3;
   --app-bg-warm: #E8E4DA;
@@ -99,14 +102,14 @@
 
   /* 全程維持螢幕筆觸飽滿的權威襯線體（Source Serif 4 + Noto Serif TC），嚴禁中文合成假斜體與新細明體 */
   .font-editorial {
-    font-family: var(--font-source-serif), "Noto Serif TC", "PingFang TC", Georgia, serif;
+    font-family: "Source Serif 4", "Noto Serif TC", "PingFang TC", Georgia, serif;
     font-style: normal;
     letter-spacing: 0.015em;
   }
 
   /* 僅供英文書目之期刊名稱使用正統拉丁斜體 */
   .font-journal-italic {
-    font-family: var(--font-source-serif), Georgia, serif;
+    font-family: "Source Serif 4", Georgia, serif;
     font-style: italic;
   }
 
@@ -170,4 +173,10 @@ select.custom-select::-ms-expand {
 
 select.custom-select::picker-icon {
   display: none;
+}
+
+/* 隱藏瀏覽器原生 search 清除鈕，避免與自訂清除圖示重複顯示 */
+input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
 }

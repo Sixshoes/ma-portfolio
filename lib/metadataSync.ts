@@ -3,9 +3,10 @@ import {
   extractDoiIdentifier,
   type Publication,
 } from '@/lib/publications';
+import { getSiteUrl } from '@/lib/site-url';
 
 const POLITE_MAILTO = 'yrma@gm.fgu.edu.tw';
-const USER_AGENT = `MaPortfolioMetadataSync/1.0 (https://ma-portfolio-alpha.vercel.app; mailto:${POLITE_MAILTO})`;
+const USER_AGENT = `MaPortfolioMetadataSync/1.0 (${getSiteUrl()}; mailto:${POLITE_MAILTO})`;
 
 export type CitationSyncPolicy = 'crossref-floor' | 'openalex' | 'keep';
 
@@ -90,9 +91,10 @@ function normTitle(t: string): string {
 
 function cleanAuthorName(raw: string): string {
   return raw
+    .replace(/\s*[\u2010-\u2015\u2212]\s*/g, '-')
     .replace(/\s+/g, ' ')
     .trim()
-    .replace(/Yuan-\s*Ron\s+Ma/gi, 'Yuan-Ron Ma');
+    .replace(/Yuan[\s-]+Ron\s+Ma/gi, 'Yuan-Ron Ma');
 }
 
 function formatCrossrefAuthors(authors?: CrossrefWork['author']): string {
@@ -163,22 +165,52 @@ async function fetchOpenAlexMap(dois: string[]): Promise<Map<string, OpenAlexWor
     chunks.push(dois.slice(i, i + batchSize));
   }
 
+  // 限制最大 3 個並行 worker，避免觸發 OpenAlex 10 req/s 速率限制
+  let chunkIdx = 0;
+  const workerCount = Math.min(3, chunks.length);
+  const failedChunks: string[][] = [];
+
   await Promise.all(
-    chunks.map(async (chunk) => {
-      const filter = chunk.map((d) => `https://doi.org/${d}`).join('|');
-      const params = new URLSearchParams({
-        filter: `doi:${filter}`,
-        'per-page': '100',
-        select: 'doi,title,publication_year,cited_by_count,authorships',
-        mailto: POLITE_MAILTO,
-      });
-      const data = await fetchJsonWithTimeout<{ results?: OpenAlexWork[] }>(
-        `https://api.openalex.org/works?${params.toString()}`,
-        18000,
-      );
-      for (const work of data?.results ?? []) {
-        const bare = work.doi ? extractDoiIdentifier(work.doi)?.toLowerCase() : undefined;
-        if (bare) map.set(bare, work);
+    Array.from({ length: workerCount }, async () => {
+      while (chunkIdx < chunks.length) {
+        const chunk = chunks[chunkIdx++];
+        const filter = chunk.map((d) => `https://doi.org/${d}`).join('|');
+        const params = new URLSearchParams({
+          filter: `doi:${filter}`,
+          'per-page': '100',
+          select: 'doi,title,publication_year,cited_by_count,authorships',
+          mailto: POLITE_MAILTO,
+        });
+        const data = await fetchJsonWithTimeout<{ results?: OpenAlexWork[] }>(
+          `https://api.openalex.org/works?${params.toString()}`,
+          16000,
+        );
+        if (!data?.results) {
+          failedChunks.push(chunk);
+        } else {
+          for (const work of data.results) {
+            const bare = work.doi ? extractDoiIdentifier(work.doi)?.toLowerCase() : undefined;
+            if (bare) map.set(bare, work);
+          }
+        }
+      }
+    }),
+  );
+
+  // 若整批失敗（例如含特殊字元 DOI），改以低併發單筆補查最多 25 筆
+  const fallbackDois = failedChunks.flat().filter((d) => !map.has(d)).slice(0, 25);
+  let fbIdx = 0;
+  const fbWorkers = Math.min(3, fallbackDois.length);
+  await Promise.all(
+    Array.from({ length: fbWorkers }, async () => {
+      while (fbIdx < fallbackDois.length) {
+        const doi = fallbackDois[fbIdx++];
+        const work = await fetchJsonWithTimeout<OpenAlexWork>(
+          `https://api.openalex.org/works/https://doi.org/${encodeURIComponent(doi)}?mailto=${encodeURIComponent(POLITE_MAILTO)}`,
+          10000,
+          1,
+        );
+        if (work) map.set(doi, work);
       }
     }),
   );
@@ -273,8 +305,17 @@ export async function syncPublicationsMetadata(
 
   const anomalies: MetadataAnomalyItem[] = [];
   const outdatedVsCrossref: OutdatedCitationItem[] = [];
-  const seenDois = new Set<string>();
+  const keptByDoi = new Map<string, Publication>();
   const updatedItems: Publication[] = [];
+
+  // 僅當同 DOI 確實存在另一筆正常條目時，才安全移除 (formula presented) 殘缺重複筆
+  const prb64ValidSiblingExists = inputItems.some((p) => {
+    const bare = extractDoiIdentifier(p.doi)?.toLowerCase() ?? '';
+    return (
+      bare === '10.1103/physrevb.64.195324' &&
+      !p.title.toLowerCase().includes('(formula presented)')
+    );
+  });
 
   let dedupedCount = 0;
   let doiRecoveredCount = 0;
@@ -316,9 +357,10 @@ export async function syncPublicationsMetadata(
       }
     }
 
-    // 2. 合併已知重複筆（Scopus 匯出殘缺 "(formula presented)" 重複項）
+    // 2. 合併已知重複筆（Scopus 匯出殘缺 "(formula presented)" 重複項，須先確認同 DOI 有效條目存在）
     if (
       fixKnownAnomalies &&
+      prb64ValidSiblingExists &&
       bareDoi === '10.1103/physrevb.64.195324' &&
       title.toLowerCase().includes('(formula presented)')
     ) {
@@ -333,18 +375,36 @@ export async function syncPublicationsMetadata(
       continue;
     }
 
-    if (bareDoi && seenDois.has(bareDoi)) {
+    if (bareDoi && keptByDoi.has(bareDoi)) {
+      const primary = keptByDoi.get(bareDoi)!;
+      // 合併重複筆中較完整的策展欄位，避免精選圖片、摘要或高引用遭靜默丟棄
+      if (pub.citations > primary.citations) {
+        primary.citations = pub.citations;
+        primary.highlight =
+          primary.citations >= 100
+            ? '🔥 國際標竿'
+            : primary.citations >= 50
+              ? '⭐ 重點關注'
+              : '📄 一般論文';
+      }
+      if (pub.is_star === '是') primary.is_star = '是';
+      if (!primary.cover_url && pub.cover_url.trim()) primary.cover_url = pub.cover_url.trim();
+      if (!primary.file_img && pub.file_img.trim()) primary.file_img = pub.file_img.trim();
+      if (!primary.authors && pub.authors?.trim()) primary.authors = pub.authors.trim();
+      if (!primary.takeaway && pub.takeaway?.trim()) primary.takeaway = pub.takeaway.trim();
+      if (!primary.abstract_excerpt && pub.abstract_excerpt?.trim()) {
+        primary.abstract_excerpt = pub.abstract_excerpt.trim();
+      }
       dedupedCount += 1;
       anomalies.push({
         kind: 'duplicate',
         year: pub.year,
         title,
         doi: doiUrl,
-        detail: '偵測到重複 DOI，已自動去重保留主條目。',
+        detail: '偵測到重複 DOI，已保留主條目並自動合併較完整之策展欄位。',
       });
       continue;
     }
-    if (bareDoi) seenDois.add(bareDoi);
 
     // 3. 修復 Scopus 漏轉化學式前綴之殘缺標題
     const fixedTitle = bareDoi ? KNOWN_TITLE_FIXES[bareDoi] : undefined;
@@ -375,7 +435,7 @@ export async function syncPublicationsMetadata(
         year: pub.year,
         title,
         doi: doiUrl,
-        detail: '此筆為 2016 Nanoscale 論文之勘誤公告（Correction），可視需要決定是否保留。',
+        detail: `此筆為 ${pub.year || '未知年份'} ${pub.journal || '期刊'} 論文之勘誤公告（Correction），可視需要決定是否保留。`,
       });
     }
 
@@ -428,7 +488,7 @@ export async function syncPublicationsMetadata(
       }
     }
 
-    updatedItems.push({
+    const mergedItem: Publication = {
       ...pub,
       title,
       doi: doiUrl,
@@ -441,7 +501,9 @@ export async function syncPublicationsMetadata(
             : '📄 一般論文',
       ...(nextAuthors ? { authors: nextAuthors } : {}),
       ...(bareDoi ? { altmetric_id: bareDoi } : {}),
-    });
+    };
+    if (bareDoi) keptByDoi.set(bareDoi, mergedItem);
+    updatedItems.push(mergedItem);
   }
 
   outdatedVsCrossref.sort(

@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { X } from 'lucide-react';
+import { lockBodyScroll, unlockBodyScroll } from '@/lib/clientUtils';
 import { EDITORIAL_EASE } from './EditorialMotion';
 
 export type FigureLightboxPayload = {
@@ -20,27 +21,41 @@ type FigureLightboxModalProps = {
   onClose: () => void;
 };
 
-/** 霧化暗房摘要圖放大燈箱（支援 layoutId 絲滑展開、雙版相紙底襯防眩光與 ESC 關閉） */
+/** 霧化暗房摘要圖放大燈箱（支援 layoutId 絲滑展開、引用計數鎖定捲動、焦點還原與破圖防呆） */
 export function FigureLightboxModal({
   lightbox,
   closeLabel,
   onClose,
 }: FigureLightboxModalProps) {
   const reduce = useReducedMotion();
+  const isOpen = Boolean(lightbox);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
+  const onCloseRef = useRef(onClose);
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
-    if (!lightbox) return;
+    if (!isOpen) return;
+    const prevActive = document.activeElement as HTMLElement | null;
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        onCloseRef.current();
+      }
     };
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    lockBodyScroll();
     window.addEventListener('keydown', onKeyDown);
+    const focusTimer = window.setTimeout(() => closeBtnRef.current?.focus(), 20);
     return () => {
-      document.body.style.overflow = prevOverflow;
+      unlockBodyScroll();
       window.removeEventListener('keydown', onKeyDown);
+      window.clearTimeout(focusTimer);
+      prevActive?.focus?.();
     };
-  }, [lightbox, onClose]);
+  }, [isOpen]);
+
+  const imgFailed = Boolean(lightbox && failedSrc === lightbox.src);
 
   return (
     <AnimatePresence>
@@ -80,6 +95,7 @@ export function FigureLightboxModal({
                 </h4>
               </div>
               <button
+                ref={closeBtnRef}
                 type="button"
                 onClick={onClose}
                 aria-label={closeLabel}
@@ -95,13 +111,20 @@ export function FigureLightboxModal({
                 transition={{ duration: 0.38, ease: EDITORIAL_EASE }}
                 className="overflow-hidden rounded-2xl border border-[var(--app-rule)] bg-[var(--app-figure-mat)] p-3"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={lightbox.src}
-                  alt={lightbox.alt}
-                  referrerPolicy="no-referrer"
-                  className="editorial-figure-img max-h-[66vh] max-w-full object-contain"
-                />
+                {imgFailed ? (
+                  <p className="px-6 py-10 text-center text-sm text-[var(--app-muted)]">
+                    無法載入此預覽圖片 / Image preview unavailable
+                  </p>
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={lightbox.src}
+                    alt={lightbox.alt}
+                    referrerPolicy="no-referrer"
+                    onError={() => setFailedSrc(lightbox.src)}
+                    className="editorial-figure-img max-h-[66vh] max-w-full object-contain"
+                  />
+                )}
               </motion.div>
             </div>
           </motion.div>

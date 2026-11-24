@@ -6,28 +6,29 @@ service firebase.storage {
     function isAdmin() {
       return request.auth != null
         && request.auth.token.email_verified == true
+        && request.auth.token.email is string
         && request.auth.token.email.lower() in [
           'yrma@gm.fgu.edu.tw',
           // '你的信箱@gmail.com'
         ];
     }
 
-    // 論文圖文摘要與期刊封面：公開讀取，僅管理者可上傳 5MB 以內的圖片檔
+    // 論文圖文摘要與期刊封面：公開讀取，僅管理者可上傳 5MB 以內的點陣圖片（封鎖 SVG 避免 Stored XSS）
     match /publications/{folder}/{fileName} {
       allow read: if true;
-      allow write: if isAdmin()
+      allow create, update: if isAdmin()
         && (folder == 'covers' || folder == 'journals')
         && request.resource.size < 5 * 1024 * 1024
-        && request.resource.contentType.matches('image/.*');
+        && request.resource.contentType.matches('image/(jpeg|png|webp|gif|avif)');
       allow delete: if isAdmin();
     }
 
-    // 親筆黑板手稿高清相簿（1800px WebP）：公開讀取，僅管理者可上傳 8MB 以內圖片
+    // 親筆黑板手稿高清相簿（1800px WebP）：公開讀取，僅管理者可上傳 8MB 以內點陣圖片
     match /chalkboards/{fileName} {
       allow read: if true;
-      allow write: if isAdmin()
+      allow create, update: if isAdmin()
         && request.resource.size < 8 * 1024 * 1024
-        && request.resource.contentType.matches('image/.*');
+        && request.resource.contentType.matches('image/(jpeg|png|webp|avif)');
       allow delete: if isAdmin();
     }
 

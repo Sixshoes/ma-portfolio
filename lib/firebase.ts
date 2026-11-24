@@ -88,19 +88,58 @@ export type PublicationsBundleDoc = {
   items: Publication[];
 };
 
-function sanitizePublicationForFirestore(pub: Publication): Record<string, string | number> {
-  const clean: Record<string, string | number> = {
-    id: pub.id?.trim() || crypto.randomUUID(),
+function generateClientId(prefix = 'id'): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+const ALLOWED_PUBLICATION_IMAGE_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/avif',
+]);
+
+const ALLOWED_CHALKBOARD_IMAGE_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/avif',
+]);
+
+function extensionFromMime(mime: string): string {
+  switch (mime.toLowerCase()) {
+    case 'image/webp':
+      return 'webp';
+    case 'image/png':
+      return 'png';
+    case 'image/gif':
+      return 'gif';
+    case 'image/avif':
+      return 'avif';
+    default:
+      return 'jpg';
+  }
+}
+
+function sanitizePublicationForFirestore(pub: Publication): Publication {
+  const citations =
+    Number.isFinite(pub.citations) && pub.citations > 0 ? Math.floor(pub.citations) : 0;
+  const clean: Publication = {
+    id: pub.id?.trim() || generateClientId('pub'),
     title: pub.title.trim(),
     year: Number.isFinite(pub.year) ? Math.trunc(pub.year) : 0,
     journal: pub.journal.trim(),
     doi: pub.doi.trim(),
-    citations: Number.isFinite(pub.citations) && pub.citations > 0 ? Math.floor(pub.citations) : 0,
+    citations,
     is_star: pub.is_star === '是' ? '是' : '否',
     highlight:
-      pub.citations >= 100
+      citations >= 100
         ? '🔥 國際標竿'
-        : pub.citations >= 50
+        : citations >= 50
           ? '⭐ 重點關注'
           : '📄 一般論文',
     cover_url: pub.cover_url.trim(),
@@ -163,7 +202,7 @@ export async function savePublicationsBundleToFirestore(
 
   return {
     ...payload,
-    items: sorted,
+    items: cleanItems,
   };
 }
 
@@ -180,6 +219,9 @@ export async function compressImageToWebp(
   if (file.type === 'image/gif') {
     return { blob: file, contentType: 'image/gif', extension: 'gif' };
   }
+
+  const fallbackMime = ALLOWED_PUBLICATION_IMAGE_TYPES.has(file.type) ? file.type : 'image/jpeg';
+  const fallbackExt = extensionFromMime(fallbackMime);
 
   return new Promise((resolve, reject) => {
     const objectUrl = URL.createObjectURL(file);
@@ -200,7 +242,7 @@ export async function compressImageToWebp(
         const ctx = canvas.getContext('2d');
         if (!ctx) {
           URL.revokeObjectURL(objectUrl);
-          resolve({ blob: file, contentType: file.type || 'image/jpeg', extension: 'jpg' });
+          resolve({ blob: file, contentType: fallbackMime, extension: fallbackExt });
           return;
         }
 
@@ -209,9 +251,17 @@ export async function compressImageToWebp(
           (blob) => {
             URL.revokeObjectURL(objectUrl);
             if (blob && blob.size > 0) {
-              resolve({ blob, contentType: 'image/webp', extension: 'webp' });
+              const actualType =
+                blob.type && ALLOWED_PUBLICATION_IMAGE_TYPES.has(blob.type)
+                  ? blob.type
+                  : 'image/webp';
+              resolve({
+                blob,
+                contentType: actualType,
+                extension: extensionFromMime(actualType),
+              });
             } else {
-              resolve({ blob: file, contentType: file.type || 'image/jpeg', extension: 'jpg' });
+              resolve({ blob: file, contentType: fallbackMime, extension: fallbackExt });
             }
           },
           'image/webp',
@@ -240,8 +290,8 @@ export async function uploadPublicationImage(
   if (!isFirebaseStorageConfigured()) {
     throw new Error('尚未設定 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET。');
   }
-  if (!file.type.startsWith('image/')) {
-    throw new Error('請上傳圖片檔案（JPG / PNG / WebP / GIF）。');
+  if (!ALLOWED_PUBLICATION_IMAGE_TYPES.has(file.type)) {
+    throw new Error('僅支援點陣圖片格式（JPG / PNG / WebP / GIF / AVIF），不支援 SVG。');
   }
   if (file.size > 12 * 1024 * 1024) {
     throw new Error('原始圖片超過 12 MB，請先縮小後再上傳。');
@@ -249,13 +299,16 @@ export async function uploadPublicationImage(
 
   const { storage } = getFirebaseServices();
   const { blob, contentType, extension } = await compressImageToWebp(file);
+  if (blob.size >= 5 * 1024 * 1024) {
+    throw new Error('壓縮後圖片仍達 5 MB 上限（storage.rules 限制），請縮小尺寸或改用 JPG／WebP。');
+  }
 
   const safeCustom = customSlug
     ? customSlug
         .toLowerCase()
         .replace(/[^a-z0-9-]+/g, '-')
         .replace(/^-+|-+$/g, '')
-        .slice(0, 96)
+        .slice(0, 80)
     : '';
 
   const safeStem =
@@ -265,7 +318,10 @@ export async function uploadPublicationImage(
       .replace(/^-+|-+$/g, '')
       .slice(0, 40) || 'figure';
 
-  const fileName = safeCustom ? `${safeCustom}.${extension}` : `${Date.now()}-${safeStem}.${extension}`;
+  // 加上時間戳版本後綴，避免使用者在編輯視窗上傳預覽後按「取消」覆蓋線上既有圖片
+  const fileName = safeCustom
+    ? `${safeCustom}-${Date.now()}.${extension}`
+    : `${Date.now()}-${safeStem}.${extension}`;
   const objectPath = `publications/${folder}/${fileName}`;
   const storageRef = ref(storage, objectPath);
 
@@ -289,7 +345,7 @@ function sanitizeChalkboardForFirestore(
   idx: number,
 ): Record<string, string | number | boolean> {
   const clean: Record<string, string | number | boolean> = {
-    id: item.id?.trim() || crypto.randomUUID(),
+    id: item.id?.trim() || generateClientId('chalkboard'),
     imageUrl: item.imageUrl.trim(),
     titleZh: item.titleZh.trim() || '親筆黑板物理推導手稿',
     titleEn: item.titleEn.trim() || item.titleZh.trim() || 'Chalkboard Derivation',
@@ -354,8 +410,8 @@ export async function uploadChalkboardImage(
   if (!isFirebaseStorageConfigured()) {
     throw new Error('尚未設定 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET。');
   }
-  if (!file.type.startsWith('image/')) {
-    throw new Error('請上傳圖片檔案（JPG / PNG / WebP）。');
+  if (!ALLOWED_CHALKBOARD_IMAGE_TYPES.has(file.type)) {
+    throw new Error('黑板照片僅支援 JPG / PNG / WebP / AVIF 格式，不支援 SVG。');
   }
   if (file.size > 20 * 1024 * 1024) {
     throw new Error('原始照片超過 20 MB，請先縮小後再上傳。');
@@ -363,6 +419,9 @@ export async function uploadChalkboardImage(
 
   const { storage } = getFirebaseServices();
   const { blob, contentType, extension } = await compressImageToWebp(file, 1800, 0.86);
+  if (blob.size >= 8 * 1024 * 1024) {
+    throw new Error('壓縮後照片仍達 8 MB 上限（storage.rules 限制），請縮小解析度後重試。');
+  }
 
   const safeId =
     (customId ?? '')

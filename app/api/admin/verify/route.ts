@@ -8,14 +8,15 @@ import { verifyAdminFirebaseToken } from '@/lib/firebaseServer';
 export async function GET(request: Request) {
   const authHeader = request.headers.get('authorization') ?? '';
   const match = authHeader.match(/^Bearer\s+(.+)$/i);
-  if (!match || !match[1]) {
+  const idToken = match?.[1]?.trim() ?? '';
+  if (!idToken) {
     return NextResponse.json(
       { isAdmin: false, error: 'Missing Authorization Bearer token.' },
       { status: 401, headers: { 'Cache-Control': 'no-store' } },
     );
   }
 
-  const verified = await verifyAdminFirebaseToken(match[1].trim());
+  const verified = await verifyAdminFirebaseToken(idToken);
   if (!verified.ok) {
     return NextResponse.json(
       { isAdmin: false, error: verified.error },

@@ -20,6 +20,25 @@ export const PUBLIC_JSON_CACHE_HEADERS: Record<string, string> = {
   'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
 };
 
+export const PUBLIC_DEGRADED_CACHE_HEADERS: Record<string, string> = {
+  ...PUBLIC_CORS_HEADERS,
+  'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+};
+
+export const PUBLIC_NO_STORE_HEADERS: Record<string, string> = {
+  ...PUBLIC_CORS_HEADERS,
+  'Cache-Control': 'no-store',
+};
+
+/** 若已設定 Firebase 但此次退回備援來源，縮短 CDN 快取 TTL 避免降級結果滯留 24 小時 */
+export function getPublicJsonCacheHeaders(source: 'firebase' | 'portal'): Record<string, string> {
+  const firebaseConfigured = Boolean(process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID?.trim());
+  if (firebaseConfigured && source !== 'firebase') {
+    return PUBLIC_DEGRADED_CACHE_HEADERS;
+  }
+  return PUBLIC_JSON_CACHE_HEADERS;
+}
+
 export type PublicPublicationsMeta = {
   totalPapers: number;
   totalCitations: number;

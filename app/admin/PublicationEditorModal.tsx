@@ -37,9 +37,25 @@ type CropBox = {
   endY: number;
 };
 
+const ALLOWED_IMAGE_MIMES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/avif',
+]);
+const MAX_PDF_BYTES = 50 * 1024 * 1024;
+
+function createClientUuid(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `pub-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 function createEmptyDraft(): Publication {
   return {
-    id: crypto.randomUUID(),
+    id: createClientUuid(),
     title: '',
     year: new Date().getFullYear(),
     journal: '',
@@ -76,7 +92,7 @@ export function PublicationEditorModal({
     initial
       ? {
           ...initial,
-          id: initial.id?.trim() || crypto.randomUUID(),
+          id: initial.id?.trim() || createClientUuid(),
           authors: initial.authors ?? '',
           takeaway: initial.takeaway ?? '',
           abstract_excerpt: initial.abstract_excerpt ?? '',
@@ -99,18 +115,27 @@ export function PublicationEditorModal({
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const pdfPreviewImgRef = useRef<HTMLImageElement>(null);
   const storageReady = isFirebaseStorageConfigured();
+  const isBusy = isSaving || isUploading || isFetchingDoi || isParsingPdf;
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !isSaving) onClose();
+      if (e.key === 'Escape' && !isBusy) onClose();
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [isSaving, onClose]);
+  }, [isBusy, onClose]);
 
   const handleImageUpload = useCallback(
-    async (file: File | undefined) => {
-      if (!file) return;
+    async (file: File | undefined): Promise<boolean> => {
+      if (!file) return false;
+      if (!storageReady) {
+        setError('尚未設定 Firebase Storage Bucket，無法上傳圖片。');
+        return false;
+      }
+      if (!ALLOWED_IMAGE_MIMES.has(file.type.toLowerCase())) {
+        setError('僅接受 JPG / PNG / WebP / GIF / AVIF 點陣圖片格式（不接受 SVG）。');
+        return false;
+      }
       setError(null);
       setNotice(null);
       setIsUploading(true);
@@ -119,14 +144,16 @@ export function PublicationEditorModal({
         const downloadUrl = await uploadPublicationImage(file, 'covers', slug);
         setDraft((prev) => ({ ...prev, cover_url: downloadUrl }));
         setNotice('已壓縮轉檔 WebP 並上傳至自家 Firebase Storage。');
+        return true;
       } catch (err) {
         const msg = err instanceof Error ? err.message : '圖片上傳失敗';
         setError(`圖片上傳失敗（請確認 Firebase Storage 與 storage.rules 已啟用）：${msg}`);
+        return false;
       } finally {
         setIsUploading(false);
       }
     },
-    [draft.doi, draft.id],
+    [draft.doi, draft.id, storageReady],
   );
 
   // 軌道 A：依 DOI 呼叫伺服器端 POST /api/admin/fetch-figure（Elsevier API + OpenAlex/Unpaywall/Crossref）
@@ -174,8 +201,16 @@ export function PublicationEditorModal({
   // 軌道 B：於瀏覽器端動態載入 pdfjs-dist 渲染 PDF 第 1–2 頁供框選裁切
   const handlePdfFile = async (file: File | undefined) => {
     if (!file) return;
+    if (!storageReady) {
+      setError('尚未設定 Firebase Storage Bucket，無法上傳擷取的摘要圖。');
+      return;
+    }
     if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
       setError('請選擇或拖入 PDF 格式的論文檔案。');
+      return;
+    }
+    if (file.size > MAX_PDF_BYTES) {
+      setError('PDF 檔案過大（上限 50 MB），請先壓縮或截圖後直接上傳圖片。');
       return;
     }
 
@@ -186,6 +221,9 @@ export function PublicationEditorModal({
     setCropBox(null);
     setActivePdfPageIdx(0);
 
+    let destroyTask: (() => Promise<void>) | null = null;
+    let cleanupPdf: (() => Promise<unknown>) | null = null;
+
     try {
       const pdfjs = await import('pdfjs-dist');
       pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -195,34 +233,42 @@ export function PublicationEditorModal({
 
       const data = await file.arrayBuffer();
       const loadingTask = pdfjs.getDocument({ data });
+      destroyTask = () => loadingTask.destroy();
       const pdf = await loadingTask.promise;
+      cleanupPdf = () => pdf.cleanup();
       const pagesToRender = Math.min(2, pdf.numPages);
       const rendered: RenderedPdfPage[] = [];
 
       for (let pageNumber = 1; pageNumber <= pagesToRender; pageNumber += 1) {
         const page = await pdf.getPage(pageNumber);
-        const viewport = page.getViewport({ scale: 1.8 });
         const canvas = document.createElement('canvas');
-        canvas.width = Math.round(viewport.width);
-        canvas.height = Math.round(viewport.height);
-        const ctx = canvas.getContext('2d');
-        if (!ctx) continue;
+        try {
+          const viewport = page.getViewport({ scale: 1.8 });
+          canvas.width = Math.round(viewport.width);
+          canvas.height = Math.round(viewport.height);
+          const ctx = canvas.getContext('2d');
+          if (!ctx) continue;
 
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        await page.render({
-          canvas,
-          canvasContext: ctx,
-          viewport,
-        }).promise;
+          await page.render({
+            canvas,
+            canvasContext: ctx,
+            viewport,
+          }).promise;
 
-        rendered.push({
-          pageNumber,
-          width: canvas.width,
-          height: canvas.height,
-          dataUrl: canvas.toDataURL('image/png'),
-        });
+          rendered.push({
+            pageNumber,
+            width: canvas.width,
+            height: canvas.height,
+            dataUrl: canvas.toDataURL('image/png'),
+          });
+        } finally {
+          page.cleanup();
+          canvas.width = 0;
+          canvas.height = 0;
+        }
       }
 
       if (rendered.length === 0) {
@@ -236,6 +282,12 @@ export function PublicationEditorModal({
         `解析 PDF 失敗：${err instanceof Error ? err.message : '檔案損毀或受加密保護'}`,
       );
     } finally {
+      try {
+        if (cleanupPdf) await cleanupPdf();
+        if (destroyTask) await destroyTask();
+      } catch {
+        // 忽略清理時的次要錯誤
+      }
       setIsParsingPdf(false);
     }
   };
@@ -262,7 +314,9 @@ export function PublicationEditorModal({
 
   const handleCropPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDraggingCrop) return;
-    e.currentTarget.releasePointerCapture(e.pointerId);
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
     setIsDraggingCrop(false);
   };
 
@@ -281,6 +335,10 @@ export function PublicationEditorModal({
     const activePage = pdfPages[activePdfPageIdx];
     const imgEl = pdfPreviewImgRef.current;
     if (!activePage || !imgEl) return;
+    if (!imgEl.complete || imgEl.naturalWidth === 0) {
+      setError('PDF 預覽圖尚未載入完成，請稍候再試。');
+      return;
+    }
 
     setError(null);
     setNotice(null);
@@ -290,11 +348,11 @@ export function PublicationEditorModal({
     const sw =
       useWholePage || !hasValidCrop
         ? activePage.width
-        : Math.max(240, Math.round(normalizedCrop!.w * activePage.width));
+        : Math.round(normalizedCrop!.w * activePage.width);
     const sh =
       useWholePage || !hasValidCrop
         ? activePage.height
-        : Math.max(150, Math.round(normalizedCrop!.h * activePage.height));
+        : Math.round(normalizedCrop!.h * activePage.height);
 
     const clampedW = Math.min(sw, activePage.width - sx);
     const clampedH = Math.min(sh, activePage.height - sy);
@@ -308,7 +366,10 @@ export function PublicationEditorModal({
     canvas.width = clampedW;
     canvas.height = clampedH;
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) {
+      setError('瀏覽器無法建立 2D 畫布，請改用截圖上傳。');
+      return;
+    }
 
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, clampedW, clampedH);
@@ -317,6 +378,8 @@ export function PublicationEditorModal({
     const blob = await new Promise<Blob | null>((resolve) =>
       canvas.toBlob((b) => resolve(b), 'image/png'),
     );
+    canvas.width = 0;
+    canvas.height = 0;
     if (!blob) {
       setError('擷取影像失敗，請重新框選。');
       return;
@@ -325,13 +388,16 @@ export function PublicationEditorModal({
     const file = new File([blob], `pdf-page-${activePage.pageNumber}.png`, {
       type: 'image/png',
     });
-    await handleImageUpload(file);
-    setPdfPages([]);
-    setCropBox(null);
+    const uploadedOk = await handleImageUpload(file);
+    if (uploadedOk) {
+      setPdfPages([]);
+      setCropBox(null);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isBusy) return;
     setError(null);
 
     if (!draft.title.trim()) {
@@ -353,9 +419,15 @@ export function PublicationEditorModal({
       return;
     }
 
+    const coverTrimmed = draft.cover_url.trim();
+    if (coverTrimmed && !/^https?:\/\//i.test(coverTrimmed)) {
+      setError('摘要圖網址必須以 https:// 或 http:// 開頭。');
+      return;
+    }
+
     const citations = Math.max(0, Math.floor(Number(draft.citations) || 0));
     const prepared: Publication = {
-      id: draft.id?.trim() || crypto.randomUUID(),
+      id: draft.id?.trim() || createClientUuid(),
       title: draft.title.trim(),
       year: Math.trunc(draft.year),
       journal: draft.journal.trim(),
@@ -368,7 +440,7 @@ export function PublicationEditorModal({
           : citations >= 50
             ? '⭐ 重點關注'
             : '📄 一般論文',
-      cover_url: draft.cover_url.trim(),
+      cover_url: coverTrimmed,
       file_img: draft.file_img.trim(),
       ...(draft.authors?.trim() ? { authors: draft.authors.trim() } : {}),
       ...(draft.takeaway?.trim() ? { takeaway: draft.takeaway.trim() } : {}),
@@ -384,6 +456,9 @@ export function PublicationEditorModal({
   };
 
   const activePdfPage = pdfPages[activePdfPageIdx] ?? null;
+  const safePreviewUrl = /^https?:\/\//i.test(draft.cover_url.trim())
+    ? draft.cover_url.trim()
+    : '';
 
   return (
     <div
@@ -392,7 +467,7 @@ export function PublicationEditorModal({
       aria-label={initial ? '編輯論文' : '新增論文'}
       className="fixed inset-0 z-50 flex items-center justify-center bg-[#11161C]/70 p-4 backdrop-blur-sm"
       onClick={() => {
-        if (!isSaving) onClose();
+        if (!isBusy) onClose();
       }}
     >
       <div
@@ -405,10 +480,10 @@ export function PublicationEditorModal({
           </h2>
           <button
             type="button"
-            disabled={isSaving}
+            disabled={isBusy}
             onClick={onClose}
             aria-label="關閉視窗"
-            className="rounded-md p-1.5 text-[#5A6775] transition-colors hover:bg-[#F6F7F8] hover:text-[#11161C]"
+            className="rounded-md p-1.5 text-[#5A6775] transition-colors hover:bg-[#F6F7F8] hover:text-[#11161C] disabled:cursor-not-allowed disabled:opacity-40"
           >
             <X className="h-5 w-5" />
           </button>
@@ -539,8 +614,9 @@ export function PublicationEditorModal({
                 {draft.cover_url ? (
                   <button
                     type="button"
-                    onClick={() => setDraft((p) => ({ ...p, cover_url: '' }))}
-                    className="inline-flex items-center gap-1 rounded border border-[#DCE2E8] bg-white px-2.5 py-1 text-xs text-[#5A6775] hover:border-red-300 hover:text-red-600"
+                    disabled={isBusy}
+                    onClick={() => setDraft((p) => ({ ...p, cover_url: '', file_img: '' }))}
+                    className="inline-flex items-center gap-1 rounded border border-[#DCE2E8] bg-white px-2.5 py-1 text-xs text-[#5A6775] hover:border-red-300 hover:text-red-600 disabled:opacity-45"
                   >
                     <Trash2 className="h-3 w-3" /> 清除圖片
                   </button>
@@ -551,7 +627,7 @@ export function PublicationEditorModal({
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
-                  disabled={isFetchingDoi || isUploading || !draft.doi.trim()}
+                  disabled={isBusy || !draft.doi.trim()}
                   onClick={() => void handleAutoFetchByDoi()}
                   className="inline-flex items-center gap-1.5 rounded-md border border-[#0F4C81] bg-[#0F4C81] px-3.5 py-2 font-mono text-xs font-medium text-white transition-colors hover:bg-[#0B3A63] disabled:cursor-not-allowed disabled:opacity-45"
                 >
@@ -576,7 +652,7 @@ export function PublicationEditorModal({
                 />
                 <button
                   type="button"
-                  disabled={!storageReady || isParsingPdf || isUploading}
+                  disabled={!storageReady || isBusy}
                   onClick={() => pdfInputRef.current?.click()}
                   className="inline-flex items-center gap-1.5 rounded-md border border-[#0F4C81]/40 bg-white px-3.5 py-2 font-mono text-xs font-medium text-[#0F4C81] transition-colors hover:bg-[#EBF2F8] disabled:cursor-not-allowed disabled:opacity-45"
                 >
@@ -594,6 +670,7 @@ export function PublicationEditorModal({
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => {
                   e.preventDefault();
+                  if (isBusy || !storageReady) return;
                   const file = e.dataTransfer.files?.[0];
                   if (!file) return;
                   if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
@@ -604,10 +681,10 @@ export function PublicationEditorModal({
                 }}
                 className="relative flex aspect-[16/9] max-h-56 w-full items-center justify-center overflow-hidden rounded-md border border-dashed border-[#C5CFD8] bg-white"
               >
-                {draft.cover_url ? (
+                {safePreviewUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={draft.cover_url}
+                    src={safePreviewUrl}
                     alt="Graphical Abstract 預覽"
                     referrerPolicy="no-referrer"
                     className="h-full w-full object-contain p-2"
@@ -671,6 +748,7 @@ export function PublicationEditorModal({
                     onPointerDown={handleCropPointerDown}
                     onPointerMove={handleCropPointerMove}
                     onPointerUp={handleCropPointerUp}
+                    onPointerCancel={handleCropPointerUp}
                     className="relative mx-auto max-h-[380px] w-fit cursor-crosshair select-none overflow-hidden rounded border border-[#DCE2E8] bg-[#EEF1F5]"
                     style={{ touchAction: 'none' }}
                   >
@@ -698,15 +776,15 @@ export function PublicationEditorModal({
                   <div className="flex flex-wrap items-center justify-end gap-2">
                     <button
                       type="button"
-                      disabled={isUploading}
+                      disabled={isBusy}
                       onClick={() => void handleExtractPdfRegion(true)}
-                      className="rounded-md border border-[#DCE2E8] bg-[#F6F7F8] px-3 py-1.5 font-mono text-xs text-[#2B3642] hover:border-[#0F4C81] hover:text-[#0F4C81]"
+                      className="rounded-md border border-[#DCE2E8] bg-[#F6F7F8] px-3 py-1.5 font-mono text-xs text-[#2B3642] hover:border-[#0F4C81] hover:text-[#0F4C81] disabled:cursor-not-allowed disabled:opacity-45"
                     >
                       整頁擷取上傳
                     </button>
                     <button
                       type="button"
-                      disabled={isUploading || !hasValidCrop}
+                      disabled={isBusy || !hasValidCrop}
                       onClick={() => void handleExtractPdfRegion(false)}
                       className="inline-flex items-center gap-1.5 rounded-md bg-[#0F4C81] px-3.5 py-1.5 font-mono text-xs font-medium text-white hover:bg-[#0B3A63] disabled:cursor-not-allowed disabled:opacity-45"
                     >
@@ -728,7 +806,7 @@ export function PublicationEditorModal({
                 <input
                   ref={coverInputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
                   className="hidden"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
@@ -738,7 +816,7 @@ export function PublicationEditorModal({
                 />
                 <button
                   type="button"
-                  disabled={!storageReady || isUploading}
+                  disabled={!storageReady || isBusy}
                   onClick={() => coverInputRef.current?.click()}
                   title={
                     storageReady
@@ -800,16 +878,16 @@ export function PublicationEditorModal({
           <div className="flex items-center justify-end gap-3 border-t border-[#DCE2E8] bg-[#F6F7F8] px-6 py-4">
             <button
               type="button"
-              disabled={isSaving}
+              disabled={isBusy}
               onClick={onClose}
-              className="rounded-md border border-[#C5CFD8] bg-white px-4 py-2 text-sm font-medium text-[#2B3642] transition-colors hover:border-[#0F4C81] hover:text-[#0F4C81]"
+              className="rounded-md border border-[#C5CFD8] bg-white px-4 py-2 text-sm font-medium text-[#2B3642] transition-colors hover:border-[#0F4C81] hover:text-[#0F4C81] disabled:cursor-not-allowed disabled:opacity-45"
             >
               取消
             </button>
             <button
               type="submit"
-              disabled={isSaving || isUploading || isFetchingDoi}
-              className="inline-flex items-center gap-2 rounded-md bg-[#0F4C81] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0B3A63] disabled:opacity-50"
+              disabled={isBusy}
+              className="inline-flex items-center gap-2 rounded-md bg-[#0F4C81] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0B3A63] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               儲存並即時發布至官網

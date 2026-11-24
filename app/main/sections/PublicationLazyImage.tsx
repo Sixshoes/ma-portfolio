@@ -28,21 +28,22 @@ export function PublicationLazyImage({
   onUnavailable,
 }: PublicationLazyImageProps) {
   const imgRef = useRef<HTMLImageElement>(null);
-  const [failed, setFailed] = useState(false);
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const failed = Boolean(src && failedSrc === src);
 
   const markFailed = () => {
-    setFailed(true);
+    setFailedSrc(src);
     onUnavailable?.();
   };
 
   useEffect(() => {
     const img = imgRef.current;
-    if (!img) return;
+    if (!img || !src) return;
     if (img.complete) {
       if (img.naturalWidth > 16 && img.naturalHeight > 16) {
         onLoaded?.();
       } else {
-        setFailed(true);
+        setFailedSrc(src);
         onUnavailable?.();
       }
     }

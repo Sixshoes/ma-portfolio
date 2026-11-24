@@ -4,6 +4,7 @@ import React, { memo, useMemo, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import type { Publication } from '@/lib/publications';
 import { computeDonutDomainStats } from '@/lib/researchDomains';
+import { useTheme } from '@/app/ThemeContext';
 import { EDITORIAL_EASE } from './EditorialMotion';
 
 type DomainDonutChartProps = {
@@ -13,27 +14,30 @@ type DomainDonutChartProps = {
   onSelectDomain: (domainId: string) => void;
 };
 
-/** 純 SVG 礦物圖鑑互斥六區互動環狀圖（總和精準對齊全站總篇數，無截斷與算術誤差） */
+/** 純 SVG 礦物圖鑑互斥六區互動環狀圖（總和精準對齊全站總篇數，雙版皆符合 WCAG 對比度） */
 function DomainDonutChartComponent({
   publications,
   lang,
   activeDomainId,
   onSelectDomain,
 }: DomainDonutChartProps) {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const reduceMotion = useReducedMotion();
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const isZh = lang === 'zh';
 
   const { segments, totalTagged } = useMemo(() => {
     const stats = computeDonutDomainStats(publications).filter((s) => s.count > 0);
-    const total = stats.reduce((sum, s) => sum + s.count, 0) || 1;
+    const rawTotal = stats.reduce((sum, s) => sum + s.count, 0);
+    const divisor = rawTotal || 1;
     const radius = 64;
     const circumference = 2 * Math.PI * radius;
     const gap = 4.2;
 
     let offset = 0;
     const built = stats.map((entry) => {
-      const share = entry.count / total;
+      const share = entry.count / divisor;
       const rawLength = share * circumference;
       const dashLength = Math.max(4, rawLength - gap);
       const startOffset = offset;
@@ -47,7 +51,7 @@ function DomainDonutChartComponent({
       };
     });
 
-    return { segments: built, totalTagged: total };
+    return { segments: built, totalTagged: rawTotal };
   }, [publications]);
 
   const focusedId = hoveredId ?? activeDomainId;
@@ -61,7 +65,7 @@ function DomainDonutChartComponent({
           viewBox="0 0 180 180"
           className="h-44 w-44 overflow-visible sm:h-48 sm:w-48"
           role="img"
-          aria-label={isZh ? '五大研究領域論文產出佔比環狀圖' : 'Research domain output distribution donut chart'}
+          aria-label={isZh ? '六大研究領域論文產出佔比環狀圖' : 'Research domain output distribution donut chart'}
         >
           {/* 基底淡軌道 */}
           <circle
@@ -123,7 +127,13 @@ function DomainDonutChartComponent({
             <>
               <span
                 className="font-mono text-[11.5px] font-semibold uppercase tracking-wider"
-                style={{ color: focused.domain.color }}
+                style={{
+                  color: isDark
+                    ? focused.domain.chalkColor
+                    : focused.domain.color === '#C88A2B'
+                      ? '#8A560B'
+                      : focused.domain.color,
+                }}
               >
                 {focused.domain.roman} · {focused.sharePct}%
               </span>
@@ -160,8 +170,11 @@ function DomainDonutChartComponent({
             <button
               key={seg.domain.id}
               type="button"
+              aria-pressed={activeDomainId === seg.domain.id}
               onMouseEnter={() => setHoveredId(seg.domain.id)}
               onMouseLeave={() => setHoveredId(null)}
+              onFocus={() => setHoveredId(seg.domain.id)}
+              onBlur={() => setHoveredId(null)}
               onClick={() => onSelectDomain(seg.domain.id)}
               className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 text-xs transition-all duration-200 ${
                 isFocused

@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { JetBrains_Mono, Plus_Jakarta_Sans, Source_Serif_4 } from 'next/font/google';
 import './globals.css';
 import { LanguageProvider } from './LanguageContext';
 import { ThemeProvider } from './ThemeContext';
@@ -7,27 +6,9 @@ import { getSiteUrl } from '@/lib/site-url';
 
 const siteUrl = getSiteUrl();
 
-const sourceSerif = Source_Serif_4({
-  weight: ['400', '600', '700'],
-  style: ['normal', 'italic'],
-  subsets: ['latin'],
-  variable: '--font-source-serif',
-  display: 'swap',
-});
-
-const jakarta = Plus_Jakarta_Sans({
-  weight: ['400', '500', '600', '700'],
-  subsets: ['latin'],
-  variable: '--font-jakarta',
-  display: 'swap',
-});
-
-const mono = JetBrains_Mono({
-  weight: ['400', '500', '600'],
-  subsets: ['latin'],
-  variable: '--font-jetbrains-mono',
-  display: 'swap',
-});
+/** 全站 Google Fonts 統一串流網址（取代偶發拋錯的 next/font/google 編譯期抓檔，確保 CI 與跨平台 100% 穩定） */
+const GOOGLE_FONTS_HREF =
+  'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap';
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -92,25 +73,18 @@ const themeInitScript = `(function(){try{var t=localStorage.getItem('ma-theme');
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="en"
-      data-theme="light"
-      suppressHydrationWarning
-      className={`${sourceSerif.variable} ${jakarta.variable} ${mono.variable}`}
-    >
+    <html lang="en" data-theme="light" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
-        {/* 以原生 Google Fonts 串流載入繁體中文 Noto Sans TC + Noto Serif TC 全字重，徹底防止 Windows 退化為新細明體 */}
+        {/* 統一以 Google Fonts CSS 串流載入中英權威字體全字重，杜絕新細明體退化與 Next 15 next/font 偶發建置失敗 */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@500;600;700&display=swap"
-        />
+        <link rel="stylesheet" href={GOOGLE_FONTS_HREF} />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(personJsonLd).replace(/</g, '\\u003c'),
+          }}
         />
       </head>
       <body className="bg-[var(--app-bg)] font-sans text-[var(--app-body)] antialiased selection:bg-[var(--app-accent)]/20 selection:text-[var(--app-ink)]">

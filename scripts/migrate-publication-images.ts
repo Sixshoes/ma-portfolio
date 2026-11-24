@@ -325,6 +325,7 @@ async function main() {
     clearedGeneric: 0,
     clearedBroken: 0,
     noImage: 0,
+    uploadFailed: 0,
   };
 
   const nextItems: Publication[] = allItems.map((p) => ({ ...p }));
@@ -389,15 +390,32 @@ async function main() {
 
       if (validWebp) {
         if (opts.apply && bucket && accessToken) {
-          const uploaded = await uploadWebpToFirebaseStorage({
-            bucket,
-            slug,
-            webp: validWebp.webp,
-            authHeader: `Bearer ${accessToken}`,
-          });
-          pub.cover_url = uploaded.downloadUrl;
+          try {
+            const uploaded = await uploadWebpToFirebaseStorage({
+              bucket,
+              slug,
+              webp: validWebp.webp,
+              authHeader: `Bearer ${accessToken}`,
+            });
+            pub.cover_url = uploaded.downloadUrl;
+          } catch (uploadErr) {
+            stats.uploadFailed += 1;
+            console.error(
+              `[UPLOAD_ERR] #${idx + 1} (${pub.year}) ${slug}: ${
+                uploadErr instanceof Error ? uploadErr.message : String(uploadErr)
+              }`,
+            );
+            continue;
+          }
         } else if (fetchedViaBackfill && backfillSourceUrl) {
-          pub.cover_url = backfillSourceUrl;
+          // 絕不將需驗證標頭的 api.elsevier.com 網址寫入公開 JSON（瀏覽器直接載入會 401）
+          if (!/^https?:\/\/api\.elsevier\.com\//i.test(backfillSourceUrl)) {
+            pub.cover_url = backfillSourceUrl;
+          } else {
+            console.log(
+              `[DRY-RUN ] #${idx + 1} (${pub.year}) 已驗證 Elsevier API 圖源，需以 --apply 轉存至 Storage 才會寫入公開網址`,
+            );
+          }
         }
         if (fetchedViaBackfill) {
           stats.backfilled += 1;
@@ -429,6 +447,7 @@ async function main() {
 
   if (opts.exportJsonPath) {
     const outPath = path.resolve(process.cwd(), opts.exportJsonPath);
+    fs.mkdirSync(path.dirname(outPath), { recursive: true });
     fs.writeFileSync(outPath, JSON.stringify(nextItems, null, 2), 'utf8');
     console.log(`\n✓ 已輸出清洗後 JSON 至: ${outPath}`);
   }
@@ -444,6 +463,9 @@ async function main() {
   console.log(`清除通用封面/Logo:  ${stats.clearedGeneric}`);
   console.log(`清除 403/404 破圖:  ${stats.clearedBroken}`);
   console.log(`原即純文字無圖:     ${stats.noImage}`);
+  if (stats.uploadFailed > 0) {
+    console.log(`Storage 上傳失敗:   ${stats.uploadFailed}`);
+  }
   console.log(`預估單文件體積:     ${(estimatedBytes / 1024).toFixed(1)} KB (${pct}% of 1 MiB)`);
   console.log('=========================================');
 }

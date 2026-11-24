@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "clean": "next clean",
+    "clean": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true})\"",
     "migrate:images": "tsx scripts/migrate-publication-images.ts",
     "sync:metadata": "tsx scripts/sync-citations-metadata.ts"
   },

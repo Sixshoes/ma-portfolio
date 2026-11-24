@@ -22,6 +22,7 @@ export interface Publication {
 
 const YEAR_REGEX = /\b((?:19|20)\d{2})\b/;
 const DOI_PREFIX_REGEX = /^https?:\/\/(?:dx\.)?doi\.org\/(.+)$/i;
+const BARE_DOI_REGEX = /^10\.\d{4,9}\/[^\s]+$/;
 
 /** 常見國際期刊大小寫正規化映射表（修正 Scopus/Notion 匯入時的駝峰或縮寫小寫錯誤） */
 const JOURNAL_CASE_MAP: Record<string, string> = {
@@ -31,13 +32,15 @@ const JOURNAL_CASE_MAP: Record<string, string> = {
   crystengcomm: 'CrystEngComm',
   'acs omega': 'ACS Omega',
   'acs applied materials and interfaces': 'ACS Applied Materials and Interfaces',
+  'acs applied materials & interfaces': 'ACS Applied Materials & Interfaces',
   'acs applied nano materials': 'ACS Applied Nano Materials',
   'acs applied energy materials': 'ACS Applied Energy Materials',
   'acs sustainable chemistry and engineering': 'ACS Sustainable Chemistry and Engineering',
+  'acs sustainable chemistry & engineering': 'ACS Sustainable Chemistry & Engineering',
 };
 
 export function normalizeJournalName(raw: unknown): string {
-  const trimmed = String(raw ?? '').trim();
+  const trimmed = String(raw ?? '').replace(/\s+/g, ' ').trim();
   if (!trimmed) return 'Unknown';
   return JOURNAL_CASE_MAP[trimmed.toLowerCase()] ?? trimmed;
 }
@@ -58,6 +61,16 @@ function sanitizeHttpUrl(value: unknown): string {
   return /^https?:\/\//i.test(trimmed) ? trimmed : '';
 }
 
+function normalizeDoiUrl(value: unknown): string {
+  if (typeof value !== 'string') return '';
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+  if (BARE_DOI_REGEX.test(trimmed)) {
+    return `https://doi.org/${trimmed}`;
+  }
+  return sanitizeHttpUrl(trimmed);
+}
+
 function parseSafeYear(value: unknown): number {
   if (typeof value === 'number' && Number.isFinite(value)) {
     const rounded = Math.trunc(value);
@@ -72,22 +85,27 @@ function parseSafeYear(value: unknown): number {
 }
 
 function parseSafeCitations(value: unknown): number {
-  const parsed = Number(value ?? 0);
+  const normalized = typeof value === 'string' ? value.replace(/,/g, '').trim() : value;
+  const parsed = Number(normalized ?? 0);
   return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : 0;
 }
 
-/** 從完整 DOI 網址自動擷取 DOI 本體（供 Altmetric 外連使用） */
+/** 從完整 DOI 網址或裸 DOI 擷取乾淨的 DOI 本體（去除查詢參數、雜湊並解碼 %2F） */
 export function extractDoiIdentifier(doiUrl: string): string | undefined {
   const trimmed = doiUrl.trim();
   if (!trimmed) return undefined;
+  let candidate = trimmed;
   const match = trimmed.match(DOI_PREFIX_REGEX);
   if (match && match[1]) {
-    return match[1].trim();
+    candidate = match[1].trim();
   }
-  if (/^10\.\d{4,9}\/\S+$/.test(trimmed)) {
-    return trimmed;
+  candidate = candidate.split(/[?#]/)[0].trim().replace(/[./;,]+$/, '');
+  try {
+    candidate = decodeURIComponent(candidate);
+  } catch {
+    /* 保留原字串 */
   }
-  return undefined;
+  return BARE_DOI_REGEX.test(candidate) ? candidate : undefined;
 }
 
 /** 取得單篇論文的穩定識別鍵，避免無 DOI 或重複 DOI 時發生衝突 */
@@ -122,7 +140,7 @@ export function normalizePublicationsFromJson(data: unknown): Publication[] {
     .filter((item): item is Record<string, unknown> => item !== null && typeof item === 'object')
     .map((pub) => {
       const id = typeof pub.id === 'string' && pub.id.trim() ? pub.id.trim() : undefined;
-      const doi = sanitizeHttpUrl(pub.doi);
+      const doi = normalizeDoiUrl(pub.doi);
       const authors = normalizeAuthorsString(pub.authors);
       const takeaway = typeof pub.takeaway === 'string' && pub.takeaway.trim() ? pub.takeaway.trim() : undefined;
       const rawAbstract = pub.abstract_excerpt ?? pub.abstractExcerpt;

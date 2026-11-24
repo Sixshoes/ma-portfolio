@@ -1,6 +1,6 @@
 'use client';
 
-import React, { memo, useCallback, useMemo, useState } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { LayoutGroup, motion, useReducedMotion } from 'motion/react';
 import {
   ArrowDown,
@@ -26,6 +26,7 @@ import {
 import type { Publication } from '@/lib/publications';
 import type { ChalkboardItem } from '@/lib/chalkboards';
 import { computeDomainStats } from '@/lib/researchDomains';
+import { getPreferredScrollBehavior } from '@/lib/clientUtils';
 import { useRenderProfiler } from './useRenderProfiler';
 import { uiTokens } from './uiTokens';
 
@@ -102,18 +103,37 @@ function HeroStatsResearchSectionComponent({
   const [failedHeroIds, setFailedHeroIds] = useState<Record<string, boolean>>({});
   const [hoveredBlueprintIdx, setHoveredBlueprintIdx] = useState<number | null>(null);
   const [lightbox, setLightbox] = useState<FigureLightboxPayload | null>(null);
+  const heroBoardImgRef = useRef<HTMLImageElement>(null);
 
   const safeSlideIdx = heroChalkboards.length > 0 ? heroSlideIdx % heroChalkboards.length : 0;
   const activeHeroBoard = heroChalkboards[safeSlideIdx];
-  const heroBoardImgFailed = activeHeroBoard ? Boolean(failedHeroIds[activeHeroBoard.id]) : true;
+  const activeHeroFailKey = activeHeroBoard
+    ? `${activeHeroBoard.id}:${activeHeroBoard.imageUrl}`
+    : '';
+  const heroBoardImgFailed = activeHeroBoard ? Boolean(failedHeroIds[activeHeroFailKey]) : true;
+
+  // 若圖片於 SSR 水合前已載入失敗，掛載時補檢 naturalWidth === 0 立即切換向量黑板備援
+  useEffect(() => {
+    const img = heroBoardImgRef.current;
+    if (img && img.complete && img.naturalWidth === 0 && activeHeroFailKey) {
+      setFailedHeroIds((prev) => (prev[activeHeroFailKey] ? prev : { ...prev, [activeHeroFailKey]: true }));
+    }
+  }, [activeHeroFailKey]);
 
   const displayHIndex = hIndexValue ?? statsText.hIndexValue;
 
-  // 動態計算五大領域篇數與總引用數，以及全站最高被引巔峰代表作
+  // 動態計算五大領域篇數與總引用數、實際年份區間，以及全站最高被引巔峰代表作
   const domainStats = useMemo(() => computeDomainStats(allPublications), [allPublications]);
   const landmarkPaper = useMemo(() => {
     if (allPublications.length === 0) return null;
     return [...allPublications].sort((a, b) => b.citations - a.citations)[0] ?? null;
+  }, [allPublications]);
+  const yearRangeLabel = useMemo(() => {
+    const validYears = allPublications
+      .map((p) => p.year)
+      .filter((y) => Number.isFinite(y) && y >= 1900 && y <= 2100);
+    if (validYears.length === 0) return '1993–2027';
+    return `${Math.min(...validYears)}–${Math.max(...validYears)}`;
   }, [allPublications]);
 
   const scrollToSection = useCallback(
@@ -121,11 +141,13 @@ function HeroStatsResearchSectionComponent({
       const target = document.getElementById(id);
       if (!target) return;
       e.preventDefault();
-      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      target.scrollIntoView({ behavior: getPreferredScrollBehavior(), block: 'start' });
       window.history.replaceState(null, '', `#${id}`);
     },
     [],
   );
+
+  const closeLightbox = useCallback(() => setLightbox(null), []);
 
   const openHeroLightbox = useCallback(() => {
     if (!activeHeroBoard || heroBoardImgFailed) return;
@@ -237,6 +259,7 @@ function HeroStatsResearchSectionComponent({
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
+                      ref={heroBoardImgRef}
                       src={activeHeroBoard.imageUrl}
                       alt={isZh ? activeHeroBoard.titleZh : activeHeroBoard.titleEn}
                       width={1024}
@@ -246,7 +269,7 @@ function HeroStatsResearchSectionComponent({
                       onError={() =>
                         setFailedHeroIds((prev) => ({
                           ...prev,
-                          [activeHeroBoard.id]: true,
+                          [activeHeroFailKey]: true,
                         }))
                       }
                       className="h-full w-full object-cover object-[76%_36%] transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]"
@@ -344,7 +367,7 @@ function HeroStatsResearchSectionComponent({
                     {isZh ? '研究領域產出分佈' : 'Research Domain Atlas'}
                   </h2>
                   <span className="rounded-full bg-[var(--app-hover)] px-2.5 py-0.5 font-mono text-xs text-[var(--app-muted)]">
-                    1993–2027
+                    {yearRangeLabel}
                   </span>
                 </div>
 
@@ -409,7 +432,7 @@ function HeroStatsResearchSectionComponent({
                         <span className="font-editorial text-4xl font-bold tracking-tight text-[var(--app-ink)] [font-variant-numeric:tabular-nums]">
                           {landmarkPaper.citations.toLocaleString('en-US')}
                         </span>
-                        <span className="font-mono text-sm font-semibold uppercase tracking-wider text-[#A46B15] dark:text-[#F3DF87]">
+                        <span className="font-mono text-sm font-semibold uppercase tracking-wider text-[#8A560B] dark:text-[#F3DF87]">
                           {isZh ? '次引用' : 'CITATIONS'}
                         </span>
                       </div>
@@ -435,7 +458,7 @@ function HeroStatsResearchSectionComponent({
                           href={landmarkPaper.doi}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center gap-1.5 rounded-full bg-[var(--app-ink)] px-4 py-2.5 text-sm font-medium text-[var(--app-bg)] transition-colors hover:bg-[#C88A2B] hover:text-white"
+                          className="inline-flex items-center justify-center gap-1.5 rounded-full bg-[var(--app-ink)] px-4 py-2.5 text-sm font-medium text-[var(--app-bg)] transition-colors hover:bg-[#D99B32] hover:text-[#1A1205]"
                         >
                           {isZh ? '前往原文 DOI' : 'Read Landmark Paper'}
                           <ExternalLink className="h-4 w-4" aria-hidden />
@@ -446,13 +469,13 @@ function HeroStatsResearchSectionComponent({
                         onClick={(e) => scrollToSection(e, 'publications')}
                         className="inline-flex items-center justify-center gap-1 rounded-full border border-[var(--app-rule)] px-4 py-2 text-sm text-[var(--app-muted)] transition-colors hover:border-[var(--app-ink)] hover:text-[var(--app-ink)]"
                       >
-                        {isZh ? '瀏覽完整 217 篇著作 ↓' : 'Explore full bibliography ↓'}
+                        {isZh ? `瀏覽完整 ${totalPubs} 篇著作 ↓` : 'Explore full bibliography ↓'}
                       </a>
                     </div>
                   </>
                 ) : (
                   <div className="flex flex-1 items-center justify-center text-sm text-[var(--app-muted)]">
-                    Loading landmark metrics...
+                    {isZh ? '載入巔峰代表作中…' : 'Loading landmark metrics...'}
                   </div>
                 )}
               </div>
@@ -526,7 +549,9 @@ function HeroStatsResearchSectionComponent({
                       {/* 頂部礦物五色圓潤徽章與篇數 */}
                       <div className="flex items-center justify-between gap-2">
                         <span
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-xl font-editorial text-sm font-bold text-white shadow-sm"
+                          className={`inline-flex h-9 w-9 items-center justify-center rounded-xl font-editorial text-sm font-bold shadow-sm ${
+                            domain.color === '#C88A2B' ? 'text-[#1A1205]' : 'text-white'
+                          }`}
                           style={{ backgroundColor: domain.color }}
                         >
                           {domain.roman}
@@ -539,6 +564,12 @@ function HeroStatsResearchSectionComponent({
                       {/* 彈性高度透明粉筆藍圖框（h-auto 避免第 IV/V 張雙行公式壓線溢位，無底色接縫補丁） */}
                       <button
                         type="button"
+                        aria-pressed={isSelected}
+                        aria-label={
+                          isZh
+                            ? `依「${textItem?.title ?? domain.labelZh}」篩選論文（${count} 篇）`
+                            : `Filter publications by ${textItem?.title ?? domain.labelEn} (${count} works)`
+                        }
                         onClick={() => onFilterByDomain(domain.id)}
                         className="my-3 flex h-auto min-h-[192px] w-full cursor-pointer flex-col items-center justify-between gap-2.5 rounded-xl border border-dashed border-[#34594A] bg-transparent px-3 py-3.5 transition-colors group-hover:border-[#F3DF87]/55"
                       >
@@ -588,6 +619,7 @@ function HeroStatsResearchSectionComponent({
                         </span>
                         <button
                           type="button"
+                          aria-pressed={isSelected}
                           onClick={() => onFilterByDomain(domain.id)}
                           className="inline-flex items-center gap-1 rounded-full bg-[#F3DF87]/15 px-3 py-1 font-medium text-[#F3DF87] transition-colors hover:bg-[#F3DF87] hover:text-[#152820]"
                         >
@@ -607,7 +639,7 @@ function HeroStatsResearchSectionComponent({
       <FigureLightboxModal
         lightbox={lightbox}
         closeLabel={isZh ? '關閉預覽' : 'Close preview'}
-        onClose={() => setLightbox(null)}
+        onClose={closeLightbox}
       />
     </LayoutGroup>
   );

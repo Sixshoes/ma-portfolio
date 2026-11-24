@@ -1,6 +1,6 @@
 'use client';
 
-import React, { memo } from 'react';
+import React, { memo, useId } from 'react';
 
 type ChalkboardFallbackGraphicProps = {
   /** 是否在右緣疊入馬副校長肖像剪影（首屏無實拍黑板原圖時作為高質感過渡） */
@@ -17,6 +17,7 @@ function ChalkboardFallbackGraphicComponent({
   showPortraitHint = false,
   className = '',
 }: ChalkboardFallbackGraphicProps) {
+  const gradId = useId();
   return (
     <div
       className={`relative h-full w-full overflow-hidden bg-[#1B3329] ${className}`.trim()}
@@ -29,12 +30,12 @@ function ChalkboardFallbackGraphicComponent({
         aria-label="Quantum Tunneling & STM Barrier Transmission chalkboard derivation"
       >
         <defs>
-          <radialGradient id="chalkGlow" cx="38%" cy="42%" r="65%">
+          <radialGradient id={gradId} cx="38%" cy="42%" r="65%">
             <stop offset="0%" stopColor="#264739" />
             <stop offset="100%" stopColor="#14271F" />
           </radialGradient>
         </defs>
-        <rect width="640" height="420" fill="url(#chalkGlow)" />
+        <rect width="640" height="420" fill={`url(#${gradId})`} />
 
         {/* 極淡黑板擦拭痕與格線 */}
         <g stroke="#F4F1EA" strokeOpacity="0.06" strokeWidth="1">
@@ -171,7 +172,7 @@ function ChalkboardFallbackGraphicComponent({
         <div className="pointer-events-none absolute bottom-16 right-4 hidden h-28 w-28 overflow-hidden rounded-full border-2 border-[#F3DF87]/70 bg-[#DDD9CE] shadow-lg sm:block">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/profile.jpg"
+            src="/profile-avatar.webp"
             alt=""
             className="h-full w-full object-cover object-top mix-blend-multiply contrast-[1.04]"
           />

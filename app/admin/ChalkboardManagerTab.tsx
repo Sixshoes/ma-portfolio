@@ -3,10 +3,12 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import type { User } from 'firebase/auth';
 import {
+  AlertTriangle,
   ArrowDown,
   ArrowUp,
   ImagePlus,
   Loader2,
+  RefreshCw,
   Save,
   Sparkles,
   Star,
@@ -20,10 +22,18 @@ import {
   uploadChalkboardImage,
 } from '@/lib/firebase';
 
+const ALLOWED_CHALKBOARD_MIMES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/avif',
+]);
+
 type ChalkboardManagerTabProps = {
   user: User;
   onTriggerRevalidate: (currentUser: User) => Promise<{ ok: boolean; error?: string }>;
   onToast: (type: 'ok' | 'err', text: string) => void;
+  onDirtyChange?: (dirty: boolean) => void;
 };
 
 /** /admin 黑板手稿相簿管理分頁：支援多張拖放上傳（自動轉 1800px WebP）、編輯公式註解、排序與首頁輪播開關 */
@@ -31,19 +41,48 @@ export function ChalkboardManagerTab({
   user,
   onTriggerRevalidate,
   onToast,
+  onDirtyChange,
 }: ChalkboardManagerTabProps) {
   const [items, setItems] = useState<ChalkboardItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [dirty, setDirty] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    onDirtyChange?.(dirty);
+    return () => {
+      onDirtyChange?.(false);
+    };
+  }, [dirty, onDirtyChange]);
+
+  useEffect(() => {
+    if (!dirty) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [dirty]);
 
   const loadData = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const doc = await loadChalkboardsBundleFromFirestore();
+      if (!mountedRef.current) return;
       if (doc && doc.items.length > 0) {
         setItems(doc.items);
       } else {
@@ -51,13 +90,14 @@ export function ChalkboardManagerTab({
       }
       setDirty(false);
     } catch (err) {
-      onToast(
-        'err',
-        `讀取黑板相簿失敗：${err instanceof Error ? err.message : '未知錯誤'}`,
-      );
-      setItems(DEFAULT_CHALKBOARDS);
+      if (!mountedRef.current) return;
+      const msg = err instanceof Error ? err.message : '未知錯誤';
+      setLoadError(msg);
+      onToast('err', `讀取黑板相簿失敗：${msg}`);
     } finally {
-      setLoading(false);
+      if (mountedRef.current) {
+        setLoading(false);
+      }
     }
   }, [onToast]);
 
@@ -65,55 +105,79 @@ export function ChalkboardManagerTab({
     void loadData();
   }, [loadData]);
 
+  const isLocked = loading || uploading || saving || Boolean(loadError);
+
   const handleFilesSelected = useCallback(
     async (fileList: FileList | null) => {
-      if (!fileList || fileList.length === 0) return;
+      if (!fileList || fileList.length === 0 || isLocked) return;
       if (!isFirebaseStorageConfigured()) {
         onToast('err', '尚未設定 Firebase Storage（NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET）。');
         return;
       }
 
-      const files = Array.from(fileList).filter((f) => f.type.startsWith('image/'));
+      const files = Array.from(fileList).filter((f) =>
+        ALLOWED_CHALKBOARD_MIMES.has(f.type.toLowerCase()),
+      );
       if (files.length === 0) {
-        onToast('err', '請選擇 JPG / PNG / WebP 黑板照片檔案。');
+        onToast('err', '請選擇 JPG / PNG / WebP / AVIF 黑板照片檔案（不接受 SVG 或非點陣圖格式）。');
         return;
       }
 
       setUploading(true);
+      const uploaded: ChalkboardItem[] = [];
+      const failedNames: string[] = [];
       try {
-        const uploaded: ChalkboardItem[] = [];
         for (let i = 0; i < files.length; i += 1) {
           const file = files[i];
           const stem = file.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim();
-          const { downloadUrl, id } = await uploadChalkboardImage(file);
-          uploaded.push({
-            id,
-            imageUrl: downloadUrl,
-            titleZh: stem || '親筆黑板物理推導手稿',
-            titleEn: stem || 'Physics Chalkboard Derivation',
-            formulaNote: '',
-            courseOrTopic: 'Physics Lecture',
-            year: String(new Date().getFullYear()),
-            featuredInHero: true,
-            order: items.length + i + 1,
-          });
+          try {
+            const { downloadUrl, id } = await uploadChalkboardImage(file);
+            uploaded.push({
+              id,
+              imageUrl: downloadUrl,
+              titleZh: stem || '親筆黑板物理推導手稿',
+              titleEn: stem || 'Physics Chalkboard Derivation',
+              formulaNote: '',
+              courseOrTopic: 'Physics Lecture',
+              year: String(new Date().getFullYear()),
+              featuredInHero: true,
+              order: items.length + uploaded.length + 1,
+            });
+          } catch (err) {
+            failedNames.push(
+              `${file.name}（${err instanceof Error ? err.message : '上傳失敗'}）`,
+            );
+          }
         }
-        setItems((prev) => [...uploaded, ...prev].map((it, idx) => ({ ...it, order: idx + 1 })));
-        setDirty(true);
-        onToast(
-          'ok',
-          `已轉為 1800px 高清 WebP 上傳 ${uploaded.length} 張黑板照，請填寫公式註解後按「儲存並發布」。`,
-        );
-      } catch (err) {
-        onToast(
-          'err',
-          `上傳失敗：${err instanceof Error ? err.message : '請確認 storage.rules 已開通 chalkboards/*'}`
-        );
       } finally {
-        setUploading(false);
+        if (mountedRef.current) {
+          if (uploaded.length > 0) {
+            setItems((prev) =>
+              [...uploaded, ...prev].map((it, idx) => ({ ...it, order: idx + 1 })),
+            );
+            setDirty(true);
+          }
+          if (failedNames.length > 0 && uploaded.length > 0) {
+            onToast(
+              'err',
+              `已上傳 ${uploaded.length} 張，但 ${failedNames.length} 張失敗：${failedNames[0]}（請記得按「儲存並發布」保留成功項目）`,
+            );
+          } else if (failedNames.length > 0) {
+            onToast(
+              'err',
+              `上傳失敗：${failedNames[0]}（請確認 storage.rules 已開通 chalkboards/*）`,
+            );
+          } else if (uploaded.length > 0) {
+            onToast(
+              'ok',
+              `已轉為 1800px 高清 WebP 上傳 ${uploaded.length} 張黑板照，請填寫公式註解後按「儲存並發布」。`,
+            );
+          }
+          setUploading(false);
+        }
       }
     },
-    [items.length, onToast],
+    [isLocked, items.length, onToast],
   );
 
   const updateField = <K extends keyof ChalkboardItem>(
@@ -144,19 +208,26 @@ export function ChalkboardManagerTab({
   };
 
   const handleSaveAndPublish = async () => {
-    if (!user.email) return;
+    if (isLocked) return;
+    if (!user.email) {
+      onToast('err', '尚未登入管理者帳號，請重新登入後再儲存。');
+      return;
+    }
     setSaving(true);
     try {
       const saved = await saveChalkboardsBundleToFirestore(items, user.email);
+      if (!mountedRef.current) return;
       setItems(saved.items);
       setDirty(false);
       const rev = await onTriggerRevalidate(user);
+      if (!mountedRef.current) return;
       if (rev.ok) {
         onToast('ok', `已儲存 ${saved.items.length} 張黑板手稿並立即刷新官網快取！`);
       } else {
         onToast('err', `黑板相簿已存檔，但刷新快取失敗：${rev.error}`);
       }
     } catch (err) {
+      if (!mountedRef.current) return;
       const msg = err instanceof Error ? err.message : '儲存失敗';
       if (msg.includes('permission-denied') || msg.includes('PERMISSION_DENIED')) {
         onToast('err', '權限不足：請確認已將最新 firestore.rules（含 siteData/chalkboards）發布至 Firebase Console。');
@@ -164,23 +235,49 @@ export function ChalkboardManagerTab({
         onToast('err', `儲存失敗：${msg}`);
       }
     } finally {
-      setSaving(false);
+      if (mountedRef.current) {
+        setSaving(false);
+      }
     }
   };
 
   return (
     <div className="space-y-6">
+      {loadError ? (
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-6">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h2 className="mb-1.5 flex items-center gap-2 text-base font-semibold text-red-800">
+                <AlertTriangle className="h-4 w-4 shrink-0" />
+                讀取黑板手稿相簿失敗，已鎖定上傳與儲存以防止覆蓋既有相簿
+              </h2>
+              <p className="font-mono text-xs text-red-700">{loadError}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void loadData()}
+              className="inline-flex items-center gap-1.5 rounded-full border border-red-300 bg-white px-4 py-2 text-xs font-semibold text-red-700 transition-colors hover:bg-red-100"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              重試讀取
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       {/* 拖放上傳區（1800px WebP 高清保留粉筆數學符號） */}
       <div
         onDragOver={(e) => {
           e.preventDefault();
-          setIsDragging(true);
+          if (!isLocked) setIsDragging(true);
         }}
         onDragLeave={() => setIsDragging(false)}
         onDrop={(e) => {
           e.preventDefault();
           setIsDragging(false);
-          void handleFilesSelected(e.dataTransfer.files);
+          if (!isLocked) {
+            void handleFilesSelected(e.dataTransfer.files);
+          }
         }}
         className={`flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 text-center transition-colors ${
           isDragging
@@ -206,7 +303,7 @@ export function ChalkboardManagerTab({
           ref={fileInputRef}
           type="file"
           multiple
-          accept="image/jpeg,image/png,image/webp"
+          accept="image/jpeg,image/png,image/webp,image/avif"
           className="hidden"
           onChange={(e) => {
             void handleFilesSelected(e.target.files);
@@ -216,18 +313,18 @@ export function ChalkboardManagerTab({
         <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
           <button
             type="button"
-            disabled={uploading}
+            disabled={isLocked}
             onClick={() => fileInputRef.current?.click()}
-            className="inline-flex items-center gap-2 rounded-full bg-[#1B3329] px-5 py-2 text-xs font-semibold text-[#F3DF87] transition-colors hover:bg-[#244336] disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-full bg-[#1B3329] px-5 py-2 text-xs font-semibold text-[#F3DF87] transition-colors hover:bg-[#244336] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <ImagePlus className="h-3.5 w-3.5" />
             選擇黑板照片（可多選）
           </button>
           <button
             type="button"
-            disabled={saving || uploading}
+            disabled={isLocked}
             onClick={() => void handleSaveAndPublish()}
-            className={`inline-flex items-center gap-2 rounded-full px-5 py-2 text-xs font-semibold text-white transition-colors disabled:opacity-50 ${
+            className={`inline-flex items-center gap-2 rounded-full px-5 py-2 text-xs font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
               dirty
                 ? 'bg-[#0F4C81] hover:bg-[#0B3A63]'
                 : 'bg-[#5A6775] hover:bg-[#3F4A56]'
@@ -245,7 +342,7 @@ export function ChalkboardManagerTab({
           <Loader2 className="h-5 w-5 animate-spin text-[#1B3329]" />
           讀取黑板手稿相簿中...
         </div>
-      ) : items.length === 0 ? (
+      ) : loadError ? null : items.length === 0 ? (
         <div className="rounded-2xl border border-[#DCE2E8] bg-white p-10 text-center text-sm text-[#5A6775]">
           目前尚未上架任何黑板手稿照片，請直接拖入上方區塊開始上傳。
         </div>
