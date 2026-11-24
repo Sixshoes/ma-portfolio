@@ -1,7 +1,8 @@
 'use client';
 
 import React, { memo, useCallback, useRef, useState } from 'react';
-import { InkRule } from '@/app/components/EditorialMotion';
+import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from 'motion/react';
+import { EDITORIAL_EASE, InkRule } from '@/app/components/EditorialMotion';
 import { useRenderProfiler } from './useRenderProfiler';
 import { uiTokens } from './uiTokens';
 
@@ -36,18 +37,18 @@ function renderChronoRow(text: string) {
   const match = text.match(/(.*?)\s*\(([^)]+)\)$/);
   if (match) {
     return (
-      <div className="flex flex-col gap-1 border-b border-[#D4D1C8] px-2 py-4 transition-colors duration-150 last:border-b-0 hover:bg-[#EFECE6] sm:flex-row sm:items-baseline sm:gap-6">
-        <span className="font-mono text-xs leading-snug text-[#5C5953] [font-variant-numeric:tabular-nums] sm:w-44 sm:shrink-0">
+      <div className="flex flex-col gap-1 border-b border-[var(--app-rule)] px-2 py-4 transition-colors duration-150 last:border-b-0 hover:bg-[var(--app-hover)] sm:flex-row sm:items-baseline sm:gap-6">
+        <span className="font-mono text-xs leading-snug text-[var(--app-muted)] [font-variant-numeric:tabular-nums] sm:w-44 sm:shrink-0">
           {match[2]}
         </span>
-        <span className="flex-1 text-[15px] leading-relaxed text-[#141413]">
+        <span className="flex-1 text-[15px] leading-relaxed text-[var(--app-ink)]">
           {match[1]}
         </span>
       </div>
     );
   }
   return (
-    <div className="border-b border-[#D4D1C8] px-2 py-4 text-[15px] leading-relaxed text-[#141413] last:border-b-0 hover:bg-[#EFECE6]">
+    <div className="border-b border-[var(--app-rule)] px-2 py-4 text-[15px] leading-relaxed text-[var(--app-ink)] last:border-b-0 hover:bg-[var(--app-hover)]">
       {text}
     </div>
   );
@@ -55,6 +56,7 @@ function renderChronoRow(text: string) {
 
 function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
   useRenderProfiler('AboutSection');
+  const reduceMotion = useReducedMotion();
   const [tab, setTab] = useState<AboutTab>('roles');
   const [isExpandedAdmin, setIsExpandedAdmin] = useState(false);
   const [isExpandedService, setIsExpandedService] = useState(false);
@@ -71,8 +73,9 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
     (e: React.KeyboardEvent<HTMLButtonElement>, currentId: AboutTab) => {
       const idx = TAB_IDS.indexOf(currentId);
       let nextIdx: number | null = null;
-      if (e.key === 'ArrowRight') nextIdx = (idx + 1) % TAB_IDS.length;
-      else if (e.key === 'ArrowLeft') nextIdx = (idx - 1 + TAB_IDS.length) % TAB_IDS.length;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') nextIdx = (idx + 1) % TAB_IDS.length;
+      else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp')
+        nextIdx = (idx - 1 + TAB_IDS.length) % TAB_IDS.length;
       else if (e.key === 'Home') nextIdx = 0;
       else if (e.key === 'End') nextIdx = TAB_IDS.length - 1;
 
@@ -108,162 +111,200 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
       <InkRule thick className="mb-10" />
 
       <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-12 lg:gap-12">
-        {/* 左側無框黏性章節目錄 */}
+        {/* 左側無框黏性章節目錄（搭配 layoutId="aboutTabInk" 垂直物理滑動墨線） */}
         <div className="lg:sticky lg:top-24 lg:col-span-4">
-          <h3 className="font-editorial mb-3 text-xl font-semibold text-[#141413]">
+          <h3 className="font-editorial mb-3 text-xl font-semibold text-[var(--app-ink)]">
             {aboutText.leadership}
           </h3>
-          <p className="mb-8 text-sm leading-[1.8] text-[#2D2C29]">
+          <p className="mb-8 text-sm leading-[1.8] text-[var(--app-body)]">
             {aboutText.leadershipDesc}
           </p>
 
-          <div
-            role="tablist"
-            aria-label={tablistLabel}
-            className="divide-y divide-[#D4D1C8] border-y border-[#141413]"
-          >
-            {tabs.map(({ id, label, count }) => {
-              const selected = tab === id;
-              return (
-                <button
-                  key={id}
-                  ref={(el) => {
-                    tabRefs.current[id] = el;
-                  }}
-                  type="button"
-                  role="tab"
-                  aria-selected={selected}
-                  tabIndex={selected ? 0 : -1}
-                  id={`about-tab-${id}`}
-                  aria-controls={`about-panel-${id}`}
-                  onClick={() => setTab(id)}
-                  onKeyDown={(e) => handleTabKeyDown(e, id)}
-                  className={`flex w-full items-center justify-between py-3.5 text-left transition-colors ${
-                    selected
-                      ? 'font-semibold text-[#141413]'
-                      : 'text-[#5C5953] hover:text-[#141413]'
-                  }`}
-                >
-                  <span className="flex items-center gap-3 text-sm">
-                    <span
-                      className={`h-[2px] transition-all duration-150 ${
-                        selected ? 'w-4 bg-[#141413]' : 'w-2 bg-[#D4D1C8]'
-                      }`}
-                      aria-hidden
-                    />
-                    {label}
-                  </span>
-                  <span className="font-mono text-xs text-[#5C5953] [font-variant-numeric:tabular-nums]">
-                    {String(count).padStart(2, '0')}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+          <LayoutGroup id="about-tabs">
+            <div
+              role="tablist"
+              aria-label={tablistLabel}
+              className="divide-y divide-[var(--app-rule)] border-y border-[var(--app-ink)]"
+            >
+              {tabs.map(({ id, label, count }) => {
+                const selected = tab === id;
+                return (
+                  <button
+                    key={id}
+                    ref={(el) => {
+                      tabRefs.current[id] = el;
+                    }}
+                    type="button"
+                    role="tab"
+                    aria-selected={selected}
+                    tabIndex={selected ? 0 : -1}
+                    id={`about-tab-${id}`}
+                    aria-controls={`about-panel-${id}`}
+                    onClick={() => setTab(id)}
+                    onKeyDown={(e) => handleTabKeyDown(e, id)}
+                    className={`relative flex w-full items-center justify-between py-3.5 pl-4 pr-2 text-left transition-colors ${
+                      selected
+                        ? 'bg-[var(--app-hover)]/75 font-semibold text-[var(--app-ink)]'
+                        : 'text-[var(--app-muted)] hover:bg-[var(--app-hover)]/45 hover:text-[var(--app-ink)]'
+                    }`}
+                  >
+                    {selected ? (
+                      <motion.span
+                        layoutId={reduceMotion ? undefined : 'aboutTabInk'}
+                        transition={{ duration: 0.3, ease: EDITORIAL_EASE }}
+                        aria-hidden="true"
+                        className="absolute bottom-1.5 left-0 top-1.5 w-[2.5px] bg-[var(--app-accent)]"
+                      />
+                    ) : null}
+                    <span className="text-sm">{label}</span>
+                    <span className="font-mono text-xs text-[var(--app-muted)] [font-variant-numeric:tabular-nums]">
+                      {String(count).padStart(2, '0')}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </LayoutGroup>
         </div>
 
-        {/* 右側無框編年履歷表（左側年份、右側內文） */}
+        {/* 右側無框編年履歷表（切換帶 180ms 淡入微移） */}
         <div className="min-h-[18rem] lg:col-span-8">
-          {tab === 'roles' && (
-            <div
-              role="tabpanel"
-              id="about-panel-roles"
-              aria-labelledby="about-tab-roles"
-              className="space-y-10"
-            >
-              <div>
-                <h4 className="font-editorial mb-3 text-base font-semibold text-[#141413]">
-                  {aboutText.roleLabel}
-                </h4>
-                <div className="border-y border-[#141413]">
-                  {aboutText.roles.map((role, idx) => (
-                    <div key={idx}>{renderChronoRow(role)}</div>
-                  ))}
+          <AnimatePresence mode="wait" initial={false}>
+            {tab === 'roles' ? (
+              <motion.div
+                key="panel-roles"
+                role="tabpanel"
+                id="about-panel-roles"
+                aria-labelledby="about-tab-roles"
+                initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
+                transition={{ duration: reduceMotion ? 0 : 0.18, ease: EDITORIAL_EASE }}
+                className="space-y-10"
+              >
+                <div>
+                  <h4 className="font-editorial mb-3 text-base font-semibold text-[var(--app-ink)]">
+                    {aboutText.roleLabel}
+                  </h4>
+                  <div className="border-y border-[var(--app-ink)]">
+                    {aboutText.roles.map((role, idx) => (
+                      <div key={idx}>{renderChronoRow(role)}</div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              <div>
-                <h4 className="font-editorial mb-3 text-base font-semibold text-[#141413]">
-                  {aboutText.eduLabel}
-                </h4>
-                <div className="border-y border-[#141413]">
-                  {aboutText.edu.map((eduItem, idx) => (
-                    <div key={idx}>{renderChronoRow(eduItem)}</div>
-                  ))}
+                <div>
+                  <h4 className="font-editorial mb-3 text-base font-semibold text-[var(--app-ink)]">
+                    {aboutText.eduLabel}
+                  </h4>
+                  <div className="border-y border-[var(--app-ink)]">
+                    {aboutText.edu.map((eduItem, idx) => (
+                      <div key={idx}>{renderChronoRow(eduItem)}</div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            </div>
-          )}
+              </motion.div>
+            ) : null}
 
-          {tab === 'admin' && (
-            <div role="tabpanel" id="about-panel-admin" aria-labelledby="about-tab-admin">
-              <h4 className="font-editorial mb-3 text-base font-semibold text-[#141413]">
-                {aboutText.adminLabel}
-              </h4>
-              <div className="border-y border-[#141413]">
-                {(isExpandedAdmin ? aboutText.admin : aboutText.admin.slice(0, 6)).map((item, idx) => (
-                  <div key={idx}>{renderChronoRow(item)}</div>
-                ))}
-              </div>
-              {aboutText.admin.length > 6 && (
-                <button
-                  type="button"
-                  onClick={() => setIsExpandedAdmin(!isExpandedAdmin)}
-                  className={`${uiTokens.buttonOutline} mt-6 px-5 py-2 text-xs`}
-                >
-                  {isExpandedAdmin
-                    ? lang === 'zh'
-                      ? '收起清單'
-                      : 'Show less'
-                    : lang === 'zh'
-                      ? `展開其餘 ${aboutText.admin.length - 6} 項`
-                      : `Show remaining ${aboutText.admin.length - 6}`}
-                </button>
-              )}
-            </div>
-          )}
-
-          {tab === 'service' && (
-            <div role="tabpanel" id="about-panel-service" aria-labelledby="about-tab-service">
-              <h4 className="font-editorial mb-3 text-base font-semibold text-[#141413]">
-                {aboutText.serviceLabel}
-              </h4>
-              <div className="border-y border-[#141413]">
-                {(isExpandedService ? aboutText.service : aboutText.service.slice(0, 6)).map(
-                  (item, idx) => (
-                    <div key={idx}>{renderChronoRow(item)}</div>
-                  ),
+            {tab === 'admin' ? (
+              <motion.div
+                key="panel-admin"
+                role="tabpanel"
+                id="about-panel-admin"
+                aria-labelledby="about-tab-admin"
+                initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
+                transition={{ duration: reduceMotion ? 0 : 0.18, ease: EDITORIAL_EASE }}
+              >
+                <h4 className="font-editorial mb-3 text-base font-semibold text-[var(--app-ink)]">
+                  {aboutText.adminLabel}
+                </h4>
+                <div className="border-y border-[var(--app-ink)]">
+                  {(isExpandedAdmin ? aboutText.admin : aboutText.admin.slice(0, 6)).map(
+                    (item, idx) => (
+                      <div key={idx}>{renderChronoRow(item)}</div>
+                    ),
+                  )}
+                </div>
+                {aboutText.admin.length > 6 && (
+                  <button
+                    type="button"
+                    onClick={() => setIsExpandedAdmin(!isExpandedAdmin)}
+                    className={`${uiTokens.buttonOutline} mt-6 px-5 py-2 text-xs`}
+                  >
+                    {isExpandedAdmin
+                      ? lang === 'zh'
+                        ? '收起清單'
+                        : 'Show less'
+                      : lang === 'zh'
+                        ? `展開其餘 ${aboutText.admin.length - 6} 項`
+                        : `Show remaining ${aboutText.admin.length - 6}`}
+                  </button>
                 )}
-              </div>
-              {aboutText.service.length > 6 && (
-                <button
-                  type="button"
-                  onClick={() => setIsExpandedService(!isExpandedService)}
-                  className={`${uiTokens.buttonOutline} mt-6 px-5 py-2 text-xs`}
-                >
-                  {isExpandedService
-                    ? lang === 'zh'
-                      ? '收起清單'
-                      : 'Show less'
-                    : lang === 'zh'
-                      ? `展開其餘 ${aboutText.service.length - 6} 項`
-                      : `Show remaining ${aboutText.service.length - 6}`}
-                </button>
-              )}
-            </div>
-          )}
+              </motion.div>
+            ) : null}
 
-          {tab === 'awards' && (
-            <div role="tabpanel" id="about-panel-awards" aria-labelledby="about-tab-awards">
-              <h4 className="font-editorial mb-3 text-base font-semibold text-[#141413]">
-                {aboutText.awardsLabel}
-              </h4>
-              <div className="border-y border-[#141413]">
-                {aboutText.awards.map((item, idx) => (
-                  <div key={idx}>{renderChronoRow(item)}</div>
-                ))}
-              </div>
-            </div>
-          )}
+            {tab === 'service' ? (
+              <motion.div
+                key="panel-service"
+                role="tabpanel"
+                id="about-panel-service"
+                aria-labelledby="about-tab-service"
+                initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
+                transition={{ duration: reduceMotion ? 0 : 0.18, ease: EDITORIAL_EASE }}
+              >
+                <h4 className="font-editorial mb-3 text-base font-semibold text-[var(--app-ink)]">
+                  {aboutText.serviceLabel}
+                </h4>
+                <div className="border-y border-[var(--app-ink)]">
+                  {(isExpandedService ? aboutText.service : aboutText.service.slice(0, 6)).map(
+                    (item, idx) => (
+                      <div key={idx}>{renderChronoRow(item)}</div>
+                    ),
+                  )}
+                </div>
+                {aboutText.service.length > 6 && (
+                  <button
+                    type="button"
+                    onClick={() => setIsExpandedService(!isExpandedService)}
+                    className={`${uiTokens.buttonOutline} mt-6 px-5 py-2 text-xs`}
+                  >
+                    {isExpandedService
+                      ? lang === 'zh'
+                        ? '收起清單'
+                        : 'Show less'
+                      : lang === 'zh'
+                        ? `展開其餘 ${aboutText.service.length - 6} 項`
+                        : `Show remaining ${aboutText.service.length - 6}`}
+                  </button>
+                )}
+              </motion.div>
+            ) : null}
+
+            {tab === 'awards' ? (
+              <motion.div
+                key="panel-awards"
+                role="tabpanel"
+                id="about-panel-awards"
+                aria-labelledby="about-tab-awards"
+                initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
+                transition={{ duration: reduceMotion ? 0 : 0.18, ease: EDITORIAL_EASE }}
+              >
+                <h4 className="font-editorial mb-3 text-base font-semibold text-[var(--app-ink)]">
+                  {aboutText.awardsLabel}
+                </h4>
+                <div className="border-y border-[var(--app-ink)]">
+                  {aboutText.awards.map((item, idx) => (
+                    <div key={idx}>{renderChronoRow(item)}</div>
+                  ))}
+                </div>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
         </div>
       </div>
     </section>

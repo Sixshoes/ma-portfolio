@@ -10,8 +10,8 @@ type ResearchPhysicsGlyphProps = {
   isActive: boolean;
 };
 
-const INK = '#141413';
-const OXFORD = '#1B365D';
+const INK = 'var(--app-ink)';
+const OXFORD = 'var(--app-accent)';
 
 function drawProps(isActive: boolean, reduce: boolean | null, delay = 0) {
   if (reduce) {

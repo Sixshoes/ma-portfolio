@@ -8,6 +8,10 @@ import {
 } from '@/lib/publications';
 import { computeFeaturedPublications } from '@/lib/publicationDisplay';
 import {
+  getResearchDomainById,
+  publicationMatchesDomain,
+} from '@/lib/researchDomains';
+import {
   fetchPapersFromRemote,
   readCachedPapers,
   writeCachedPapers,
@@ -41,6 +45,7 @@ export function usePublications(
   const [pubFilter, setPubFilter] = useState<PubFilter>('All');
   const [pubSort, setPubSort] = useState<PubSort>('newest');
   const [correspondingOnly, setCorrespondingOnly] = useState(false);
+  const [activeDomainId, setActiveDomainId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<PubViewMode>('card');
   const [searchQuery, setSearchQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(PUB_PAGE_DESKTOP);
@@ -173,6 +178,7 @@ export function usePublications(
   }, [publications, pubSort]);
 
   const normalizedQuery = searchQuery.trim().toLowerCase();
+  const activeDomain = useMemo(() => getResearchDomainById(activeDomainId), [activeDomainId]);
 
   const filteredPublications = useMemo(() => {
     let list = sortedPublications;
@@ -186,6 +192,10 @@ export function usePublications(
       list = list.filter((p) => p.is_star === '是');
     }
 
+    if (activeDomain) {
+      list = list.filter((p) => publicationMatchesDomain(p, activeDomain));
+    }
+
     if (normalizedQuery) {
       list = list.filter((p) => {
         const haystack = `${p.title} ${p.journal} ${p.year} ${p.authors ?? ''}`.toLowerCase();
@@ -193,11 +203,14 @@ export function usePublications(
       });
     }
     return list;
-  }, [pubFilter, correspondingOnly, normalizedQuery, sortedPublications]);
+  }, [pubFilter, correspondingOnly, activeDomain, normalizedQuery, sortedPublications]);
 
-  // 僅在未套用年份／高引用／搜尋／僅通訊作者篩選時顯示置頂精選區
+  // 僅在未套用年份／高引用／領域／搜尋／僅通訊作者篩選時顯示置頂精選區
   const isDefaultAllView =
-    pubFilter === 'All' && normalizedQuery === '' && !correspondingOnly;
+    pubFilter === 'All' &&
+    normalizedQuery === '' &&
+    !correspondingOnly &&
+    activeDomainId === null;
 
   const featuredPublications = useMemo(
     () => (isDefaultAllView ? computeFeaturedPublications(publications, 3) : []),
@@ -263,6 +276,28 @@ export function usePublications(
     [pageSize],
   );
 
+  const handleDomainFilterChange = useCallback(
+    (domainId: string | null) => {
+      setActiveDomainId(domainId);
+      if (domainId !== null) {
+        setPubFilter('All');
+        setSearchQuery('');
+      }
+      setVisibleCount(pageSize);
+    },
+    [pageSize],
+  );
+
+  const handleKeywordQuickFilter = useCallback(
+    (keyword: string) => {
+      setActiveDomainId(null);
+      setPubFilter('All');
+      setSearchQuery(keyword);
+      setVisibleCount(pageSize);
+    },
+    [pageSize],
+  );
+
   const handleLoadMore = useCallback(() => {
     setVisibleCount((prev) => prev + pageSize);
   }, [pageSize]);
@@ -272,6 +307,7 @@ export function usePublications(
     pubFilter,
     pubSort,
     correspondingOnly,
+    activeDomainId,
     viewMode,
     searchQuery,
     uniqueYears,
@@ -287,6 +323,8 @@ export function usePublications(
     handlePubFilterChange,
     handlePubSortChange,
     handleCorrespondingToggle,
+    handleDomainFilterChange,
+    handleKeywordQuickFilter,
     handleViewModeChange,
     handleSearchChange,
     handleLoadMore,

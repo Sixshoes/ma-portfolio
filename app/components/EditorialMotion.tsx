@@ -24,10 +24,10 @@ export function InkRule({
 }: InkRuleProps) {
   const reduce = useReducedMotion();
   const barClass = thick
-    ? 'h-[2px] w-full bg-[#141413]'
+    ? 'h-[2px] w-full bg-[var(--app-ink)]'
     : dark
-      ? 'h-px w-full bg-[#141413]'
-      : 'h-px w-full bg-[#D4D1C8]';
+      ? 'h-px w-full bg-[var(--app-ink)]'
+      : 'h-px w-full bg-[var(--app-rule)]';
 
   if (reduce) {
     return <div aria-hidden="true" className={`${barClass} ${className}`.trim()} />;

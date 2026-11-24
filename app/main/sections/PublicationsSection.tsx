@@ -6,16 +6,18 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
+  Code2,
   Copy,
   ExternalLink,
   Search,
   X,
   ZoomIn,
 } from 'lucide-react';
-import { Publication, getPublicationKey } from '@/lib/publications';
+import { Publication, extractDoiIdentifier, getPublicationKey } from '@/lib/publications';
 import type { PublicationsText } from '@/lib/i18n';
 import type { PubSort, PubViewMode } from '@/hooks/usePublications';
 import { parseTakeawayLines, splitAuthorsHighlighted } from '@/lib/publicationDisplay';
+import { getResearchDomainById } from '@/lib/researchDomains';
 import { EDITORIAL_EASE, InkRule } from '@/app/components/EditorialMotion';
 import {
   FigureLightboxModal,
@@ -27,7 +29,8 @@ import { PublicationLazyImage } from './PublicationLazyImage';
 import { PublicationTimelineChart } from './PublicationTimelineChart';
 
 type Lang = 'en' | 'zh';
-
+type CitationFormat = 'apa' | 'bibtex';
+type CopiedState = { key: string; format: CitationFormat } | null;
 type LightboxState = FigureLightboxPayload | null;
 
 type PublicationsSectionProps = {
@@ -37,6 +40,7 @@ type PublicationsSectionProps = {
   pubFilter: string;
   pubSort: PubSort;
   correspondingOnly: boolean;
+  activeDomainId: string | null;
   viewMode: PubViewMode;
   searchQuery: string;
   uniqueYears: string[];
@@ -52,6 +56,7 @@ type PublicationsSectionProps = {
   onFilterChange: (value: string) => void;
   onSortChange: (value: PubSort) => void;
   onCorrespondingToggle: () => void;
+  onClearDomainFilter: () => void;
   onViewModeChange: (mode: PubViewMode) => void;
   onSearchChange: (value: string) => void;
   onLoadMore: () => void;
@@ -67,6 +72,46 @@ function formatCitationString(pub: Publication): string {
   return parts.join(' ');
 }
 
+/** 依標題、作者、期刊、年份、DOI 自動組裝標準 BibTeX @article 引文 */
+function formatBibTeXString(pub: Publication): string {
+  const bareDoi = extractDoiIdentifier(pub.doi);
+  const firstWord =
+    pub.title
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .split(/\s+/)
+      .find((w) => w.length >= 3 && !['the', 'and', 'for', 'with', 'from', 'into'].includes(w)) ??
+    'paper';
+  const citeKey = `ma${pub.year > 0 ? pub.year : 'nd'}${firstWord}`;
+  const authorsBib = pub.authors?.trim()
+    ? pub.authors
+        .split(/,\s*/)
+        .map((a) => a.trim())
+        .filter(Boolean)
+        .join(' and ')
+    : 'Ma, Yuan-Ron';
+  const escapeBraces = (s: string) => s.replace(/[{}]/g, '');
+
+  const lines = [
+    `@article{${citeKey},`,
+    `  author  = {${escapeBraces(authorsBib)}},`,
+    `  title   = {${escapeBraces(pub.title)}},`,
+  ];
+  if (pub.journal && pub.journal !== 'Unknown') {
+    lines.push(`  journal = {${escapeBraces(pub.journal)}},`);
+  }
+  if (pub.year > 0) {
+    lines.push(`  year    = {${pub.year}},`);
+  }
+  if (bareDoi) {
+    lines.push(`  doi     = {${bareDoi}},`);
+  } else if (pub.doi) {
+    lines.push(`  url     = {${pub.doi}},`);
+  }
+  lines.push('}');
+  return lines.join('\n');
+}
+
 function getLinkDisplay(url: string, pubsText: PublicationsText): string {
   if (!url) return '';
   if (url.includes('doi.org/')) return url.split('doi.org/')[1];
@@ -79,9 +124,6 @@ function getLinkDisplay(url: string, pubsText: PublicationsText): string {
   }
 }
 
-/**
- * 僅讀取單篇專屬圖解摘要 cover_url；自動過濾與 file_img 重複之通用期刊封面
- */
 function resolveGraphicalAbstractUrl(pub: Publication): string {
   const cover = pub.cover_url?.trim() ?? '';
   if (!cover) return '';
@@ -102,6 +144,7 @@ type PublicationRowProps = {
   pub: Publication;
   pubKey: string;
   pubsText: PublicationsText;
+  lang: Lang;
   isMobile: boolean;
   litePub: boolean;
   featuredRank?: number;
@@ -109,17 +152,18 @@ type PublicationRowProps = {
   locale: string;
   currentYear: number;
   expandedKey: string | null;
-  copiedKey: string | null;
+  copiedState: CopiedState;
   onToggleAbstract: (key: string) => void;
-  onCopyCitation: (key: string, pub: Publication) => void;
+  onCopyCitation: (key: string, pub: Publication, format: CitationFormat) => void;
   onOpenLightbox: (payload: NonNullable<LightboxState>) => void;
 };
 
-/** 單欄全寬水平尺規學報書目列：左欄年份與通訊標記、中欄書目與摘要、右欄僅於有單篇摘要圖時顯示直角白底縮圖 */
+/** 單欄全寬水平尺規學報書目列（支援閱讀聚光燈、APA/BibTeX 雙制複製與暗房燈箱） */
 const PublicationJournalRow = memo(function PublicationJournalRow({
   pub,
   pubKey,
   pubsText,
+  lang,
   isMobile,
   litePub,
   featuredRank,
@@ -127,7 +171,7 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
   locale,
   currentYear,
   expandedKey,
-  copiedKey,
+  copiedState,
   onToggleAbstract,
   onCopyCitation,
   onOpenLightbox,
@@ -138,13 +182,15 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
 
   const takeawayLines = parseTakeawayLines(pub.takeaway);
   const expanded = expandedKey === pubKey;
-  const isCopied = copiedKey === pubKey;
+  const isApaCopied = copiedState?.key === pubKey && copiedState.format === 'apa';
+  const isBibCopied = copiedState?.key === pubKey && copiedState.format === 'bibtex';
   const hasAbstractBody = !!pub.abstract_excerpt?.trim();
   const isInPress = pub.year > currentYear;
   const eagerMain = index < (isMobile ? 1 : 3);
   const altmetricHref = pub.altmetric_id
     ? `https://www.altmetric.com/details.php?doi=${encodeURIComponent(pub.altmetric_id)}`
     : null;
+  const isZh = lang === 'zh';
 
   const handleUnavailable = useCallback(() => {
     setFailedUrl(figureUrl);
@@ -170,56 +216,56 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
           ? { contentVisibility: 'auto', containIntrinsicSize: showFigure ? '210px' : '148px' }
           : undefined
       }
-      className="group relative border-b border-[#D4D1C8] py-7 pl-0 transition-[opacity,background-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[#EFECE6]/55 md:pl-3 md:group-hover/list:opacity-60 md:hover:!opacity-100"
+      className="group relative border-b border-[var(--app-rule)] py-7 pl-0 transition-[opacity,background-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[var(--app-hover)]/65 md:pl-3 md:group-hover/list:opacity-60 md:hover:!opacity-100"
     >
-      {/* 當前閱讀行左側 3px 牛津深海藍書籤線 */}
+      {/* 當前閱讀行左側 3px 書籤線 */}
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute bottom-0 left-0 top-0 hidden w-[3px] origin-top scale-y-0 bg-[#1B365D] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-y-100 motion-reduce:transition-none md:block"
+        className="pointer-events-none absolute bottom-0 left-0 top-0 hidden w-[3px] origin-top scale-y-0 bg-[var(--app-accent)] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-y-100 motion-reduce:transition-none md:block"
       />
       <div className="flex flex-col gap-5 md:flex-row md:items-start md:gap-8">
         {/* 左欄：年份、預刊、通訊星號與代表作小標 */}
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 md:w-28 md:shrink-0 md:flex-col md:gap-1.5">
           <div className="flex items-center gap-2">
-            <span className="font-mono text-sm font-medium text-[#141413] [font-variant-numeric:tabular-nums]">
+            <span className="font-mono text-sm font-medium text-[var(--app-ink)] [font-variant-numeric:tabular-nums]">
               {pub.year > 0 ? pub.year : '—'}
             </span>
             {isInPress ? (
-              <span className="border border-[#1B365D] px-1.5 py-0.5 text-[10px] font-medium text-[#1B365D]">
+              <span className="border border-[var(--app-accent)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--app-accent)]">
                 {pubsText.inPress}
               </span>
             ) : null}
           </div>
 
           {featuredRank !== undefined ? (
-            <span className="text-xs font-medium text-[#1B365D]">
+            <span className="text-xs font-medium text-[var(--app-accent)]">
               {pubsText.featuredSpotlight} {String(featuredRank).padStart(2, '0')}
             </span>
           ) : null}
 
           {pub.is_star === '是' ? (
-            <span className="text-xs font-medium text-[#1B365D]">
+            <span className="text-xs font-medium text-[var(--app-accent)]">
               ★ {pubsText.corresponding}
             </span>
           ) : (
-            <span className="text-xs text-[#5C5953]">{pubsText.coauthor}</span>
+            <span className="text-xs text-[var(--app-muted)]">{pubsText.coauthor}</span>
           )}
         </div>
 
-        {/* 中欄：書目主內容（無圖時自然全寬延伸） */}
+        {/* 中欄：書目主內容 */}
         <div className="flex min-w-0 flex-1 flex-col">
-          <h3 className="font-editorial mb-2 text-lg font-semibold leading-[1.35] text-[#141413] transition-colors group-hover:text-[#1B365D] md:text-[1.2rem]">
+          <h3 className="font-editorial mb-2 text-lg font-semibold leading-[1.35] text-[var(--app-ink)] transition-colors group-hover:text-[var(--app-accent)] md:text-[1.2rem]">
             {pub.title}
           </h3>
 
           {pub.authors?.trim() ? (
-            <p className="mb-2.5 text-sm leading-relaxed text-[#5C5953]">
+            <p className="mb-2.5 text-sm leading-relaxed text-[var(--app-muted)]">
               {splitAuthorsHighlighted(pub.authors)}
             </p>
           ) : null}
 
           {takeawayLines.length > 0 ? (
-            <ul className="mb-3 space-y-1 border-l border-[#141413] pl-3.5 text-sm leading-relaxed text-[#2D2C29]">
+            <ul className="mb-3 space-y-1 border-l border-[var(--app-ink)] pl-3.5 text-sm leading-relaxed text-[var(--app-body)]">
               {takeawayLines.map((line, li) => (
                 <li key={li}>{line}</li>
               ))}
@@ -227,10 +273,10 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
           ) : null}
 
           <div className="mt-1 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">
-            <span className="font-journal-italic text-[15px] text-[#2D2C29]">
+            <span className="font-journal-italic text-[15px] text-[var(--app-body)]">
               {pub.journal}
             </span>
-            <span className="font-mono text-xs text-[#141413] [font-variant-numeric:tabular-nums]">
+            <span className="font-mono text-xs text-[var(--app-ink)] [font-variant-numeric:tabular-nums]">
               {pub.citations.toLocaleString(locale)} {pubsText.citations}
             </span>
             {pub.doi ? (
@@ -238,7 +284,7 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
                 href={pub.doi}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 break-all font-mono text-xs text-[#5C5953] underline decoration-[#D4D1C8] underline-offset-4 transition-colors hover:text-[#1B365D] hover:decoration-[#1B365D]"
+                className="inline-flex items-center gap-1 break-all font-mono text-xs text-[var(--app-muted)] underline decoration-[var(--app-rule)] underline-offset-4 transition-colors hover:text-[var(--app-accent)] hover:decoration-[var(--app-accent)]"
               >
                 {getLinkDisplay(pub.doi, pubsText)}
                 <ExternalLink className="h-3 w-3 shrink-0" aria-hidden />
@@ -246,28 +292,29 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
             ) : null}
           </div>
 
-          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-[#5C5953]">
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-[var(--app-muted)]">
+            {/* APA 標準引文複製 */}
             <button
               type="button"
-              onClick={() => onCopyCitation(pubKey, pub)}
-              className="inline-flex h-5 items-center overflow-hidden transition-colors hover:text-[#141413]"
+              onClick={() => onCopyCitation(pubKey, pub, 'apa')}
+              className="inline-flex h-5 items-center overflow-hidden transition-colors hover:text-[var(--app-ink)]"
             >
               <AnimatePresence mode="wait" initial={false}>
-                {isCopied ? (
+                {isApaCopied ? (
                   <motion.span
-                    key="copied"
+                    key="apa-copied"
                     initial={litePub ? { opacity: 1 } : { y: 8, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     exit={litePub ? { opacity: 0 } : { y: -8, opacity: 0 }}
                     transition={{ duration: litePub ? 0 : 0.2, ease: EDITORIAL_EASE }}
-                    className="inline-flex items-center gap-1 font-medium text-[#1B365D]"
+                    className="inline-flex items-center gap-1 font-medium text-[var(--app-accent)]"
                   >
-                    <Check className="h-3.5 w-3.5 text-[#1B365D]" aria-hidden />
-                    <span>{pubsText.copiedCitation}</span>
+                    <Check className="h-3.5 w-3.5 text-[var(--app-accent)]" aria-hidden />
+                    <span>{isZh ? '已複製書目' : pubsText.copiedCitation}</span>
                   </motion.span>
                 ) : (
                   <motion.span
-                    key="copy"
+                    key="apa-copy"
                     initial={litePub ? { opacity: 1 } : { y: 8, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     exit={litePub ? { opacity: 0 } : { y: -8, opacity: 0 }}
@@ -281,12 +328,47 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
               </AnimatePresence>
             </button>
 
+            {/* BibTeX 格式一鍵複製 */}
+            <button
+              type="button"
+              onClick={() => onCopyCitation(pubKey, pub, 'bibtex')}
+              className="inline-flex h-5 items-center overflow-hidden font-mono transition-colors hover:text-[var(--app-ink)]"
+            >
+              <AnimatePresence mode="wait" initial={false}>
+                {isBibCopied ? (
+                  <motion.span
+                    key="bib-copied"
+                    initial={litePub ? { opacity: 1 } : { y: 8, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={litePub ? { opacity: 0 } : { y: -8, opacity: 0 }}
+                    transition={{ duration: litePub ? 0 : 0.2, ease: EDITORIAL_EASE }}
+                    className="inline-flex items-center gap-1 font-sans font-medium text-[var(--app-accent)]"
+                  >
+                    <Check className="h-3.5 w-3.5 text-[var(--app-accent)]" aria-hidden />
+                    <span>{isZh ? '已複製 BibTeX' : 'BibTeX copied'}</span>
+                  </motion.span>
+                ) : (
+                  <motion.span
+                    key="bib-copy"
+                    initial={litePub ? { opacity: 1 } : { y: 8, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={litePub ? { opacity: 0 } : { y: -8, opacity: 0 }}
+                    transition={{ duration: litePub ? 0 : 0.2, ease: EDITORIAL_EASE }}
+                    className="inline-flex items-center gap-1"
+                  >
+                    <Code2 className="h-3.5 w-3.5" aria-hidden />
+                    <span>BibTeX</span>
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </button>
+
             {altmetricHref ? (
               <a
                 href={altmetricHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 transition-colors hover:text-[#1B365D] hover:underline"
+                className="inline-flex items-center gap-1 transition-colors hover:text-[var(--app-accent)] hover:underline"
               >
                 Altmetric
                 <ExternalLink className="h-3 w-3" aria-hidden />
@@ -298,7 +380,7 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
                 type="button"
                 onClick={() => onToggleAbstract(pubKey)}
                 aria-expanded={expanded}
-                className="inline-flex items-center gap-1 font-medium text-[#141413] transition-colors hover:text-[#1B365D]"
+                className="inline-flex items-center gap-1 font-medium text-[var(--app-ink)] transition-colors hover:text-[var(--app-accent)]"
               >
                 {expanded ? pubsText.collapseAbstract : pubsText.readAbstract}
                 {expanded ? (
@@ -317,10 +399,10 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: litePub ? 0 : 0.15 }}
+                transition={{ duration: litePub ? 0 : 0.18, ease: EDITORIAL_EASE }}
                 className="overflow-hidden"
               >
-                <p className="mt-4 border-t border-[#D4D1C8] pt-3.5 text-sm leading-relaxed text-[#2D2C29]">
+                <p className="mt-4 border-t border-[var(--app-rule)] pt-3.5 text-sm leading-relaxed text-[var(--app-body)]">
                   {pub.abstract_excerpt}
                 </p>
               </motion.div>
@@ -328,14 +410,14 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
           </AnimatePresence>
         </div>
 
-        {/* 右欄：僅於具備有效單篇摘要圖時顯示直角白底縮圖（點擊縮圖以 layoutId 絲滑展開紙白暗房燈箱） */}
+        {/* 右欄：僅於具備有效單篇摘要圖時顯示相紙底襯縮圖（黑版柔和防眩光） */}
         {showFigure ? (
           <div className="w-full shrink-0 md:w-[230px] lg:w-[252px]">
             <motion.div
               layoutId={litePub ? undefined : figLayoutId}
               transition={{ duration: 0.36, ease: EDITORIAL_EASE }}
               onClick={openFigure}
-              className="group/img relative flex aspect-[16/10] w-full cursor-zoom-in items-center justify-center overflow-hidden border border-[#D4D1C8] bg-white p-2 transition-colors hover:border-[#141413]"
+              className="group/img relative flex aspect-[16/10] w-full cursor-zoom-in items-center justify-center overflow-hidden border border-[var(--app-rule)] bg-[var(--app-figure-mat)] p-2 transition-colors hover:border-[var(--app-ink)]"
             >
               <PublicationLazyImage
                 key={figureUrl}
@@ -343,7 +425,7 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
                 alt={pub.title}
                 eager={eagerMain}
                 onUnavailable={handleUnavailable}
-                className="h-full w-full object-contain transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/img:scale-[1.03]"
+                className="editorial-figure-img h-full w-full object-contain transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/img:scale-[1.03]"
               />
               <button
                 type="button"
@@ -353,7 +435,7 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
                 }}
                 aria-label={pubsText.zoomFigure}
                 title={pubsText.zoomFigure}
-                className="absolute right-1.5 top-1.5 z-10 flex h-7 w-7 items-center justify-center border border-[#D4D1C8] bg-[#F7F6F2]/95 text-[#141413] opacity-85 transition-colors hover:border-[#141413] hover:bg-[#141413] hover:text-[#F7F6F2] group-hover/img:opacity-100 md:opacity-0"
+                className="absolute right-1.5 top-1.5 z-10 flex h-7 w-7 items-center justify-center border border-[var(--app-rule)] bg-[var(--app-bg)]/95 text-[var(--app-ink)] opacity-85 transition-colors hover:border-[var(--app-ink)] hover:bg-[var(--app-ink)] hover:text-[var(--app-bg)] group-hover/img:opacity-100 md:opacity-0"
               >
                 <ZoomIn className="h-3.5 w-3.5" aria-hidden />
               </button>
@@ -364,6 +446,8 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
     </article>
   );
 }, (prev, next) => {
+  const prevMatch = prev.copiedState?.key === prev.pubKey ? prev.copiedState.format : null;
+  const nextMatch = next.copiedState?.key === next.pubKey ? next.copiedState.format : null;
   return (
     prev.pubKey === next.pubKey &&
     prev.pub.title === next.pub.title &&
@@ -379,6 +463,7 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
     prev.pub.abstract_excerpt === next.pub.abstract_excerpt &&
     prev.pub.altmetric_id === next.pub.altmetric_id &&
     prev.pubsText === next.pubsText &&
+    prev.lang === next.lang &&
     prev.featuredRank === next.featuredRank &&
     prev.index === next.index &&
     prev.isMobile === next.isMobile &&
@@ -389,7 +474,7 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
     prev.onCopyCitation === next.onCopyCitation &&
     prev.onOpenLightbox === next.onOpenLightbox &&
     (prev.expandedKey === prev.pubKey) === (next.expandedKey === next.pubKey) &&
-    (prev.copiedKey === prev.pubKey) === (next.copiedKey === next.pubKey)
+    prevMatch === nextMatch
   );
 });
 
@@ -397,51 +482,54 @@ const PublicationCompactRow = memo(function PublicationCompactRow({
   pub,
   pubKey,
   pubsText,
+  lang,
   locale,
   currentYear,
-  copiedKey,
+  copiedState,
   onCopyCitation,
 }: {
   pub: Publication;
   pubKey: string;
   pubsText: PublicationsText;
+  lang: Lang;
   locale: string;
   currentYear: number;
-  copiedKey: string | null;
-  onCopyCitation: (key: string, pub: Publication) => void;
+  copiedState: CopiedState;
+  onCopyCitation: (key: string, pub: Publication, format: CitationFormat) => void;
 }) {
-  const isCopied = copiedKey === pubKey;
+  const isApaCopied = copiedState?.key === pubKey && copiedState.format === 'apa';
+  const isBibCopied = copiedState?.key === pubKey && copiedState.format === 'bibtex';
   const isInPress = pub.year > currentYear;
 
   return (
-    <article className="group relative flex flex-col gap-2 border-b border-[#D4D1C8] py-4 pl-0 transition-[opacity,background-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[#EFECE6]/55 md:flex-row md:items-baseline md:gap-6 md:pl-3 md:group-hover/list:opacity-60 md:hover:!opacity-100">
+    <article className="group relative flex flex-col gap-2 border-b border-[var(--app-rule)] py-4 pl-0 transition-[opacity,background-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[var(--app-hover)]/65 md:flex-row md:items-baseline md:gap-6 md:pl-3 md:group-hover/list:opacity-60 md:hover:!opacity-100">
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute bottom-0 left-0 top-0 hidden w-[3px] origin-top scale-y-0 bg-[#1B365D] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-y-100 motion-reduce:transition-none md:block"
+        className="pointer-events-none absolute bottom-0 left-0 top-0 hidden w-[3px] origin-top scale-y-0 bg-[var(--app-accent)] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-y-100 motion-reduce:transition-none md:block"
       />
       <div className="flex items-center gap-2 md:w-28 md:shrink-0">
-        <span className="font-mono text-sm font-medium text-[#141413] [font-variant-numeric:tabular-nums]">
+        <span className="font-mono text-sm font-medium text-[var(--app-ink)] [font-variant-numeric:tabular-nums]">
           {pub.year > 0 ? pub.year : '—'}
         </span>
         {isInPress ? (
-          <span className="border border-[#1B365D] px-1 py-0.5 text-[10px] text-[#1B365D]">
+          <span className="border border-[var(--app-accent)] px-1 py-0.5 text-[10px] text-[var(--app-accent)]">
             {pubsText.inPress}
           </span>
         ) : null}
         {pub.is_star === '是' ? (
-          <span className="text-xs text-[#1B365D]" aria-label={pubsText.corresponding}>
+          <span className="text-xs text-[var(--app-accent)]" aria-label={pubsText.corresponding}>
             ★
           </span>
         ) : null}
       </div>
 
       <div className="min-w-0 flex-1">
-        <h3 className="font-editorial text-base font-medium leading-snug text-[#141413] transition-colors group-hover:text-[#1B365D]">
+        <h3 className="font-editorial text-base font-medium leading-snug text-[var(--app-ink)] transition-colors group-hover:text-[var(--app-accent)]">
           {pub.title}
         </h3>
-        <div className="mt-1 flex flex-wrap items-baseline gap-x-4 gap-y-0.5 text-xs text-[#5C5953]">
-          <span className="font-journal-italic text-sm text-[#2D2C29]">{pub.journal}</span>
-          <span className="font-mono text-[#141413]">
+        <div className="mt-1 flex flex-wrap items-baseline gap-x-4 gap-y-0.5 text-xs text-[var(--app-muted)]">
+          <span className="font-journal-italic text-sm text-[var(--app-body)]">{pub.journal}</span>
+          <span className="font-mono text-[var(--app-ink)]">
             {pub.citations.toLocaleString(locale)} {pubsText.citations}
           </span>
         </div>
@@ -450,17 +538,32 @@ const PublicationCompactRow = memo(function PublicationCompactRow({
       <div className="flex shrink-0 items-center gap-3 text-xs">
         <button
           type="button"
-          onClick={() => onCopyCitation(pubKey, pub)}
-          className="text-[#5C5953] transition-colors hover:text-[#141413]"
+          onClick={() => onCopyCitation(pubKey, pub, 'apa')}
+          className={`transition-colors ${
+            isApaCopied
+              ? 'font-medium text-[var(--app-accent)]'
+              : 'text-[var(--app-muted)] hover:text-[var(--app-ink)]'
+          }`}
         >
-          {isCopied ? pubsText.copiedCitation : pubsText.copyCitation}
+          {isApaCopied ? (lang === 'zh' ? '✓ 已複製' : `✓ ${pubsText.copiedCitation}`) : pubsText.copyCitation}
+        </button>
+        <button
+          type="button"
+          onClick={() => onCopyCitation(pubKey, pub, 'bibtex')}
+          className={`font-mono transition-colors ${
+            isBibCopied
+              ? 'font-medium text-[var(--app-accent)]'
+              : 'text-[var(--app-muted)] hover:text-[var(--app-ink)]'
+          }`}
+        >
+          {isBibCopied ? '✓ BibTeX' : 'BibTeX'}
         </button>
         {pub.doi ? (
           <a
             href={pub.doi}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 font-medium text-[#141413] underline decoration-[#D4D1C8] underline-offset-4 transition-colors hover:text-[#1B365D] hover:decoration-[#1B365D]"
+            className="inline-flex items-center gap-1 font-medium text-[var(--app-ink)] underline decoration-[var(--app-rule)] underline-offset-4 transition-colors hover:text-[var(--app-accent)] hover:decoration-[var(--app-accent)]"
           >
             DOI
             <ExternalLink className="h-3 w-3" aria-hidden />
@@ -481,7 +584,7 @@ function PublicationsListSkeleton({
   const pulse = prefersReducedMotion ? '' : 'animate-pulse';
   return (
     <div
-      className="divide-y divide-[#D4D1C8]"
+      className="divide-y divide-[var(--app-rule)]"
       role="status"
       aria-live="polite"
       aria-busy="true"
@@ -489,9 +592,9 @@ function PublicationsListSkeleton({
     >
       {[0, 1, 2].map((i) => (
         <div key={i} className={`flex flex-col gap-3 py-6 ${pulse}`}>
-          <div className="h-3.5 w-24 bg-[#E6E4DD]" />
-          <div className="h-5 w-[78%] bg-[#E6E4DD]" />
-          <div className="h-4 w-[48%] bg-[#EFECE6]" />
+          <div className="h-3.5 w-24 bg-[var(--app-hover)]" />
+          <div className="h-5 w-[78%] bg-[var(--app-hover)]" />
+          <div className="h-4 w-[48%] bg-[var(--app-hover)]/70" />
         </div>
       ))}
     </div>
@@ -505,6 +608,7 @@ function PublicationsSectionComponent({
   pubFilter,
   pubSort,
   correspondingOnly,
+  activeDomainId,
   viewMode,
   searchQuery,
   uniqueYears,
@@ -520,6 +624,7 @@ function PublicationsSectionComponent({
   onFilterChange,
   onSortChange,
   onCorrespondingToggle,
+  onClearDomainFilter,
   onViewModeChange,
   onSearchChange,
   onLoadMore,
@@ -527,37 +632,42 @@ function PublicationsSectionComponent({
   useRenderProfiler('PublicationsSection');
   const litePub = Boolean(prefersReducedMotion) || isMobile;
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
-  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [copiedState, setCopiedState] = useState<CopiedState>(null);
   const [lightbox, setLightbox] = useState<LightboxState>(null);
   const locale = lang === 'zh' ? 'zh-TW' : 'en-US';
   const currentYear = new Date().getFullYear();
+  const activeDomain = getResearchDomainById(activeDomainId);
+  const isZh = lang === 'zh';
 
   const onToggleAbstract = useCallback((key: string) => {
     setExpandedKey((prev) => (prev === key ? null : key));
   }, []);
 
-  const onCopyCitation = useCallback((key: string, pub: Publication) => {
-    const citation = formatCitationString(pub);
-    if (navigator.clipboard?.writeText) {
-      void navigator.clipboard.writeText(citation).then(() => setCopiedKey(key));
-    } else {
-      const textarea = document.createElement('textarea');
-      textarea.value = citation;
-      textarea.style.position = 'fixed';
-      textarea.style.opacity = '0';
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
-      setCopiedKey(key);
-    }
-  }, []);
+  const onCopyCitation = useCallback(
+    (key: string, pub: Publication, format: CitationFormat) => {
+      const citation = format === 'bibtex' ? formatBibTeXString(pub) : formatCitationString(pub);
+      if (navigator.clipboard?.writeText) {
+        void navigator.clipboard.writeText(citation).then(() => setCopiedState({ key, format }));
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = citation;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        setCopiedState({ key, format });
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
-    if (!copiedKey) return;
-    const timer = window.setTimeout(() => setCopiedKey(null), 2000);
+    if (!copiedState) return;
+    const timer = window.setTimeout(() => setCopiedState(null), 2000);
     return () => window.clearTimeout(timer);
-  }, [copiedKey]);
+  }, [copiedState]);
 
   const onOpenLightbox = useCallback((payload: NonNullable<LightboxState>) => {
     setLightbox(payload);
@@ -581,7 +691,7 @@ function PublicationsSectionComponent({
             {lang === 'en' ? ' ' : ''}
             {pubsText.subtitle}
           </h2>
-          <p className="max-w-md text-sm text-[#5C5953] md:text-right">
+          <p className="max-w-md text-sm text-[var(--app-muted)] md:text-right">
             {pubsText.desc}
           </p>
         </div>
@@ -598,12 +708,12 @@ function PublicationsSectionComponent({
         />
       ) : null}
 
-      {/* 直角底線檢索工具列（移除所有圓角膠囊與白底表單盒） */}
-      <div className="border-y border-[#141413] py-4">
+      {/* 直角底線檢索工具列 */}
+      <div className="border-y border-[var(--app-ink)] py-4">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
             <div className="flex items-center gap-2">
-              <label htmlFor="pub-filter-select" className="text-xs text-[#5C5953]">
+              <label htmlFor="pub-filter-select" className="text-xs text-[var(--app-muted)]">
                 {pubsText.filterBy}
               </label>
               <div className="relative">
@@ -627,14 +737,14 @@ function PublicationsSectionComponent({
                   </optgroup>
                 </select>
                 <ChevronDown
-                  className="pointer-events-none absolute right-1 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#5C5953]"
+                  className="pointer-events-none absolute right-1 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--app-muted)]"
                   aria-hidden
                 />
               </div>
             </div>
 
             <div className="flex items-center gap-2">
-              <label htmlFor="pub-sort-select" className="text-xs text-[#5C5953]">
+              <label htmlFor="pub-sort-select" className="text-xs text-[var(--app-muted)]">
                 {pubsText.sortLabel}
               </label>
               <div className="relative">
@@ -649,7 +759,7 @@ function PublicationsSectionComponent({
                   <option value="starred">{pubsText.sortStarred}</option>
                 </select>
                 <ChevronDown
-                  className="pointer-events-none absolute right-1 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#5C5953]"
+                  className="pointer-events-none absolute right-1 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--app-muted)]"
                   aria-hidden
                 />
               </div>
@@ -661,8 +771,8 @@ function PublicationsSectionComponent({
               aria-pressed={correspondingOnly}
               className={`border-b-2 pb-1 text-sm transition-colors ${
                 correspondingOnly
-                  ? 'border-[#1B365D] font-semibold text-[#1B365D]'
-                  : 'border-transparent text-[#5C5953] hover:text-[#141413]'
+                  ? 'border-[var(--app-accent)] font-semibold text-[var(--app-accent)]'
+                  : 'border-transparent text-[var(--app-muted)] hover:text-[var(--app-ink)]'
               }`}
             >
               ★ {pubsText.correspondingOnly}
@@ -672,7 +782,7 @@ function PublicationsSectionComponent({
           <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
             <div className="relative min-w-0 flex-1 sm:w-64">
               <Search
-                className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-[#5C5953]"
+                className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--app-muted)]"
                 aria-hidden
               />
               <input
@@ -681,14 +791,14 @@ function PublicationsSectionComponent({
                 onChange={(e) => onSearchChange(e.target.value)}
                 placeholder={pubsText.searchPlaceholder}
                 aria-label={pubsText.searchAriaLabel}
-                className="w-full rounded-none border-0 border-b border-[#141413] bg-transparent py-1.5 pl-6 pr-6 text-sm text-[#141413] placeholder:text-[#5C5953]/70 focus:border-[#1B365D] focus:outline-none"
+                className="w-full rounded-none border-0 border-b border-[var(--app-ink)] bg-transparent py-1.5 pl-6 pr-6 text-sm text-[var(--app-ink)] placeholder:text-[var(--app-muted)]/75 focus:border-[var(--app-accent)] focus:outline-none"
               />
               {searchQuery ? (
                 <button
                   type="button"
                   onClick={() => onSearchChange('')}
                   aria-label={pubsText.clearSearch}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 p-0.5 text-[#5C5953] hover:text-[#141413]"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 p-0.5 text-[var(--app-muted)] hover:text-[var(--app-ink)]"
                 >
                   <X className="h-3.5 w-3.5" aria-hidden />
                 </button>
@@ -706,21 +816,21 @@ function PublicationsSectionComponent({
                 aria-pressed={viewMode === 'card'}
                 className={`border-b-2 pb-0.5 transition-colors ${
                   viewMode === 'card'
-                    ? 'border-[#141413] font-semibold text-[#141413]'
-                    : 'border-transparent text-[#5C5953] hover:text-[#141413]'
+                    ? 'border-[var(--app-ink)] font-semibold text-[var(--app-ink)]'
+                    : 'border-transparent text-[var(--app-muted)] hover:text-[var(--app-ink)]'
                 }`}
               >
                 {pubsText.viewCard}
               </button>
-              <span aria-hidden className="text-[#D4D1C8]">/</span>
+              <span aria-hidden className="text-[var(--app-rule)]">/</span>
               <button
                 type="button"
                 onClick={() => onViewModeChange('compact')}
                 aria-pressed={viewMode === 'compact'}
                 className={`border-b-2 pb-0.5 transition-colors ${
                   viewMode === 'compact'
-                    ? 'border-[#141413] font-semibold text-[#141413]'
-                    : 'border-transparent text-[#5C5953] hover:text-[#141413]'
+                    ? 'border-[var(--app-ink)] font-semibold text-[var(--app-ink)]'
+                    : 'border-transparent text-[var(--app-muted)] hover:text-[var(--app-ink)]'
                 }`}
               >
                 {pubsText.viewCompact}
@@ -729,7 +839,7 @@ function PublicationsSectionComponent({
 
             {!isLoading ? (
               <span
-                className="font-mono text-xs text-[#5C5953] [font-variant-numeric:tabular-nums]"
+                className="font-mono text-xs text-[var(--app-muted)] [font-variant-numeric:tabular-nums]"
                 aria-live="polite"
               >
                 {pubsText.resultCount.replace('{count}', String(filteredCount))}
@@ -738,8 +848,36 @@ function PublicationsSectionComponent({
           </div>
         </div>
 
+        {/* 01–05 研究領域連動篩選狀態條（可一鍵清除） */}
+        {activeDomain ? (
+          <div className="mt-3.5 flex flex-wrap items-center justify-between gap-2 border-t border-[var(--app-rule)] pt-3 text-xs">
+            <div className="flex flex-wrap items-center gap-2 text-[var(--app-body)]">
+              <span className="font-mono text-[var(--app-accent)]">
+                0{activeDomain.index + 1}.
+              </span>
+              <span>
+                {isZh ? '目前依研究領域篩選：' : 'Filtered by research area: '}
+                <strong className="font-semibold text-[var(--app-ink)]">
+                  {isZh ? activeDomain.labelZh : activeDomain.labelEn}
+                </strong>
+              </span>
+              <span className="font-mono text-[var(--app-muted)]">
+                ({filteredCount} {isZh ? '篇' : 'works'})
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={onClearDomainFilter}
+              className="inline-flex items-center gap-1 border border-[var(--app-ink)] px-2.5 py-1 text-xs font-medium text-[var(--app-ink)] transition-colors hover:bg-[var(--app-ink)] hover:text-[var(--app-bg)]"
+            >
+              <X className="h-3 w-3" aria-hidden />
+              {isZh ? '清除領域篩選' : 'Clear area filter'}
+            </button>
+          </div>
+        ) : null}
+
         {isUsingFallback ? (
-          <p className="mt-3 border-l-2 border-[#1B365D] pl-3 text-xs text-[#1B365D]">
+          <p className="mt-3 border-l-2 border-[var(--app-accent)] pl-3 text-xs text-[var(--app-accent)]">
             {pubsText.offlineFallbackNote}
           </p>
         ) : null}
@@ -750,7 +888,7 @@ function PublicationsSectionComponent({
         <PublicationsListSkeleton prefersReducedMotion={prefersReducedMotion} pubsText={pubsText} />
       ) : filteredCount === 0 ? (
         <div
-          className="border-b border-[#D4D1C8] py-16 text-center text-sm text-[#5C5953]"
+          className="border-b border-[var(--app-rule)] py-16 text-center text-sm text-[var(--app-muted)]"
           role="status"
           aria-live="polite"
         >
@@ -768,6 +906,7 @@ function PublicationsSectionComponent({
                       pubKey={key}
                       pub={pub}
                       pubsText={pubsText}
+                      lang={lang}
                       isMobile={isMobile}
                       litePub={litePub}
                       featuredRank={fi + 1}
@@ -775,7 +914,7 @@ function PublicationsSectionComponent({
                       locale={locale}
                       currentYear={currentYear}
                       expandedKey={expandedKey}
-                      copiedKey={copiedKey}
+                      copiedState={copiedState}
                       onToggleAbstract={onToggleAbstract}
                       onCopyCitation={onCopyCitation}
                       onOpenLightbox={onOpenLightbox}
@@ -785,7 +924,7 @@ function PublicationsSectionComponent({
               : null}
 
             {listAllInFeatured ? (
-              <p className="border-b border-[#D4D1C8] py-6 text-center text-sm text-[#5C5953]">
+              <p className="border-b border-[var(--app-rule)] py-6 text-center text-sm text-[var(--app-muted)]">
                 {pubsText.allInFeaturedNote}
               </p>
             ) : null}
@@ -800,9 +939,10 @@ function PublicationsSectionComponent({
                         pubKey={key}
                         pub={pub}
                         pubsText={pubsText}
+                        lang={lang}
                         locale={locale}
                         currentYear={currentYear}
-                        copiedKey={copiedKey}
+                        copiedState={copiedState}
                         onCopyCitation={onCopyCitation}
                       />
                     );
@@ -815,13 +955,14 @@ function PublicationsSectionComponent({
                         pubKey={key}
                         pub={pub}
                         pubsText={pubsText}
+                        lang={lang}
                         isMobile={isMobile}
                         litePub={litePub}
                         index={i + featuredPublications.length}
                         locale={locale}
                         currentYear={currentYear}
                         expandedKey={expandedKey}
-                        copiedKey={copiedKey}
+                        copiedState={copiedState}
                         onToggleAbstract={onToggleAbstract}
                         onCopyCitation={onCopyCitation}
                         onOpenLightbox={onOpenLightbox}
@@ -831,7 +972,6 @@ function PublicationsSectionComponent({
               : null}
           </div>
 
-          {/* 科學圖解摘要紙白霧化暗房燈箱（支援 layoutId 絲滑展開與 ESC 關閉） */}
           <FigureLightboxModal
             lightbox={lightbox}
             closeLabel={pubsText.closeLightbox}

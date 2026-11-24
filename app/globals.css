@@ -6,19 +6,56 @@
   --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
-:root {
+/* 關閉 View Transitions 預設交叉淡化，確保電致變色圓形光圈邊緣乾淨銳利 */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* 晝讀紙本版（預設） */
+:root,
+[data-theme="light"] {
   color-scheme: light;
-  /* 路線一：經典書卷雜誌風（Alabaster Paper + Deep Print Ink + Oxford Blue） */
+  --font-noto-serif-tc: "Noto Serif TC";
   --app-bg: #F7F6F2;
-  --portrait-mat: #E6E4DD;
+  --app-hover: #ECE9E1;
   --app-ink: #141413;
   --app-body: #2D2C29;
   --app-muted: #5C5953;
   --app-rule: #D4D1C8;
-  --app-hover: #EFECE6;
   --app-accent: #1B365D;
+  --portrait-mat: #E6E4DD;
+  --app-surface-card: #F7F6F2;
+  --app-figure-mat: #FFFFFF;
+  --app-bar-coauthor: #C8C4B8;
+  --app-bar-coauthor-hover: #B3AFA5;
   background-color: var(--app-bg);
   color: var(--app-ink);
+}
+
+/* 夜讀典藏黑版（零流金、霧面碳墨黑配溫潤羊皮紙白字） */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --app-bg: #121210;
+  --app-hover: #1D1C19;
+  --app-ink: #EAE6DF;
+  --app-body: #C7C2B8;
+  --app-muted: #8E8980;
+  --app-rule: #2C2B28;
+  --app-accent: #7FA2C7;
+  --portrait-mat: #DDD9CE; /* 關鍵：保護 mix-blend-multiply 肖像於黑版清晰立體不變黑 */
+  --app-surface-card: #1A1A17;
+  --app-figure-mat: #E6E2D8; /* 柔和相紙底襯，消除白底論文摘要圖刺眼感 */
+  --app-bar-coauthor: #3D3B36;
+  --app-bar-coauthor-hover: #52504A;
+  background-color: var(--app-bg);
+  color: var(--app-ink);
+}
+
+/* 黑版下白底論文摘要圖輕微柔和壓暗，避免純白方塊眩光 */
+[data-theme="dark"] .editorial-figure-img {
+  filter: brightness(0.95) contrast(1.02);
 }
 
 @layer utilities {
@@ -46,7 +83,7 @@ html {
 }
 
 :focus-visible {
-  outline: 1.5px solid #141413;
+  outline: 1.5px solid var(--app-ink);
   outline-offset: 2px;
 }
 

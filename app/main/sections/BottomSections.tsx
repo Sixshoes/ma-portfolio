@@ -1,8 +1,9 @@
 'use client';
 
 import React, { memo, useCallback, useEffect, useState } from 'react';
+import { motion, useReducedMotion } from 'motion/react';
 import { Check, Copy, Download, Mail } from 'lucide-react';
-import { InkRule } from '@/app/components/EditorialMotion';
+import { EDITORIAL_EASE, InkRule } from '@/app/components/EditorialMotion';
 import { useRenderProfiler } from './useRenderProfiler';
 import { uiTokens } from './uiTokens';
 import { impactData } from '@/lib/impactData';
@@ -58,6 +59,7 @@ type BottomSectionsProps = {
 
 function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsProps) {
   useRenderProfiler('BottomSections');
+  const reduceMotion = useReducedMotion();
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const handleCopy = useCallback((key: string, text: string) => {
@@ -129,7 +131,7 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
 
   return (
     <>
-      {/* 學術影響力：無框雙欄水平印刷評比表 */}
+      {/* 學術影響力：無框雙欄水平印刷評比表（含動能進度條進場推進） */}
       <section
         id="impact"
         className="mx-auto max-w-6xl scroll-mt-20 px-6 py-20 md:py-24"
@@ -141,85 +143,94 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
               {lang === 'en' ? ' ' : ''}
               {t.impact.subtitle}
             </h2>
-            <p className="text-xs text-[#5C5953]">{t.impact.source}</p>
+            <p className="text-xs text-[var(--app-muted)]">{t.impact.source}</p>
           </div>
         </div>
         <InkRule thick />
 
-        <div className="grid grid-cols-1 divide-y divide-[#D4D1C8] border-b border-[#141413] lg:grid-cols-2 lg:divide-x lg:divide-y-0">
+        <div className="grid grid-cols-1 divide-y divide-[var(--app-rule)] border-b border-[var(--app-ink)] lg:grid-cols-2 lg:divide-x lg:divide-y-0">
           {institutions.map((inst, idx) => (
             <div
               key={inst.key}
               className={`py-8 ${idx === 0 ? 'lg:pr-10' : 'lg:pl-10'}`}
             >
-              <div className="mb-6 flex items-baseline justify-between gap-4 border-b border-[#D4D1C8] pb-4">
+              <div className="mb-6 flex items-baseline justify-between gap-4 border-b border-[var(--app-rule)] pb-4">
                 <div>
-                  <h3 className="font-editorial text-2xl font-semibold text-[#141413]">
+                  <h3 className="font-editorial text-2xl font-semibold text-[var(--app-ink)]">
                     {inst.name}
                   </h3>
-                  <p className="mt-1 text-xs text-[#5C5953]">{inst.location}</p>
+                  <p className="mt-1 text-xs text-[var(--app-muted)]">{inst.location}</p>
                 </div>
-                <span className="font-editorial text-base text-[#5C5953]">
+                <span className="font-editorial text-base text-[var(--app-muted)]">
                   {inst.index}
                 </span>
               </div>
 
-              <div className="mb-6 grid grid-cols-3 divide-x divide-[#D4D1C8] border-b border-[#D4D1C8] pb-6">
+              <div className="mb-6 grid grid-cols-3 divide-x divide-[var(--app-rule)] border-b border-[var(--app-rule)] pb-6">
                 <div className="pr-3">
-                  <div className="font-editorial text-2xl font-semibold text-[#141413] [font-variant-numeric:tabular-nums] sm:text-3xl">
+                  <div className="font-editorial text-2xl font-semibold text-[var(--app-ink)] [font-variant-numeric:tabular-nums] sm:text-3xl">
                     {inst.metrics.worldRank}
                   </div>
-                  <div className="mt-1 text-xs text-[#5C5953]">{t.impact.worldRank}</div>
+                  <div className="mt-1 text-xs text-[var(--app-muted)]">{t.impact.worldRank}</div>
                 </div>
                 <div className="px-3 sm:pl-5">
-                  <div className="font-editorial text-2xl font-semibold text-[#141413] [font-variant-numeric:tabular-nums] sm:text-3xl">
+                  <div className="font-editorial text-2xl font-semibold text-[var(--app-ink)] [font-variant-numeric:tabular-nums] sm:text-3xl">
                     #{inst.metrics.countryRank}
                   </div>
-                  <div className="mt-1 text-xs text-[#5C5953]">{t.impact.countryRank}</div>
+                  <div className="mt-1 text-xs text-[var(--app-muted)]">{t.impact.countryRank}</div>
                 </div>
                 <div className="pl-3 sm:pl-5">
-                  <div className="font-editorial text-2xl font-semibold text-[#141413] [font-variant-numeric:tabular-nums] sm:text-3xl">
+                  <div className="font-editorial text-2xl font-semibold text-[var(--app-ink)] [font-variant-numeric:tabular-nums] sm:text-3xl">
                     #{inst.metrics.uniRank}
                   </div>
-                  <div className="mt-1 text-xs text-[#5C5953]">{t.impact.uniRank}</div>
+                  <div className="mt-1 text-xs text-[var(--app-muted)]">{t.impact.uniRank}</div>
                 </div>
               </div>
 
               <div>
-                <div className="mb-3 flex items-baseline justify-between text-xs text-[#5C5953]">
-                  <span className="font-medium text-[#141413]">{t.impact.hIndex}</span>
-                  <span className="font-mono text-[#5C5953]">
+                <div className="mb-3 flex items-baseline justify-between text-xs text-[var(--app-muted)]">
+                  <span className="font-medium text-[var(--app-ink)]">{t.impact.hIndex}</span>
+                  <span className="font-mono text-[var(--app-muted)]">
                     {t.impact.ratio}: {inst.metrics.hIndex.ratio}
                   </span>
                 </div>
 
                 <div className="mb-4 grid grid-cols-3 gap-4">
                   <div>
-                    <div className="font-editorial text-3xl font-semibold text-[#141413] [font-variant-numeric:tabular-nums]">
+                    <div className="font-editorial text-3xl font-semibold text-[var(--app-ink)] [font-variant-numeric:tabular-nums]">
                       {inst.metrics.hIndex.total}
                     </div>
-                    <div className="mt-0.5 text-xs text-[#5C5953]">{t.impact.total}</div>
+                    <div className="mt-0.5 text-xs text-[var(--app-muted)]">{t.impact.total}</div>
                   </div>
                   <div>
-                    <div className="font-editorial text-3xl font-semibold text-[#141413] [font-variant-numeric:tabular-nums]">
+                    <div className="font-editorial text-3xl font-semibold text-[var(--app-ink)] [font-variant-numeric:tabular-nums]">
                       {inst.metrics.hIndex.last5}
                     </div>
-                    <div className="mt-0.5 text-xs text-[#5C5953]">{t.impact.last5}</div>
+                    <div className="mt-0.5 text-xs text-[var(--app-muted)]">{t.impact.last5}</div>
                   </div>
                   <div>
-                    <div className="font-editorial text-3xl font-medium text-[#2D2C29] [font-variant-numeric:tabular-nums]">
+                    <div className="font-editorial text-3xl font-medium text-[var(--app-body)] [font-variant-numeric:tabular-nums]">
                       {inst.metrics.hIndex.ratio}
                     </div>
-                    <div className="mt-0.5 text-xs text-[#5C5953]">
+                    <div className="mt-0.5 text-xs text-[var(--app-muted)]">
                       {lang === 'zh' ? '動能比' : 'Ratio'}
                     </div>
                   </div>
                 </div>
 
-                <div className="h-1 w-full bg-[#D4D1C8]">
-                  <div
-                    style={{ width: `${inst.ratioPct}%` }}
-                    className="h-full bg-[#1B365D]"
+                {/* 0.758 / 0.731 動能進度條進視窗動態推進 */}
+                <div className="h-1 w-full overflow-hidden bg-[var(--app-rule)]">
+                  <motion.div
+                    initial={reduceMotion ? { scaleX: 1 } : { scaleX: 0 }}
+                    whileInView={{ scaleX: 1 }}
+                    viewport={{ once: true, margin: '-60px' }}
+                    transition={{
+                      duration: reduceMotion ? 0 : 0.85,
+                      delay: reduceMotion ? 0 : 0.14 + idx * 0.12,
+                      ease: EDITORIAL_EASE,
+                    }}
+                    style={{ transformOrigin: 'left', width: `${inst.ratioPct}%` }}
+                    className="h-full bg-[var(--app-accent)] will-change-transform"
                   />
                 </div>
               </div>
@@ -228,7 +239,7 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
         </div>
       </section>
 
-      {/* 聯絡方式：頂部 2px 墨黑粗線 + 無框三欄水平印刷欄位 + 頁尾開發者信箱互動署名 */}
+      {/* 聯絡方式：頂部 2px 粗線 + 無框三欄水平印刷欄位 + 頁尾開發者信箱互動署名 */}
       <section
         id="contact"
         className="mx-auto max-w-6xl scroll-mt-20 px-6 pb-8 pt-20 md:pt-24"
@@ -253,7 +264,7 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
             </button>
           </div>
 
-          <div className="grid grid-cols-1 divide-y divide-[#D4D1C8] border-y border-[#D4D1C8] md:grid-cols-3 md:divide-x md:divide-y-0">
+          <div className="grid grid-cols-1 divide-y divide-[var(--app-rule)] border-y border-[var(--app-rule)] md:grid-cols-3 md:divide-x md:divide-y-0">
             {contactItems.map(({ key, label, values, hrefs, copyValue }, idx) => {
               const isCopied = copiedField === key;
               return (
@@ -264,17 +275,17 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
                   }`}
                 >
                   <div className="mb-4 flex items-center justify-between gap-2">
-                    <span className="text-xs font-medium text-[#5C5953]">{label}</span>
+                    <span className="text-xs font-medium text-[var(--app-muted)]">{label}</span>
                     <button
                       type="button"
                       onClick={() => handleCopy(key, copyValue)}
                       aria-label={`${t.contact.copyAction} ${label}`}
-                      className="inline-flex items-center gap-1 text-xs text-[#5C5953] transition-colors hover:text-[#141413]"
+                      className="inline-flex items-center gap-1 text-xs text-[var(--app-muted)] transition-colors hover:text-[var(--app-ink)]"
                     >
                       {isCopied ? (
                         <>
-                          <Check className="h-3 w-3 text-[#1B365D]" aria-hidden />
-                          <span className="text-[#1B365D]">{t.contact.copiedAction}</span>
+                          <Check className="h-3 w-3 text-[var(--app-accent)]" aria-hidden />
+                          <span className="text-[var(--app-accent)]">{t.contact.copiedAction}</span>
                         </>
                       ) : (
                         <>
@@ -292,12 +303,12 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
                         <a
                           key={val}
                           href={href}
-                          className="font-editorial break-words text-lg font-medium text-[#141413] transition-colors hover:text-[#1B365D] hover:underline"
+                          className="font-editorial break-words text-lg font-medium text-[var(--app-ink)] transition-colors hover:text-[var(--app-accent)] hover:underline"
                         >
                           {val}
                         </a>
                       ) : (
-                        <p key={val} className="font-editorial text-lg font-medium text-[#141413]">
+                        <p key={val} className="font-editorial text-lg font-medium text-[var(--app-ink)]">
                           {val}
                         </p>
                       );
@@ -309,7 +320,7 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
           </div>
         </div>
 
-        <footer className="mt-20 border-t border-[#141413] pb-12 pt-6 text-sm text-[#5C5953]">
+        <footer className="mt-20 border-t border-[var(--app-ink)] pb-12 pt-6 text-sm text-[var(--app-muted)]">
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
             <p>
               {t.contact.footer.replace(/\{year\}/g, String(new Date().getFullYear()))}
@@ -321,7 +332,7 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
                   <a
                     href={DEVELOPER_MAILTO}
                     title={`寄信聯絡陳奕廷 (${DEVELOPER_EMAIL})`}
-                    className="font-medium text-[#141413] underline decoration-[#ABA79E] underline-offset-4 transition-colors hover:text-[#1B365D] hover:decoration-[#141413]"
+                    className="font-medium text-[var(--app-ink)] underline decoration-[var(--app-rule)] underline-offset-4 transition-colors hover:text-[var(--app-accent)] hover:decoration-[var(--app-ink)]"
                   >
                     {lang === 'zh' ? '陳奕廷' : 'Yiting Chen'}
                   </a>
@@ -343,12 +354,12 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
                       ? `複製陳奕廷信箱 ${DEVELOPER_EMAIL}`
                       : `Copy Yiting Chen's email ${DEVELOPER_EMAIL}`
                   }
-                  className="inline-flex items-center gap-1 p-0.5 text-[#5C5953] transition-colors hover:text-[#141413]"
+                  className="inline-flex items-center gap-1 p-0.5 text-[var(--app-muted)] transition-colors hover:text-[var(--app-ink)]"
                 >
                   {isDevEmailCopied ? (
                     <>
-                      <Check className="h-3.5 w-3.5 text-[#1B365D]" aria-hidden />
-                      <span className="text-xs text-[#1B365D]">
+                      <Check className="h-3.5 w-3.5 text-[var(--app-accent)]" aria-hidden />
+                      <span className="text-xs text-[var(--app-accent)]">
                         {lang === 'zh' ? '已複製' : 'Copied'}
                       </span>
                     </>
@@ -358,13 +369,13 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
                 </button>
               </span>
 
-              <span aria-hidden="true" className="text-[#D4D1C8]">
+              <span aria-hidden="true" className="text-[var(--app-rule)]">
                 ·
               </span>
 
               <a
                 href="#top"
-                className="text-[#141413] transition-colors hover:text-[#1B365D] hover:underline"
+                className="text-[var(--app-ink)] transition-colors hover:text-[var(--app-accent)] hover:underline"
               >
                 {lang === 'zh' ? '回到頂部 ↑' : 'Back to top ↑'}
               </a>

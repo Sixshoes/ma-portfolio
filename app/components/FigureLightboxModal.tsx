@@ -20,7 +20,7 @@ type FigureLightboxModalProps = {
   onClose: () => void;
 };
 
-/** 紙白霧化暗房摘要圖放大燈箱（支援 layoutId 絲滑展開與 ESC 關閉） */
+/** 霧化暗房摘要圖放大燈箱（支援 layoutId 絲滑展開、雙版相紙底襯防眩光與 ESC 關閉） */
 export function FigureLightboxModal({
   lightbox,
   closeLabel,
@@ -55,7 +55,7 @@ export function FigureLightboxModal({
           exit={{ opacity: 0 }}
           transition={{ duration: reduce ? 0 : 0.24, ease: EDITORIAL_EASE }}
           onClick={onClose}
-          className="fixed inset-0 z-[100000] flex items-center justify-center bg-[#F7F6F2]/92 p-4 backdrop-blur-md md:p-8"
+          className="fixed inset-0 z-[100000] flex items-center justify-center bg-[color-mix(in_srgb,var(--app-bg)_92%,transparent)] p-4 backdrop-blur-md md:p-8"
         >
           <motion.div
             initial={reduce ? { opacity: 1 } : { opacity: 0, y: 12 }}
@@ -63,19 +63,19 @@ export function FigureLightboxModal({
             exit={reduce ? { opacity: 0 } : { opacity: 0, y: 8 }}
             transition={{ duration: reduce ? 0 : 0.3, ease: EDITORIAL_EASE }}
             onClick={(e) => e.stopPropagation()}
-            className="relative flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden border border-[#141413] bg-[#F7F6F2]"
+            className="relative flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden border border-[var(--app-ink)] bg-[var(--app-bg)]"
           >
-            <div className="flex items-start justify-between gap-4 border-b border-[#D4D1C8] px-6 py-4">
+            <div className="flex items-start justify-between gap-4 border-b border-[var(--app-rule)] px-6 py-4">
               <div className="min-w-0">
-                <div className="flex flex-wrap items-baseline gap-2 text-sm text-[#5C5953]">
+                <div className="flex flex-wrap items-baseline gap-2 text-sm text-[var(--app-muted)]">
                   {lightbox.year && lightbox.year > 0 ? (
-                    <span className="font-mono text-xs text-[#141413] [font-variant-numeric:tabular-nums]">
+                    <span className="font-mono text-xs text-[var(--app-ink)] [font-variant-numeric:tabular-nums]">
                       {lightbox.year}
                     </span>
                   ) : null}
                   <span className="font-journal-italic">{lightbox.journal}</span>
                 </div>
-                <h4 className="font-editorial mt-1 line-clamp-2 text-base font-semibold text-[#141413]">
+                <h4 className="font-editorial mt-1 line-clamp-2 text-base font-semibold text-[var(--app-ink)]">
                   {lightbox.title}
                 </h4>
               </div>
@@ -83,24 +83,24 @@ export function FigureLightboxModal({
                 type="button"
                 onClick={onClose}
                 aria-label={closeLabel}
-                className="shrink-0 border border-[#D4D1C8] p-1.5 text-[#5C5953] transition-colors hover:border-[#141413] hover:bg-[#141413] hover:text-[#F7F6F2]"
+                className="shrink-0 border border-[var(--app-rule)] p-1.5 text-[var(--app-muted)] transition-colors hover:border-[var(--app-ink)] hover:bg-[var(--app-ink)] hover:text-[var(--app-bg)]"
               >
                 <X className="h-4 w-4" aria-hidden />
               </button>
             </div>
 
-            <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-[#E6E4DD] p-5 md:p-8">
+            <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-[var(--app-hover)] p-5 md:p-8">
               <motion.div
                 layoutId={reduce ? undefined : lightbox.layoutId}
                 transition={{ duration: 0.38, ease: EDITORIAL_EASE }}
-                className="border border-[#D4D1C8] bg-white p-3"
+                className="border border-[var(--app-rule)] bg-[var(--app-figure-mat)] p-3"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={lightbox.src}
                   alt={lightbox.alt}
                   referrerPolicy="no-referrer"
-                  className="max-h-[66vh] max-w-full object-contain"
+                  className="editorial-figure-img max-h-[66vh] max-w-full object-contain"
                 />
               </motion.div>
             </div>

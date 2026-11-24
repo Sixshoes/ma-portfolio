@@ -20,7 +20,7 @@ type PublicationTimelineChartProps = {
   onSelectYear: (yearOrAll: string) => void;
 };
 
-/** 無框學報紙張時間軸長條圖：首次滾入 18ms 波浪生長、切換指標流體伸縮、懸停浮現精準數據標記 */
+/** 無框學報時間軸長條圖（支援晝夜雙版 CSS 變數、18ms 波浪生長、流體切換與懸停精準標記） */
 function PublicationTimelineChartComponent({
   publications,
   selectedFilter,
@@ -104,7 +104,6 @@ function PublicationTimelineChartComponent({
       };
     }, [publications, metric, currentYear]);
 
-  // 首次波浪生長完成後切回零延遲，讓「發表篇數／年度引用數」切換瞬間同步流體伸縮
   useEffect(() => {
     if (!isInView || waveFinished) return;
     if (reduceMotion) {
@@ -141,18 +140,18 @@ function PublicationTimelineChartComponent({
       <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-baseline md:justify-between">
         <div>
           <div className="flex flex-wrap items-baseline gap-2.5">
-            <h3 className="font-editorial text-lg font-semibold text-[#141413]">
+            <h3 className="font-editorial text-lg font-semibold text-[var(--app-ink)]">
               {isZh
                 ? `歷年發表與引用分佈（${minYear}–${maxYear}）`
                 : `Annual Publication & Citation Record (${minYear}–${maxYear})`}
             </h3>
             {hasInPress ? (
-              <span className="border border-[#1B365D] px-1.5 py-0.5 text-[11px] text-[#1B365D]">
+              <span className="border border-[var(--app-accent)] px-1.5 py-0.5 text-[11px] text-[var(--app-accent)]">
                 {isZh ? `含 ${maxYear} 預刊` : `incl. ${maxYear} In Press`}
               </span>
             ) : null}
           </div>
-          <p className="mt-1 text-xs text-[#5C5953]">
+          <p className="mt-1 text-xs text-[var(--app-muted)]">
             {isZh
               ? '點擊任一年份柱狀即可篩選該年度著作；再次點擊取消'
               : 'Click any year bar to filter works; click again to clear'}
@@ -164,7 +163,7 @@ function PublicationTimelineChartComponent({
             <button
               type="button"
               onClick={() => onSelectYear('All')}
-              className="inline-flex items-center gap-1 border border-[#141413] bg-[#141413] px-2.5 py-1 text-xs text-[#F7F6F2] transition-colors hover:border-[#1B365D] hover:bg-[#1B365D]"
+              className="inline-flex items-center gap-1 border border-[var(--app-ink)] bg-[var(--app-ink)] px-2.5 py-1 text-xs text-[var(--app-bg)] transition-colors hover:border-[var(--app-accent)] hover:bg-[var(--app-accent)]"
             >
               {isZh
                 ? `${activeYearNum} 年${activeYearNum > currentYear ? '（預刊）' : ''}`
@@ -198,7 +197,9 @@ function PublicationTimelineChartComponent({
                   }}
                   aria-pressed={active}
                   className={`relative pb-1.5 transition-colors ${
-                    active ? 'font-semibold text-[#141413]' : 'text-[#5C5953] hover:text-[#141413]'
+                    active
+                      ? 'font-semibold text-[var(--app-ink)]'
+                      : 'text-[var(--app-muted)] hover:text-[var(--app-ink)]'
                   }`}
                 >
                   {label}
@@ -206,7 +207,7 @@ function PublicationTimelineChartComponent({
                     <motion.span
                       layoutId={reduceMotion ? undefined : 'timeline-metric-underline'}
                       transition={{ duration: 0.3, ease: EDITORIAL_EASE }}
-                      className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#141413]"
+                      className="absolute bottom-0 left-0 right-0 h-[2px] bg-[var(--app-ink)]"
                     />
                   ) : null}
                 </button>
@@ -218,73 +219,75 @@ function PublicationTimelineChartComponent({
 
       {/* 無框細線數據讀數與圖例列 */}
       <div
-        className="mb-5 flex flex-wrap items-center justify-between gap-2 border-y border-[#D4D1C8] py-2.5 text-xs"
+        className="mb-5 flex flex-wrap items-center justify-between gap-2 border-y border-[var(--app-rule)] py-2.5 text-xs"
         aria-live="polite"
       >
         {inspectedBucket ? (
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-[#2D2C29]">
-            <span className="inline-flex items-center gap-1.5 font-mono text-sm font-semibold text-[#141413]">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-[var(--app-body)]">
+            <span className="inline-flex items-center gap-1.5 font-mono text-sm font-semibold text-[var(--app-ink)]">
               {inspectedBucket.year}
               {inspectedBucket.year > currentYear ? (
-                <span className="border border-[#1B365D] px-1 py-0.5 font-sans text-[10px] font-medium text-[#1B365D]">
+                <span className="border border-[var(--app-accent)] px-1 py-0.5 font-sans text-[10px] font-medium text-[var(--app-accent)]">
                   {inPressLabel}
                 </span>
               ) : null}
             </span>
             <span>
               {isZh ? '發表篇數 ' : 'Papers '}
-              <strong className="font-mono text-[#141413]">{inspectedBucket.count}</strong>
+              <strong className="font-mono text-[var(--app-ink)]">{inspectedBucket.count}</strong>
             </span>
             <span>
               {isZh ? '通訊作者 ' : 'Corresponding '}
-              <strong className="font-mono text-[#1B365D]">{inspectedBucket.starredCount}</strong>
+              <strong className="font-mono text-[var(--app-accent)]">
+                {inspectedBucket.starredCount}
+              </strong>
             </span>
             <span>
               {isZh ? '累計引用 ' : 'Citations '}
-              <strong className="font-mono text-[#141413]">
+              <strong className="font-mono text-[var(--app-ink)]">
                 {inspectedBucket.citations.toLocaleString('en-US')}
               </strong>
             </span>
           </div>
         ) : (
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-[#5C5953]">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-[var(--app-muted)]">
             {peakBucket ? (
               <span>
                 {isZh ? '最高產年度：' : 'Peak year: '}
-                <strong className="font-mono text-[#141413]">{peakBucket.year}</strong> (
+                <strong className="font-mono text-[var(--app-ink)]">{peakBucket.year}</strong> (
                 {peakBucket.count} {isZh ? '篇' : 'papers'})
               </span>
             ) : null}
             <span>
               {isZh ? '通訊作者：' : 'Corresponding: '}
-              <strong className="font-mono text-[#1B365D]">{totalStarred}</strong>{' '}
+              <strong className="font-mono text-[var(--app-accent)]">{totalStarred}</strong>{' '}
               {isZh ? '篇' : 'works'}
             </span>
           </div>
         )}
 
-        <div className="flex flex-wrap items-center gap-4 text-xs text-[#5C5953]">
+        <div className="flex flex-wrap items-center gap-4 text-xs text-[var(--app-muted)]">
           {metric === 'papers' ? (
             <>
               <span className="inline-flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 bg-[#1B365D]" aria-hidden />
+                <span className="h-2.5 w-2.5 bg-[var(--app-accent)]" aria-hidden />
                 {isZh ? '通訊作者' : 'Corresponding'}
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 bg-[#C8C4B8]" aria-hidden />
+                <span className="h-2.5 w-2.5 bg-[var(--app-bar-coauthor)]" aria-hidden />
                 {isZh ? '共同作者' : 'Co-author'}
               </span>
             </>
           ) : (
             <span className="inline-flex items-center gap-1.5">
-              <span className="h-2.5 w-2.5 bg-[#1B365D]" aria-hidden />
+              <span className="h-2.5 w-2.5 bg-[var(--app-accent)]" aria-hidden />
               {isZh ? '依發表年份統計之累計引用數' : 'Cumulative citations by publication year'}
             </span>
           )}
           {hasInPress ? (
             <span className="inline-flex items-center gap-1.5">
               <span
-                className="h-2.5 w-2.5 border border-dashed border-[#1B365D] bg-[#E6E4DD]"
+                className="h-2.5 w-2.5 border border-dashed border-[var(--app-accent)] bg-[var(--app-hover)]"
                 aria-hidden
               />
               {inPressLabel}
@@ -293,10 +296,9 @@ function PublicationTimelineChartComponent({
         </div>
       </div>
 
-      {/* 長條圖本體（直接落於紙白畫布，含懸停平滑跟隨之精準數據標記） */}
+      {/* 長條圖本體（直接落於畫布，含懸停平滑跟隨之精準數據標記） */}
       <div className="overflow-x-auto pb-1">
         <div className="relative min-w-[620px] pt-8">
-          {/* 懸停跟隨之紙本直角精準標記 */}
           <div className="pointer-events-none absolute left-12 right-0 top-0 h-7">
             <AnimatePresence>
               {hoveredBucket && hoveredBucket.count > 0 ? (
@@ -311,11 +313,11 @@ function PublicationTimelineChartComponent({
                   exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 3 }}
                   transition={{ duration: reduceMotion ? 0 : 0.18, ease: EDITORIAL_EASE }}
                   style={{ transform: 'translateX(-50%)' }}
-                  className="absolute top-0 whitespace-nowrap border border-[#141413] bg-[#F7F6F2] px-2 py-0.5 font-mono text-[11px] text-[#141413] [font-variant-numeric:tabular-nums]"
+                  className="absolute top-0 whitespace-nowrap border border-[var(--app-ink)] bg-[var(--app-bg)] px-2 py-0.5 font-mono text-[11px] text-[var(--app-ink)] [font-variant-numeric:tabular-nums]"
                 >
                   <span className="font-semibold">{hoveredBucket.year}</span>
-                  <span className="mx-1.5 text-[#ABA79E]">·</span>
-                  <span className="text-[#1B365D]">
+                  <span className="mx-1.5 text-[var(--app-muted)]">·</span>
+                  <span className="text-[var(--app-accent)]">
                     {metric === 'papers'
                       ? `${hoveredBucket.count} ${isZh ? '篇' : 'pubs'}`
                       : `${hoveredBucket.citations.toLocaleString('en-US')} ${isZh ? '引' : 'cit.'}`}
@@ -328,10 +330,10 @@ function PublicationTimelineChartComponent({
           <div className="pointer-events-none absolute inset-x-0 bottom-7 top-8 flex flex-col justify-between">
             {[1, 0.5, 0].map((ratio, idx) => (
               <div key={idx} className="flex items-center gap-2.5">
-                <span className="w-9 shrink-0 text-right font-mono text-[10px] text-[#5C5953] [font-variant-numeric:tabular-nums]">
+                <span className="w-9 shrink-0 text-right font-mono text-[10px] text-[var(--app-muted)] [font-variant-numeric:tabular-nums]">
                   {Math.round(maxMetricValue * ratio).toLocaleString('en-US')}
                 </span>
-                <div className="h-px flex-1 border-b border-dashed border-[#D4D1C8]" />
+                <div className="h-px flex-1 border-b border-dashed border-[var(--app-rule)]" />
               </div>
             ))}
           </div>
@@ -378,18 +380,18 @@ function PublicationTimelineChartComponent({
                     }`}
                   >
                     {isEmpty ? (
-                      <span className="h-px w-full bg-[#D4D1C8]" />
+                      <span className="h-px w-full bg-[var(--app-rule)]" />
                     ) : isFutureYear ? (
                       <motion.span
                         initial={reduceMotion ? false : { height: '0%' }}
                         animate={{ height: targetHeight }}
                         transition={barTransition}
-                        className={`block w-full border border-dashed border-[#1B365D] transition-colors duration-150 ${
+                        className={`block w-full border border-dashed border-[var(--app-accent)] transition-colors duration-150 ${
                           isSelected
-                            ? 'bg-[#1B365D]/30'
+                            ? 'bg-[var(--app-accent)]/35'
                             : isHovered
-                              ? 'bg-[#1B365D]/20'
-                              : 'bg-[#E6E4DD]'
+                              ? 'bg-[var(--app-accent)]/20'
+                              : 'bg-[var(--app-hover)]'
                         }`}
                       />
                     ) : metric === 'papers' ? (
@@ -399,10 +401,10 @@ function PublicationTimelineChartComponent({
                         transition={barTransition}
                         className={`relative flex w-full flex-col justify-end overflow-hidden transition-colors duration-150 ${
                           isSelected
-                            ? 'bg-[#ABA79E] outline outline-1 outline-[#141413]'
+                            ? 'bg-[var(--app-bar-coauthor-hover)] outline outline-1 outline-[var(--app-ink)]'
                             : isHovered
-                              ? 'bg-[#B3AFA5]'
-                              : 'bg-[#C8C4B8]'
+                              ? 'bg-[var(--app-bar-coauthor-hover)]'
+                              : 'bg-[var(--app-bar-coauthor)]'
                         }`}
                       >
                         {b.starredCount > 0 ? (
@@ -415,8 +417,8 @@ function PublicationTimelineChartComponent({
                             }
                             className={`block w-full transition-colors duration-150 ${
                               isSelected
-                                ? 'bg-[#141413]'
-                                : 'bg-[#1B365D] group-hover:bg-[#141413]'
+                                ? 'bg-[var(--app-ink)]'
+                                : 'bg-[var(--app-accent)] group-hover:bg-[var(--app-ink)]'
                             }`}
                           />
                         ) : null}
@@ -427,11 +429,9 @@ function PublicationTimelineChartComponent({
                         animate={{ height: targetHeight }}
                         transition={barTransition}
                         className={`block w-full transition-colors duration-150 ${
-                          isSelected
-                            ? 'bg-[#141413]'
-                            : isHovered
-                              ? 'bg-[#141413]'
-                              : 'bg-[#1B365D]'
+                          isSelected || isHovered
+                            ? 'bg-[var(--app-ink)]'
+                            : 'bg-[var(--app-accent)]'
                         }`}
                       />
                     )}
@@ -440,11 +440,11 @@ function PublicationTimelineChartComponent({
                   <span
                     className={`mt-2 h-5 font-mono text-[10px] leading-none [font-variant-numeric:tabular-nums] ${
                       isSelected
-                        ? 'font-bold text-[#141413]'
+                        ? 'font-bold text-[var(--app-ink)]'
                         : showLabel
                           ? isFutureYear
-                            ? 'font-medium text-[#1B365D]'
-                            : 'text-[#5C5953]'
+                            ? 'font-medium text-[var(--app-accent)]'
+                            : 'text-[var(--app-muted)]'
                           : 'select-none text-transparent'
                     }`}
                   >

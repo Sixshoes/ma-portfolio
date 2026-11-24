@@ -30,18 +30,18 @@ export function splitAuthorsHighlighted(authors: string): ReactNode[] {
     const node = isLead ? (
       <strong
         key={i}
-        className="font-semibold text-[#141413] underline decoration-[#1B365D]/60 underline-offset-4"
+        className="font-semibold text-[var(--app-ink)] underline decoration-[var(--app-accent)]/60 underline-offset-4"
       >
         {segment}
       </strong>
     ) : (
-      <span key={i} className="text-[#5C5953]">
+      <span key={i} className="text-[var(--app-muted)]">
         {segment}
       </span>
     );
     return (
       <span key={`wrap-${i}`}>
-        {i > 0 ? <span className="text-[#ABA79E]">, </span> : null}
+        {i > 0 ? <span className="text-[var(--app-muted)]/70">, </span> : null}
         {node}
       </span>
     );

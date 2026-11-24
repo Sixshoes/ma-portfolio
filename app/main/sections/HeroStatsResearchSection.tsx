@@ -1,8 +1,14 @@
 'use client';
 
-import React, { memo, useCallback, useRef, useState } from 'react';
-import { motion, useReducedMotion, useScroll, useTransform } from 'motion/react';
-import { ArrowDown } from 'lucide-react';
+import React, { memo, useCallback, useMemo, useRef, useState } from 'react';
+import {
+  AnimatePresence,
+  motion,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+} from 'motion/react';
+import { ArrowDown, ChevronDown } from 'lucide-react';
 import {
   EDITORIAL_EASE,
   InkRule,
@@ -10,6 +16,8 @@ import {
   RollingNumber,
 } from '@/app/components/EditorialMotion';
 import { ResearchPhysicsGlyph } from '@/app/components/ResearchPhysicsGlyph';
+import type { Publication } from '@/lib/publications';
+import { RESEARCH_DOMAINS, publicationMatchesDomain } from '@/lib/researchDomains';
 import { useRenderProfiler } from './useRenderProfiler';
 import { uiTokens } from './uiTokens';
 
@@ -52,6 +60,10 @@ type HeroStatsResearchSectionProps = {
   totalPubs: number | string;
   totalCitations: number | string;
   hIndexValue?: number | string;
+  allPublications: Publication[];
+  activeDomainId: string | null;
+  onFilterByDomain: (domainId: string) => void;
+  onFilterByKeyword: (keyword: string) => void;
 };
 
 function HeroStatsResearchSectionComponent({
@@ -62,11 +74,16 @@ function HeroStatsResearchSectionComponent({
   totalPubs,
   totalCitations,
   hIndexValue,
+  allPublications,
+  activeDomainId,
+  onFilterByDomain,
+  onFilterByKeyword,
 }: HeroStatsResearchSectionProps) {
   useRenderProfiler('HeroStatsResearchSection');
   const reduceMotion = useReducedMotion();
   const [isImgError, setIsImgError] = useState(false);
   const [hoveredResearchIdx, setHoveredResearchIdx] = useState<number | null>(null);
+  const [expandedResearchIdx, setExpandedResearchIdx] = useState<number | null>(null);
   const onImgError = useCallback(() => setIsImgError(true), []);
   const displayHIndex = hIndexValue ?? statsText.hIndexValue;
 
@@ -77,6 +94,16 @@ function HeroStatsResearchSectionComponent({
     offset: ['start end', 'end start'],
   });
   const portraitParallaxY = useTransform(portraitProgress, [0, 1], [-10, 14]);
+
+  // 預計算 01–05 各研究領域的對應論文篇數
+  const domainCounts = useMemo(() => {
+    return RESEARCH_DOMAINS.map((domain) =>
+      allPublications.reduce(
+        (acc, pub) => acc + (publicationMatchesDomain(pub, domain) ? 1 : 0),
+        0,
+      ),
+    );
+  }, [allPublications]);
 
   const scrollToSection = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
@@ -120,12 +147,12 @@ function HeroStatsResearchSectionComponent({
                 initial={reduceMotion ? false : { opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: reduceMotion ? 0 : 0.48, delay: 0.06, ease: EDITORIAL_EASE }}
-                className="mb-4 text-sm text-[#5C5953]"
+                className="mb-4 text-sm text-[var(--app-muted)]"
               >
                 {institutionLine}
               </motion.p>
 
-              <h1 className="font-editorial mb-6 text-[#141413]">
+              <h1 className="font-editorial mb-6 text-[var(--app-ink)]">
                 <MaskedTextReveal
                   delay={0.12}
                   duration={0.63}
@@ -137,7 +164,7 @@ function HeroStatsResearchSectionComponent({
                   delay={0.2}
                   duration={0.63}
                   className="mt-2"
-                  innerClassName="text-2xl font-medium leading-[1.25] tracking-[-0.015em] text-[#2D2C29] sm:text-3xl lg:text-[2.1rem]"
+                  innerClassName="text-2xl font-medium leading-[1.25] tracking-[-0.015em] text-[var(--app-body)] sm:text-3xl lg:text-[2.1rem]"
                 >
                   {heroLabHeadline}
                 </MaskedTextReveal>
@@ -147,7 +174,7 @@ function HeroStatsResearchSectionComponent({
                 initial={reduceMotion ? false : { opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: reduceMotion ? 0 : 0.56, delay: 0.26, ease: EDITORIAL_EASE }}
-                className="mb-8 max-w-xl text-[15px] leading-[1.8] text-[#2D2C29] md:text-base"
+                className="mb-8 max-w-xl text-[15px] leading-[1.8] text-[var(--app-body)] md:text-base"
               >
                 {heroText.desc}
               </motion.p>
@@ -176,10 +203,10 @@ function HeroStatsResearchSectionComponent({
               </motion.div>
             </div>
 
-            {/* 三大統計數據：上下 1px 墨黑鋼筆尺規繪線夾住 + 0.85s tabular-nums 滾動跳表 */}
+            {/* 三大統計數據：上下 1px 鋼筆尺規繪線夾住 + 0.85s tabular-nums 滾動跳表 */}
             <div className="mt-12">
               <InkRule dark immediate delay={0} />
-              <div className="grid grid-cols-3 divide-x divide-[#D4D1C8] py-6">
+              <div className="grid grid-cols-3 divide-x divide-[var(--app-rule)] py-6">
                 {[
                   { label: statsText.pubs, value: totalPubs },
                   { label: statsText.citations, value: totalCitations },
@@ -189,14 +216,14 @@ function HeroStatsResearchSectionComponent({
                     key={stat.label}
                     className={i > 0 ? 'pl-4 sm:pl-6' : 'pr-4'}
                   >
-                    <div className="font-editorial text-3xl font-semibold tracking-tight text-[#141413] sm:text-4xl">
+                    <div className="font-editorial text-3xl font-semibold tracking-tight text-[var(--app-ink)] sm:text-4xl">
                       <RollingNumber
                         value={stat.value}
                         delay={0.25 + i * 0.06}
                         duration={0.85}
                       />
                     </div>
-                    <div className="mt-1 text-xs text-[#5C5953]">
+                    <div className="mt-1 text-xs text-[var(--app-muted)]">
                       {stat.label}
                     </div>
                   </div>
@@ -204,21 +231,21 @@ function HeroStatsResearchSectionComponent({
               </div>
               <InkRule dark immediate delay={0.08} />
             </div>
-            <p className="mt-3 text-xs text-[#5C5953]">{statsText.scopusNote}</p>
+            <p className="mt-3 text-xs text-[var(--app-muted)]">{statsText.scopusNote}</p>
           </div>
 
-          {/* 右欄：直角裝裱霧暖礦石灰肖像框（暗房顯影 scale 1.04->1 + 微視差景深 -10px->+14px + 700ms 藝廊推進） */}
+          {/* 右欄：直角裝裱肖像框（黑版外框轉深炭灰 #1A1A17，內襯維持暖銀鹽相紙 #DDD9CE 保護 mix-blend-multiply 人像不變黑） */}
           <div className="md:col-span-5">
             <motion.figure
               ref={portraitFrameRef}
               initial={reduceMotion ? false : { opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: reduceMotion ? 0 : 0.74, delay: 0.18, ease: EDITORIAL_EASE }}
-              className="group/portrait mx-auto w-full max-w-[380px] border border-[#141413] bg-[#F7F6F2] p-2.5 md:ml-auto md:mr-0"
+              className="group/portrait mx-auto w-full max-w-[380px] border border-[var(--app-ink)] bg-[var(--app-surface-card)] p-2.5 md:ml-auto md:mr-0"
             >
-              <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#E6E4DD]">
+              <div className="relative aspect-[4/5] w-full overflow-hidden bg-[var(--portrait-mat)]">
                 {isImgError ? (
-                  <div className="font-editorial flex h-full w-full items-center justify-center text-3xl font-semibold tracking-widest text-[#5C5953]">
+                  <div className="font-editorial flex h-full w-full items-center justify-center text-3xl font-semibold tracking-widest text-[var(--app-muted)]">
                     YRM
                   </div>
                 ) : (
@@ -244,8 +271,8 @@ function HeroStatsResearchSectionComponent({
                   </motion.div>
                 )}
               </div>
-              <figcaption className="mt-2.5 border-t border-[#D4D1C8] pt-2.5 text-xs text-[#4A4843]">
-                <span className="font-semibold text-[#141413]">{portraitName}</span>
+              <figcaption className="mt-2.5 border-t border-[var(--app-rule)] pt-2.5 text-xs text-[var(--app-muted)]">
+                <span className="font-semibold text-[var(--app-ink)]">{portraitName}</span>
                 <span className="mx-1.5">·</span>
                 <span>{portraitAffiliation}</span>
               </figcaption>
@@ -254,7 +281,7 @@ function HeroStatsResearchSectionComponent({
         </div>
       </section>
 
-      {/* 五大研究領域：01.–05. 電致變色由左至右橫掃底襯 + 列尾銅版細墨線物理幾何圖騰 */}
+      {/* 五大研究領域：01.–05. 電致變色橫掃 + 銅版物理圖騰 + 點擊手風琴展開關鍵詞與論文連動篩選 */}
       <section
         id="research"
         className="mx-auto max-w-6xl scroll-mt-20 px-6 py-20 md:py-24"
@@ -266,60 +293,157 @@ function HeroStatsResearchSectionComponent({
               {lang === 'en' ? ' ' : ''}
               {researchText.subtitle}
             </h2>
-            <p className="max-w-sm text-sm text-[#5C5953] md:text-right">
+            <p className="max-w-sm text-sm text-[var(--app-muted)] md:text-right">
               {researchText.desc}
+              <span className="mt-1 block text-xs text-[var(--app-muted)]/85">
+                {isZh
+                  ? '點擊任一研究領域展開材料關鍵詞並篩選相關著作'
+                  : 'Click any area to explore keywords and filter related works'}
+              </span>
             </p>
           </div>
         </div>
         <InkRule thick />
 
-        <ol className="divide-y divide-[#D4D1C8]">
+        <ol className="divide-y divide-[var(--app-rule)]">
           {researchText.items.map((item, i) => {
             const num = `${String(i + 1).padStart(2, '0')}.`;
-            const isActive = hoveredResearchIdx === i;
+            const domain = RESEARCH_DOMAINS[i];
+            const domainCount = domainCounts[i] ?? 0;
+            const isExpanded = expandedResearchIdx === i;
+            const isActiveDomain = Boolean(domain && activeDomainId === domain.id);
+            const isGlyphActive = hoveredResearchIdx === i || isExpanded || isActiveDomain;
+
             return (
               <li
                 key={item.title}
-                tabIndex={0}
                 onMouseEnter={() => setHoveredResearchIdx(i)}
                 onMouseLeave={() => setHoveredResearchIdx((prev) => (prev === i ? null : prev))}
-                onFocus={() => setHoveredResearchIdx(i)}
-                onBlur={() => setHoveredResearchIdx((prev) => (prev === i ? null : prev))}
-                className="group relative overflow-hidden px-3 py-6 focus:outline-none md:px-4"
+                className="group relative overflow-hidden"
               >
-                {/* 電致變色薄膜橫掃底襯（origin-left scale-x-0 -> scale-x-100） */}
+                {/* 電致變色薄膜橫掃底襯（懸停或展開時呈現） */}
                 <span
                   aria-hidden="true"
-                  className="pointer-events-none absolute inset-0 origin-left scale-x-0 bg-[#ECE9E1] transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-x-100 group-focus-visible:scale-x-100 motion-reduce:transition-none"
+                  className={`pointer-events-none absolute inset-0 origin-left bg-[var(--app-hover)] transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
+                    isExpanded || isActiveDomain
+                      ? 'scale-x-100'
+                      : 'scale-x-0 group-hover:scale-x-100 group-focus-within:scale-x-100'
+                  }`}
                 />
-                {/* 左側極細牛津深藍通電指示邊線 */}
+                {/* 左側極細強調指示邊線 */}
                 <span
                   aria-hidden="true"
-                  className="pointer-events-none absolute bottom-0 left-0 top-0 w-[2px] origin-top scale-y-0 bg-[#1B365D] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-y-100 group-focus-visible:scale-y-100 motion-reduce:transition-none"
+                  className={`pointer-events-none absolute bottom-0 left-0 top-0 w-[2.5px] origin-top bg-[var(--app-accent)] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
+                    isExpanded || isActiveDomain
+                      ? 'scale-y-100'
+                      : 'scale-y-0 group-hover:scale-y-100 group-focus-within:scale-y-100'
+                  }`}
                 />
 
-                <div className="relative z-10 grid grid-cols-1 gap-3 md:grid-cols-12 md:items-center md:gap-6">
-                  <div className="flex items-center justify-between md:col-span-1 md:block">
-                    <span className="font-editorial inline-block text-lg font-medium text-[#141413] [font-variant-numeric:tabular-nums] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-1.5 group-hover:text-[#1B365D] group-focus-visible:translate-x-1.5 group-focus-visible:text-[#1B365D] motion-reduce:transition-none">
-                      {num}
-                    </span>
-                    <div className="md:hidden">
-                      <ResearchPhysicsGlyph index={i} isActive={isActive} />
+                <button
+                  type="button"
+                  aria-expanded={isExpanded}
+                  aria-controls={`research-drawer-${i}`}
+                  onClick={() => setExpandedResearchIdx((prev) => (prev === i ? null : i))}
+                  className="relative z-10 w-full cursor-pointer px-3 py-6 text-left focus:outline-none md:px-4"
+                >
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-12 md:items-center md:gap-6">
+                    <div className="flex items-center justify-between md:col-span-1 md:block">
+                      <span
+                        className={`font-editorial inline-block text-lg font-medium [font-variant-numeric:tabular-nums] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
+                          isExpanded || isActiveDomain
+                            ? 'translate-x-1.5 text-[var(--app-accent)]'
+                            : 'text-[var(--app-ink)] group-hover:translate-x-1.5 group-hover:text-[var(--app-accent)]'
+                        }`}
+                      >
+                        {num}
+                      </span>
+                      <div className="flex items-center gap-3 md:hidden">
+                        <ResearchPhysicsGlyph index={i} isActive={isGlyphActive} />
+                        <ChevronDown
+                          className={`h-4 w-4 text-[var(--app-muted)] transition-transform duration-300 ${
+                            isExpanded ? 'rotate-180 text-[var(--app-accent)]' : ''
+                          }`}
+                          aria-hidden
+                        />
+                      </div>
+                    </div>
+
+                    <h3
+                      className={`font-editorial text-xl font-semibold transition-colors duration-300 md:col-span-3 ${
+                        isExpanded || isActiveDomain
+                          ? 'text-[var(--app-accent)]'
+                          : 'text-[var(--app-ink)] group-hover:text-[var(--app-accent)]'
+                      }`}
+                    >
+                      {item.title}
+                    </h3>
+
+                    <p className="text-sm leading-[1.75] text-[var(--app-body)] md:col-span-6">
+                      {item.desc}
+                    </p>
+
+                    <div className="hidden items-center justify-end gap-3 md:col-span-2 md:flex">
+                      <ResearchPhysicsGlyph index={i} isActive={isGlyphActive} />
+                      <ChevronDown
+                        className={`h-4 w-4 shrink-0 text-[var(--app-muted)] transition-transform duration-300 ${
+                          isExpanded
+                            ? 'rotate-180 text-[var(--app-accent)]'
+                            : 'group-hover:text-[var(--app-ink)]'
+                        }`}
+                        aria-hidden
+                      />
                     </div>
                   </div>
+                </button>
 
-                  <h3 className="font-editorial text-xl font-semibold text-[#141413] transition-colors duration-300 group-hover:text-[#1B365D] md:col-span-3">
-                    {item.title}
-                  </h3>
-
-                  <p className="text-sm leading-[1.75] text-[#2D2C29] md:col-span-6">
-                    {item.desc}
-                  </p>
-
-                  <div className="hidden justify-end md:col-span-2 md:flex">
-                    <ResearchPhysicsGlyph index={i} isActive={isActive} />
-                  </div>
-                </div>
+                {/* 可展開手風琴抽屜：核心材料關鍵字標籤 + 一鍵捲動過濾論文 */}
+                <AnimatePresence initial={false}>
+                  {isExpanded && domain ? (
+                    <motion.div
+                      id={`research-drawer-${i}`}
+                      key={`drawer-${domain.id}`}
+                      initial={reduceMotion ? { opacity: 1 } : { height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={reduceMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
+                      transition={{ duration: reduceMotion ? 0 : 0.34, ease: EDITORIAL_EASE }}
+                      className="relative z-10 overflow-hidden"
+                    >
+                      <div className="border-t border-[var(--app-rule)] px-3 pb-6 pt-4 md:grid md:grid-cols-12 md:items-center md:gap-6 md:px-4">
+                        <div className="hidden md:col-span-1 md:block" />
+                        <div className="flex flex-wrap items-center gap-2 md:col-span-7">
+                          <span className="mr-1 font-mono text-[11px] uppercase tracking-wider text-[var(--app-muted)]">
+                            {isZh ? '核心關鍵詞' : 'Keywords'}
+                          </span>
+                          {domain.keywords.map((kw) => (
+                            <button
+                              key={kw.label}
+                              type="button"
+                              onClick={() => onFilterByKeyword(kw.query)}
+                              className="border border-[var(--app-rule)] bg-[var(--app-bg)] px-2.5 py-1 font-mono text-xs text-[var(--app-body)] transition-colors hover:border-[var(--app-accent)] hover:text-[var(--app-accent)]"
+                            >
+                              {kw.label}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="mt-4 flex md:col-span-4 md:mt-0 md:justify-end">
+                          <button
+                            type="button"
+                            onClick={() => onFilterByDomain(domain.id)}
+                            className={`${uiTokens.buttonPrimary} inline-flex items-center gap-2 px-4 py-2 text-xs`}
+                          >
+                            <span>
+                              {isZh
+                                ? `篩選此領域相關論文${domainCount > 0 ? `（${domainCount} 篇）` : ''}`
+                                : `Filter related works${domainCount > 0 ? ` (${domainCount})` : ''}`}
+                            </span>
+                            <ArrowDown className="h-3.5 w-3.5" aria-hidden />
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ) : null}
+                </AnimatePresence>
               </li>
             );
           })}

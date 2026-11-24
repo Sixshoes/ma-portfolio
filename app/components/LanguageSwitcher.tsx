@@ -9,7 +9,7 @@ type LanguageSwitcherProps = {
   className?: string;
 };
 
-/** 純文字書卷語系切換（中文 / EN）：啟用項加墨黑底線，零膠囊圓角 */
+/** 純文字書卷語系切換（中文 / EN）：啟用項加墨色底線，零膠囊圓角 */
 export function LanguageSwitcher({ className = '' }: LanguageSwitcherProps) {
   const { lang, setLang } = useLanguage();
 
@@ -23,8 +23,8 @@ export function LanguageSwitcher({ className = '' }: LanguageSwitcherProps) {
         aria-pressed={active}
         className={`pb-0.5 text-sm transition-colors duration-150 ${
           active
-            ? 'border-b-2 border-[#141413] font-semibold text-[#141413]'
-            : 'border-b-2 border-transparent text-[#5C5953] hover:text-[#141413]'
+            ? 'border-b-2 border-[var(--app-ink)] font-semibold text-[var(--app-ink)]'
+            : 'border-b-2 border-transparent text-[var(--app-muted)] hover:text-[var(--app-ink)]'
         }`}
       >
         {label}
@@ -39,7 +39,7 @@ export function LanguageSwitcher({ className = '' }: LanguageSwitcherProps) {
       aria-label="Language"
     >
       {renderBtn('zh', '中文')}
-      <span aria-hidden="true" className="text-xs text-[#D4D1C8]">
+      <span aria-hidden="true" className="text-xs text-[var(--app-rule)]">
         /
       </span>
       {renderBtn('en', 'EN')}

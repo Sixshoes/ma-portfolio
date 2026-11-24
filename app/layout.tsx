@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
-import { Inter, JetBrains_Mono, Newsreader, Noto_Serif_TC } from 'next/font/google';
+import { Inter, JetBrains_Mono, Newsreader } from 'next/font/google';
 import './globals.css';
 import { LanguageProvider } from './LanguageContext';
+import { ThemeProvider } from './ThemeContext';
 import { getSiteUrl } from '@/lib/site-url';
 
 const siteUrl = getSiteUrl();
@@ -11,13 +12,6 @@ const newsreader = Newsreader({
   style: ['normal', 'italic'],
   subsets: ['latin'],
   variable: '--font-newsreader',
-  display: 'swap',
-});
-
-const notoSerifTc = Noto_Serif_TC({
-  weight: ['600', '700'],
-  subsets: ['latin'],
-  variable: '--font-noto-serif-tc',
   display: 'swap',
 });
 
@@ -91,20 +85,36 @@ const personJsonLd = {
   ],
 };
 
+/** 首次繪製前同步套用記憶之晝／夜主題（預設晝讀白版），徹底杜絕 SSR 閃爍 */
+const themeInitScript = `(function(){try{var t=localStorage.getItem('ma-theme');document.documentElement.dataset.theme=t==='dark'?'dark':'light';}catch(e){document.documentElement.dataset.theme='light';}})();`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="en"
-      className={`${newsreader.variable} ${notoSerifTc.variable} ${inter.variable} ${mono.variable}`}
+      data-theme="light"
+      suppressHydrationWarning
+      className={`${newsreader.variable} ${inter.variable} ${mono.variable}`}
     >
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        {/* 以原生 Google Fonts 串流載入繁體中文 Noto Serif TC，避免 Next.js 15 CJK 分塊抓檔偶發錯誤 */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700&display=swap"
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
         />
       </head>
-      <body className="bg-[var(--app-bg)] font-sans text-[var(--app-body)] antialiased selection:bg-[#1B365D]/15 selection:text-[#141413]">
-        <LanguageProvider>{children}</LanguageProvider>
+      <body className="bg-[var(--app-bg)] font-sans text-[var(--app-body)] antialiased selection:bg-[var(--app-accent)]/20 selection:text-[var(--app-ink)]">
+        <ThemeProvider>
+          <LanguageProvider>{children}</LanguageProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
