@@ -251,7 +251,7 @@ function HeroStatsResearchSectionComponent({
                           [activeHeroBoard.id]: true,
                         }))
                       }
-                      className="h-full w-full object-cover object-center transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]"
+                      className="h-full w-full object-cover object-[76%_36%] transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]"
                     />
                   </motion.div>
                 )}
