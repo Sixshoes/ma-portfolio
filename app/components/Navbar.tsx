@@ -194,19 +194,19 @@ export function Navbar({ navText, lang, onOpenCommandPalette }: NavbarProps) {
           </div>
 
           <div className="flex items-center gap-2.5 sm:gap-3.5">
-            {/* ⌘K 快速檢索觸發鈕 */}
+            {/* ⌘K 快速檢索觸發鈕（柔和膠囊） */}
             <button
               type="button"
               onClick={onOpenCommandPalette}
               aria-label={isZh ? '開啟快速檢索（⌘K）' : 'Open quick search (⌘K)'}
               title={isZh ? '快速檢索論文與指令（⌘K / Ctrl+K）' : 'Quick search (⌘K / Ctrl+K)'}
-              className="inline-flex items-center gap-1.5 border border-[var(--app-rule)] px-2 py-1 text-xs text-[var(--app-muted)] transition-colors hover:border-[var(--app-ink)] hover:bg-[var(--app-hover)] hover:text-[var(--app-ink)]"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--app-rule)] bg-[var(--app-surface-card)]/80 px-3 py-1 text-xs text-[var(--app-muted)] transition-colors hover:border-[var(--app-ink)] hover:bg-[var(--app-hover)] hover:text-[var(--app-ink)]"
             >
               <Search className="h-3.5 w-3.5" aria-hidden />
               <span className="hidden font-mono text-[11px] sm:inline">⌘K</span>
             </button>
 
-            {/* 電致變色晝／夜雙版切換鈕 */}
+            {/* 電致變色晝／夜雙版切換鈕（柔和膠囊） */}
             <button
               type="button"
               onClick={handleThemeToggleClick}
@@ -228,7 +228,7 @@ export function Navbar({ navText, lang, onOpenCommandPalette }: NavbarProps) {
                     ? '切換為夜讀典藏黑版'
                     : 'Switch to dark theme'
               }
-              className="inline-flex items-center gap-1.5 border border-[var(--app-rule)] px-2 py-1 text-xs text-[var(--app-ink)] transition-colors hover:border-[var(--app-ink)] hover:bg-[var(--app-hover)]"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--app-rule)] bg-[var(--app-surface-card)]/80 px-3 py-1 text-xs text-[var(--app-ink)] transition-colors hover:border-[var(--app-ink)] hover:bg-[var(--app-hover)]"
             >
               {isDark ? (
                 <Sun className="h-3.5 w-3.5 text-[var(--app-accent)]" aria-hidden />
@@ -247,7 +247,7 @@ export function Navbar({ navText, lang, onOpenCommandPalette }: NavbarProps) {
               aria-label={isMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
               aria-expanded={isMenuOpen}
               aria-controls="mobile-nav-menu"
-              className="rounded-none p-1.5 text-[var(--app-ink)] transition-colors hover:bg-[var(--app-hover)] lg:hidden"
+              className="rounded-full p-1.5 text-[var(--app-ink)] transition-colors hover:bg-[var(--app-hover)] lg:hidden"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
               {isMenuOpen ? <X className="h-5 w-5" aria-hidden /> : <Menu className="h-5 w-5" aria-hidden />}

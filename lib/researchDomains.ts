@@ -3,9 +3,16 @@ import type { Publication } from './publications';
 export type ResearchDomainConfig = {
   id: string;
   index: number;
+  roman: 'I' | 'II' | 'III' | 'IV' | 'V';
+  /** 礦物圖鑑五色譜（用於環狀圖扇區、六角徽章與期刊視覺識別） */
+  color: string;
+  /** 黑板藍圖展櫃粉筆點綴色（鵝黃 #F3DF87 / 珊瑚粉紅 #E88D84） */
+  chalkColor: string;
   labelZh: string;
   labelEn: string;
-  /** 展開抽屜中顯示的可點擊核心材料／物理關鍵字標籤 */
+  /** 藍圖展櫃頂部之物理公式／晶格標註 */
+  formulaTag: string;
+  /** 展開抽屜與藍圖展櫃顯示的可點擊核心材料／物理關鍵字標籤 */
   keywords: Array<{ label: string; query: string }>;
   /** 點擊「篩選此領域相關論文」時比對標題／期刊／亮點／摘要的關鍵詞清單（任一命中即納入） */
   matchTerms: string[];
@@ -15,8 +22,12 @@ export const RESEARCH_DOMAINS: ResearchDomainConfig[] = [
   {
     id: '1d-nanomaterials',
     index: 0,
+    roman: 'I',
+    color: '#1B4965',
+    chalkColor: '#F3DF87',
     labelZh: '一維奈米材料',
     labelEn: '1D Nanomaterials',
+    formulaTag: 'ZnO · WO₃ [001] Nanorods',
     keywords: [
       { label: 'Nanorods', query: 'nanorod' },
       { label: 'Nanowires', query: 'nanowire' },
@@ -40,8 +51,12 @@ export const RESEARCH_DOMAINS: ResearchDomainConfig[] = [
   {
     id: '2d-ferromagnetic',
     index: 1,
+    roman: 'II',
+    color: '#2A6F68',
+    chalkColor: '#8ED1C6',
     labelZh: '二維鐵磁材料',
     labelEn: '2D Ferromagnetic Materials',
+    formulaTag: 'CrI₃ · CrTe₂ · 2D Spin ↑↑',
     keywords: [
       { label: 'Ferromagnetic', query: 'ferromagnet' },
       { label: 'Magnetic', query: 'magnetic' },
@@ -65,8 +80,12 @@ export const RESEARCH_DOMAINS: ResearchDomainConfig[] = [
   {
     id: 'electrochromism',
     index: 2,
+    roman: 'III',
+    color: '#C88A2B',
+    chalkColor: '#E88D84',
     labelZh: '電致變色',
     labelEn: 'Electrochromism',
+    formulaTag: 'WO₃ + xLi⁺ + xe⁻ ⇄ LiₓWO₃',
     keywords: [
       { label: 'Electrochromic', query: 'electrochromic' },
       { label: 'WO3', query: 'wo3' },
@@ -86,8 +105,12 @@ export const RESEARCH_DOMAINS: ResearchDomainConfig[] = [
   {
     id: 'supercapacitors',
     index: 3,
+    roman: 'IV',
+    color: '#9E3B33',
+    chalkColor: '#F3DF87',
     labelZh: '超級電容器',
     labelEn: 'Supercapacitors',
+    formulaTag: 'C = εA / d · Pseudocapacitance',
     keywords: [
       { label: 'Supercapacitor', query: 'supercapacitor' },
       { label: 'Pseudocapacitive', query: 'pseudocapacit' },
@@ -109,8 +132,12 @@ export const RESEARCH_DOMAINS: ResearchDomainConfig[] = [
   {
     id: 'quantum-computer',
     index: 4,
+    roman: 'V',
+    color: '#4A586E',
+    chalkColor: '#E88D84',
     labelZh: '量子電腦',
     labelEn: 'Quantum Computer',
+    formulaTag: 'T = |F/A|² · |ψ⟩ = α|0⟩ + β|1⟩',
     keywords: [
       { label: 'Quantum', query: 'quantum' },
       { label: 'Photodetector', query: 'photodetector' },
@@ -143,4 +170,22 @@ export function publicationMatchesDomain(
 ): boolean {
   const haystack = `${pub.title} ${pub.journal} ${pub.takeaway ?? ''} ${pub.abstract_excerpt ?? ''}`.toLowerCase();
   return domain.matchTerms.some((term) => haystack.includes(term));
+}
+
+export function computeDomainStats(publications: Publication[]) {
+  return RESEARCH_DOMAINS.map((domain) => {
+    let count = 0;
+    let citations = 0;
+    for (const pub of publications) {
+      if (publicationMatchesDomain(pub, domain)) {
+        count += 1;
+        citations += pub.citations;
+      }
+    }
+    return {
+      domain,
+      count,
+      citations,
+    };
+  });
 }

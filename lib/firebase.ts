@@ -17,16 +17,22 @@ import {
   type FirebaseStorage,
 } from 'firebase/storage';
 import {
+  CHALKBOARDS_DOC_ID,
   PUBLICATIONS_COLLECTION,
   PUBLICATIONS_DOC_ID,
+  STORAGE_CHALKBOARDS_PREFIX,
 } from '@/lib/constants';
+import {
+  normalizeChalkboardsFromJson,
+  type ChalkboardItem,
+} from '@/lib/chalkboards';
 import {
   computeHIndex,
   normalizePublicationsFromJson,
   type Publication,
 } from '@/lib/publications';
 
-export { PUBLICATIONS_COLLECTION, PUBLICATIONS_DOC_ID };
+export { CHALKBOARDS_DOC_ID, PUBLICATIONS_COLLECTION, PUBLICATIONS_DOC_ID };
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY?.trim() ?? '',
@@ -269,4 +275,110 @@ export async function uploadPublicationImage(
   });
 
   return getDownloadURL(storageRef);
+}
+
+export type ChalkboardsBundleDoc = {
+  schemaVersion: number;
+  updatedAt: string;
+  updatedBy: string;
+  items: ChalkboardItem[];
+};
+
+function sanitizeChalkboardForFirestore(
+  item: ChalkboardItem,
+  idx: number,
+): Record<string, string | number | boolean> {
+  const clean: Record<string, string | number | boolean> = {
+    id: item.id?.trim() || crypto.randomUUID(),
+    imageUrl: item.imageUrl.trim(),
+    titleZh: item.titleZh.trim() || '親筆黑板物理推導手稿',
+    titleEn: item.titleEn.trim() || item.titleZh.trim() || 'Chalkboard Derivation',
+    formulaNote: item.formulaNote.trim(),
+    featuredInHero: Boolean(item.featuredInHero),
+    order: Number.isFinite(item.order) ? Math.trunc(item.order) : idx + 1,
+  };
+  if (item.courseOrTopic?.trim()) clean.courseOrTopic = item.courseOrTopic.trim();
+  if (item.year?.trim()) clean.year = item.year.trim();
+  return clean;
+}
+
+export async function loadChalkboardsBundleFromFirestore(): Promise<ChalkboardsBundleDoc | null> {
+  const { db } = getFirebaseServices();
+  const snap = await getDoc(doc(db, PUBLICATIONS_COLLECTION, CHALKBOARDS_DOC_ID));
+  if (!snap.exists()) return null;
+
+  const raw = snap.data() as Partial<ChalkboardsBundleDoc>;
+  const items = normalizeChalkboardsFromJson(raw.items ?? []);
+  return {
+    schemaVersion: typeof raw.schemaVersion === 'number' ? raw.schemaVersion : 1,
+    updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : '',
+    updatedBy: typeof raw.updatedBy === 'string' ? raw.updatedBy : '',
+    items,
+  };
+}
+
+export async function saveChalkboardsBundleToFirestore(
+  items: ChalkboardItem[],
+  updatedByEmail: string,
+): Promise<ChalkboardsBundleDoc> {
+  const { db } = getFirebaseServices();
+  const normalized = normalizeChalkboardsFromJson(items).map((item, idx) => ({
+    ...item,
+    order: idx + 1,
+  }));
+  const cleanItems = normalized.map(sanitizeChalkboardForFirestore);
+
+  const payload = {
+    schemaVersion: 1,
+    updatedAt: new Date().toISOString(),
+    updatedBy: updatedByEmail,
+    items: cleanItems,
+  };
+
+  await setDoc(doc(db, PUBLICATIONS_COLLECTION, CHALKBOARDS_DOC_ID), payload);
+
+  return {
+    ...payload,
+    items: normalized,
+  };
+}
+
+/**
+ * 黑板手稿照片上傳至 Firebase Storage chalkboards/{id}.webp：
+ * 最大邊長放寬至 1800px、品質 0.86，確保細小粉筆上下標數學符號清晰銳利。
+ */
+export async function uploadChalkboardImage(
+  file: File,
+  customId?: string,
+): Promise<{ downloadUrl: string; id: string }> {
+  if (!isFirebaseStorageConfigured()) {
+    throw new Error('尚未設定 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET。');
+  }
+  if (!file.type.startsWith('image/')) {
+    throw new Error('請上傳圖片檔案（JPG / PNG / WebP）。');
+  }
+  if (file.size > 20 * 1024 * 1024) {
+    throw new Error('原始照片超過 20 MB，請先縮小後再上傳。');
+  }
+
+  const { storage } = getFirebaseServices();
+  const { blob, contentType, extension } = await compressImageToWebp(file, 1800, 0.86);
+
+  const safeId =
+    (customId ?? '')
+      .toLowerCase()
+      .replace(/[^a-z0-9-]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 72) || `chalkboard-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+
+  const objectPath = `${STORAGE_CHALKBOARDS_PREFIX}/${safeId}.${extension}`;
+  const storageRef = ref(storage, objectPath);
+
+  await uploadBytes(storageRef, blob, {
+    contentType,
+    cacheControl: 'public, max-age=31536000, immutable',
+  });
+
+  const downloadUrl = await getDownloadURL(storageRef);
+  return { downloadUrl, id: safeId };
 }

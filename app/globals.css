@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 @theme inline {
   --font-sans: var(--font-inter), "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", ui-sans-serif, system-ui, sans-serif;
@@ -13,42 +14,48 @@
   mix-blend-mode: normal;
 }
 
-/* 晝讀紙本版（預設） */
+/* 晝讀圖鑑版（預設：石灰岩紙底 × 典藏淺紙 × 暖礦石展廳） */
 :root,
 [data-theme="light"] {
   color-scheme: light;
   --font-noto-serif-tc: "Noto Serif TC";
-  --app-bg: #F7F6F2;
-  --app-hover: #ECE9E1;
-  --app-ink: #141413;
-  --app-body: #2D2C29;
-  --app-muted: #5C5953;
-  --app-rule: #D4D1C8;
-  --app-accent: #1B365D;
+  --app-bg: #F2EFE7;
+  --app-bg-alt: #F8F7F3;
+  --app-bg-warm: #E8E4DA;
+  --app-hover: #EAE6DC;
+  --app-ink: #14171A;
+  --app-body: #2C3035;
+  --app-muted: #5F646B;
+  --app-rule: #DDD8CC;
+  --app-accent: #1B4965;
   --portrait-mat: #E6E4DD;
-  --app-surface-card: #F7F6F2;
+  --app-surface-card: #FFFFFF;
   --app-figure-mat: #FFFFFF;
-  --app-bar-coauthor: #C8C4B8;
-  --app-bar-coauthor-hover: #B3AFA5;
+  --app-bar-coauthor: #C9C4B6;
+  --app-bar-coauthor-hover: #B4AEA0;
+  --app-card-shadow: 0 14px 38px -22px rgba(20, 24, 22, 0.16);
   background-color: var(--app-bg);
   color: var(--app-ink);
 }
 
-/* 夜讀典藏黑版（零流金、霧面碳墨黑配溫潤羊皮紙白字） */
+/* 夜讀典藏黑版（保留電致變色圓形光圈轉場，柔和低眩光） */
 [data-theme="dark"] {
   color-scheme: dark;
-  --app-bg: #121210;
-  --app-hover: #1D1C19;
+  --app-bg: #111315;
+  --app-bg-alt: #171A1E;
+  --app-bg-warm: #14171B;
+  --app-hover: #22272E;
   --app-ink: #EAE6DF;
-  --app-body: #C7C2B8;
-  --app-muted: #8E8980;
-  --app-rule: #2C2B28;
+  --app-body: #C5C2BA;
+  --app-muted: #8E939B;
+  --app-rule: #2A2F36;
   --app-accent: #7FA2C7;
-  --portrait-mat: #DDD9CE; /* 關鍵：保護 mix-blend-multiply 肖像於黑版清晰立體不變黑 */
-  --app-surface-card: #1A1A17;
+  --portrait-mat: #DDD9CE; /* 保護 #about 的 mix-blend-multiply 肖像在夜間模式依然清晰立體 */
+  --app-surface-card: #1A1E23;
   --app-figure-mat: #E6E2D8; /* 柔和相紙底襯，消除白底論文摘要圖刺眼感 */
-  --app-bar-coauthor: #3D3B36;
-  --app-bar-coauthor-hover: #52504A;
+  --app-bar-coauthor: #3A414A;
+  --app-bar-coauthor-hover: #4E5763;
+  --app-card-shadow: 0 18px 42px -24px rgba(0, 0, 0, 0.55);
   background-color: var(--app-bg);
   color: var(--app-ink);
 }
@@ -56,6 +63,22 @@
 /* 黑版下白底論文摘要圖輕微柔和壓暗，避免純白方塊眩光 */
 [data-theme="dark"] .editorial-figure-img {
   filter: brightness(0.95) contrast(1.02);
+}
+
+/* 石灰岩柔曲線地形等高線微紋理（極低存在感，消除冰冷空白感） */
+.atlas-contour-bg {
+  background-image:
+    radial-gradient(ellipse 65% 50% at 88% 12%, color-mix(in srgb, var(--app-accent) 6%, transparent), transparent 70%),
+    radial-gradient(ellipse 55% 45% at 10% 85%, color-mix(in srgb, #C88A2B 6%, transparent), transparent 70%);
+}
+
+/* 講堂深墨綠黑板自然粉筆霧暈質感 */
+.chalkboard-hall-bg {
+  background-color: #1B3329;
+  background-image:
+    radial-gradient(ellipse 60% 45% at 15% 15%, rgba(243, 223, 135, 0.06), transparent 65%),
+    radial-gradient(ellipse 55% 45% at 85% 80%, rgba(232, 141, 132, 0.06), transparent 65%),
+    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.03), transparent 55%);
 }
 
 @layer utilities {
@@ -70,6 +93,13 @@
     font-family: var(--font-newsreader), Georgia, serif;
     font-style: italic;
   }
+
+  .atlas-card {
+    border-radius: 1.5rem;
+    border: 1px solid color-mix(in srgb, var(--app-rule) 85%, transparent);
+    background-color: var(--app-surface-card);
+    box-shadow: var(--app-card-shadow);
+  }
 }
 
 html {
@@ -83,7 +113,7 @@ html {
 }
 
 :focus-visible {
-  outline: 1.5px solid var(--app-ink);
+  outline: 2px solid var(--app-accent);
   outline-offset: 2px;
 }
 

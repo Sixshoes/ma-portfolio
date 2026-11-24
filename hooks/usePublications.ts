@@ -46,6 +46,7 @@ export function usePublications(
   const [pubSort, setPubSort] = useState<PubSort>('newest');
   const [correspondingOnly, setCorrespondingOnly] = useState(false);
   const [activeDomainId, setActiveDomainId] = useState<string | null>(null);
+  const [selectedJournal, setSelectedJournal] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<PubViewMode>('card');
   const [searchQuery, setSearchQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(PUB_PAGE_DESKTOP);
@@ -196,6 +197,10 @@ export function usePublications(
       list = list.filter((p) => publicationMatchesDomain(p, activeDomain));
     }
 
+    if (selectedJournal) {
+      list = list.filter((p) => p.journal.trim() === selectedJournal);
+    }
+
     if (normalizedQuery) {
       list = list.filter((p) => {
         const haystack = `${p.title} ${p.journal} ${p.year} ${p.authors ?? ''}`.toLowerCase();
@@ -203,14 +208,15 @@ export function usePublications(
       });
     }
     return list;
-  }, [pubFilter, correspondingOnly, activeDomain, normalizedQuery, sortedPublications]);
+  }, [pubFilter, correspondingOnly, activeDomain, selectedJournal, normalizedQuery, sortedPublications]);
 
-  // 僅在未套用年份／高引用／領域／搜尋／僅通訊作者篩選時顯示置頂精選區
+  // 僅在未套用年份／高引用／領域／期刊／搜尋／僅通訊作者篩選時顯示置頂精選區
   const isDefaultAllView =
     pubFilter === 'All' &&
     normalizedQuery === '' &&
     !correspondingOnly &&
-    activeDomainId === null;
+    activeDomainId === null &&
+    selectedJournal === null;
 
   const featuredPublications = useMemo(
     () => (isDefaultAllView ? computeFeaturedPublications(publications, 3) : []),
@@ -281,7 +287,19 @@ export function usePublications(
       setActiveDomainId(domainId);
       if (domainId !== null) {
         setPubFilter('All');
+        setSelectedJournal(null);
         setSearchQuery('');
+      }
+      setVisibleCount(pageSize);
+    },
+    [pageSize],
+  );
+
+  const handleJournalFilterChange = useCallback(
+    (journal: string | null) => {
+      setSelectedJournal(journal);
+      if (journal !== null) {
+        setActiveDomainId(null);
       }
       setVisibleCount(pageSize);
     },
@@ -291,6 +309,7 @@ export function usePublications(
   const handleKeywordQuickFilter = useCallback(
     (keyword: string) => {
       setActiveDomainId(null);
+      setSelectedJournal(null);
       setPubFilter('All');
       setSearchQuery(keyword);
       setVisibleCount(pageSize);
@@ -308,6 +327,7 @@ export function usePublications(
     pubSort,
     correspondingOnly,
     activeDomainId,
+    selectedJournal,
     viewMode,
     searchQuery,
     uniqueYears,
@@ -324,6 +344,7 @@ export function usePublications(
     handlePubSortChange,
     handleCorrespondingToggle,
     handleDomainFilterChange,
+    handleJournalFilterChange,
     handleKeywordQuickFilter,
     handleViewModeChange,
     handleSearchChange,

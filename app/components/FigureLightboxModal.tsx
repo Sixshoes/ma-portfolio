@@ -63,13 +63,13 @@ export function FigureLightboxModal({
             exit={reduce ? { opacity: 0 } : { opacity: 0, y: 8 }}
             transition={{ duration: reduce ? 0 : 0.3, ease: EDITORIAL_EASE }}
             onClick={(e) => e.stopPropagation()}
-            className="relative flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden border border-[var(--app-ink)] bg-[var(--app-bg)]"
+            className="relative flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-[24px] border border-[var(--app-rule)] bg-[var(--app-surface-card)] shadow-[0_28px_70px_-24px_rgba(0,0,0,0.45)]"
           >
             <div className="flex items-start justify-between gap-4 border-b border-[var(--app-rule)] px-6 py-4">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-baseline gap-2 text-sm text-[var(--app-muted)]">
                   {lightbox.year && lightbox.year > 0 ? (
-                    <span className="font-mono text-xs text-[var(--app-ink)] [font-variant-numeric:tabular-nums]">
+                    <span className="rounded-full bg-[var(--app-hover)] px-2 py-0.5 font-mono text-xs text-[var(--app-ink)] [font-variant-numeric:tabular-nums]">
                       {lightbox.year}
                     </span>
                   ) : null}
@@ -83,7 +83,7 @@ export function FigureLightboxModal({
                 type="button"
                 onClick={onClose}
                 aria-label={closeLabel}
-                className="shrink-0 border border-[var(--app-rule)] p-1.5 text-[var(--app-muted)] transition-colors hover:border-[var(--app-ink)] hover:bg-[var(--app-ink)] hover:text-[var(--app-bg)]"
+                className="shrink-0 rounded-full border border-[var(--app-rule)] p-2 text-[var(--app-muted)] transition-colors hover:border-[var(--app-ink)] hover:bg-[var(--app-ink)] hover:text-[var(--app-bg)]"
               >
                 <X className="h-4 w-4" aria-hidden />
               </button>
@@ -93,7 +93,7 @@ export function FigureLightboxModal({
               <motion.div
                 layoutId={reduce ? undefined : lightbox.layoutId}
                 transition={{ duration: 0.38, ease: EDITORIAL_EASE }}
-                className="border border-[var(--app-rule)] bg-[var(--app-figure-mat)] p-3"
+                className="overflow-hidden rounded-2xl border border-[var(--app-rule)] bg-[var(--app-figure-mat)] p-3"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img

@@ -23,6 +23,7 @@ import {
   FigureLightboxModal,
   type FigureLightboxPayload,
 } from '@/app/components/FigureLightboxModal';
+import { TopJournalsChart } from '@/app/components/TopJournalsChart';
 import { useRenderProfiler } from './useRenderProfiler';
 import { uiTokens } from './uiTokens';
 import { PublicationLazyImage } from './PublicationLazyImage';
@@ -41,6 +42,7 @@ type PublicationsSectionProps = {
   pubSort: PubSort;
   correspondingOnly: boolean;
   activeDomainId: string | null;
+  selectedJournal: string | null;
   viewMode: PubViewMode;
   searchQuery: string;
   uniqueYears: string[];
@@ -57,6 +59,7 @@ type PublicationsSectionProps = {
   onSortChange: (value: PubSort) => void;
   onCorrespondingToggle: () => void;
   onClearDomainFilter: () => void;
+  onSelectJournal: (journal: string | null) => void;
   onViewModeChange: (mode: PubViewMode) => void;
   onSearchChange: (value: string) => void;
   onLoadMore: () => void;
@@ -72,7 +75,6 @@ function formatCitationString(pub: Publication): string {
   return parts.join(' ');
 }
 
-/** 依標題、作者、期刊、年份、DOI 自動組裝標準 BibTeX @article 引文 */
 function formatBibTeXString(pub: Publication): string {
   const bareDoi = extractDoiIdentifier(pub.doi);
   const firstWord =
@@ -158,7 +160,7 @@ type PublicationRowProps = {
   onOpenLightbox: (payload: NonNullable<LightboxState>) => void;
 };
 
-/** 單欄全寬水平尺規學報書目列（支援閱讀聚光燈、APA/BibTeX 雙制複製與暗房燈箱） */
+/** 溫潤圓角學報書目列（閱讀聚光燈、APA/BibTeX 雙制複製與圓角摘要圖燈箱） */
 const PublicationJournalRow = memo(function PublicationJournalRow({
   pub,
   pubKey,
@@ -216,29 +218,29 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
           ? { contentVisibility: 'auto', containIntrinsicSize: showFigure ? '210px' : '148px' }
           : undefined
       }
-      className="group relative border-b border-[var(--app-rule)] py-7 pl-0 transition-[opacity,background-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[var(--app-hover)]/65 md:pl-3 md:group-hover/list:opacity-60 md:hover:!opacity-100"
+      className="group relative rounded-2xl border-b border-[var(--app-rule)]/70 px-3 py-6 transition-[opacity,background-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[var(--app-surface-card)] md:px-5 md:group-hover/list:opacity-65 md:hover:!opacity-100"
     >
-      {/* 當前閱讀行左側 3px 書籤線 */}
+      {/* 當前閱讀行左側柔圓書籤線 */}
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute bottom-0 left-0 top-0 hidden w-[3px] origin-top scale-y-0 bg-[var(--app-accent)] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-y-100 motion-reduce:transition-none md:block"
+        className="pointer-events-none absolute bottom-4 left-0 top-4 hidden w-[3px] origin-top scale-y-0 rounded-full bg-[var(--app-accent)] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-y-100 motion-reduce:transition-none md:block"
       />
-      <div className="flex flex-col gap-5 md:flex-row md:items-start md:gap-8">
-        {/* 左欄：年份、預刊、通訊星號與代表作小標 */}
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 md:w-28 md:shrink-0 md:flex-col md:gap-1.5">
+      <div className="flex flex-col gap-5 md:flex-row md:items-start md:gap-7">
+        {/* 左欄：年份膠囊、預刊與通訊星號 */}
+        <div className="flex flex-wrap items-center gap-2 md:w-28 md:shrink-0 md:flex-col md:items-start md:gap-2">
           <div className="flex items-center gap-2">
-            <span className="font-mono text-sm font-medium text-[var(--app-ink)] [font-variant-numeric:tabular-nums]">
+            <span className="rounded-full bg-[var(--app-hover)] px-2.5 py-0.5 font-mono text-xs font-semibold text-[var(--app-ink)] [font-variant-numeric:tabular-nums]">
               {pub.year > 0 ? pub.year : '—'}
             </span>
             {isInPress ? (
-              <span className="border border-[var(--app-accent)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--app-accent)]">
+              <span className="rounded-full bg-[var(--app-accent)]/15 px-2 py-0.5 text-[10px] font-medium text-[var(--app-accent)]">
                 {pubsText.inPress}
               </span>
             ) : null}
           </div>
 
           {featuredRank !== undefined ? (
-            <span className="text-xs font-medium text-[var(--app-accent)]">
+            <span className="rounded-full bg-[#C88A2B]/15 px-2.5 py-0.5 text-[11px] font-semibold text-[#B4771D] dark:text-[#F3DF87]">
               {pubsText.featuredSpotlight} {String(featuredRank).padStart(2, '0')}
             </span>
           ) : null}
@@ -254,7 +256,7 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
 
         {/* 中欄：書目主內容 */}
         <div className="flex min-w-0 flex-1 flex-col">
-          <h3 className="font-editorial mb-2 text-lg font-semibold leading-[1.35] text-[var(--app-ink)] transition-colors group-hover:text-[var(--app-accent)] md:text-[1.2rem]">
+          <h3 className="font-editorial mb-2 text-lg font-semibold leading-[1.35] text-[var(--app-ink)] transition-colors group-hover:text-[var(--app-accent)] md:text-[1.18rem]">
             {pub.title}
           </h3>
 
@@ -265,18 +267,18 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
           ) : null}
 
           {takeawayLines.length > 0 ? (
-            <ul className="mb-3 space-y-1 border-l border-[var(--app-ink)] pl-3.5 text-sm leading-relaxed text-[var(--app-body)]">
+            <ul className="mb-3 space-y-1 rounded-xl border-l-2 border-[var(--app-accent)] bg-[var(--app-bg)]/60 py-2 pl-3.5 pr-3 text-sm leading-relaxed text-[var(--app-body)]">
               {takeawayLines.map((line, li) => (
                 <li key={li}>{line}</li>
               ))}
             </ul>
           ) : null}
 
-          <div className="mt-1 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">
+          <div className="mt-1 flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-sm">
             <span className="font-journal-italic text-[15px] text-[var(--app-body)]">
               {pub.journal}
             </span>
-            <span className="font-mono text-xs text-[var(--app-ink)] [font-variant-numeric:tabular-nums]">
+            <span className="rounded-full bg-[var(--app-hover)] px-2.5 py-0.5 font-mono text-[11px] text-[var(--app-ink)] [font-variant-numeric:tabular-nums]">
               {pub.citations.toLocaleString(locale)} {pubsText.citations}
             </span>
             {pub.doi ? (
@@ -293,7 +295,6 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
           </div>
 
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-[var(--app-muted)]">
-            {/* APA 標準引文複製 */}
             <button
               type="button"
               onClick={() => onCopyCitation(pubKey, pub, 'apa')}
@@ -328,7 +329,6 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
               </AnimatePresence>
             </button>
 
-            {/* BibTeX 格式一鍵複製 */}
             <button
               type="button"
               onClick={() => onCopyCitation(pubKey, pub, 'bibtex')}
@@ -402,7 +402,7 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
                 transition={{ duration: litePub ? 0 : 0.18, ease: EDITORIAL_EASE }}
                 className="overflow-hidden"
               >
-                <p className="mt-4 border-t border-[var(--app-rule)] pt-3.5 text-sm leading-relaxed text-[var(--app-body)]">
+                <p className="mt-4 rounded-xl bg-[var(--app-bg)]/80 p-4 text-sm leading-relaxed text-[var(--app-body)]">
                   {pub.abstract_excerpt}
                 </p>
               </motion.div>
@@ -410,14 +410,14 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
           </AnimatePresence>
         </div>
 
-        {/* 右欄：僅於具備有效單篇摘要圖時顯示相紙底襯縮圖（黑版柔和防眩光） */}
+        {/* 右欄：溫潤圓角單篇摘要圖縮圖 */}
         {showFigure ? (
           <div className="w-full shrink-0 md:w-[230px] lg:w-[252px]">
             <motion.div
               layoutId={litePub ? undefined : figLayoutId}
               transition={{ duration: 0.36, ease: EDITORIAL_EASE }}
               onClick={openFigure}
-              className="group/img relative flex aspect-[16/10] w-full cursor-zoom-in items-center justify-center overflow-hidden border border-[var(--app-rule)] bg-[var(--app-figure-mat)] p-2 transition-colors hover:border-[var(--app-ink)]"
+              className="group/img relative flex aspect-[16/10] w-full cursor-zoom-in items-center justify-center overflow-hidden rounded-2xl border border-[var(--app-rule)] bg-[var(--app-figure-mat)] p-2.5 shadow-xs transition-all hover:border-[var(--app-ink)] hover:shadow-md"
             >
               <PublicationLazyImage
                 key={figureUrl}
@@ -435,7 +435,7 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
                 }}
                 aria-label={pubsText.zoomFigure}
                 title={pubsText.zoomFigure}
-                className="absolute right-1.5 top-1.5 z-10 flex h-7 w-7 items-center justify-center border border-[var(--app-rule)] bg-[var(--app-bg)]/95 text-[var(--app-ink)] opacity-85 transition-colors hover:border-[var(--app-ink)] hover:bg-[var(--app-ink)] hover:text-[var(--app-bg)] group-hover/img:opacity-100 md:opacity-0"
+                className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-[var(--app-rule)] bg-[var(--app-bg)]/95 text-[var(--app-ink)] opacity-85 transition-colors hover:border-[var(--app-ink)] hover:bg-[var(--app-ink)] hover:text-[var(--app-bg)] group-hover/img:opacity-100 md:opacity-0"
               >
                 <ZoomIn className="h-3.5 w-3.5" aria-hidden />
               </button>
@@ -502,17 +502,17 @@ const PublicationCompactRow = memo(function PublicationCompactRow({
   const isInPress = pub.year > currentYear;
 
   return (
-    <article className="group relative flex flex-col gap-2 border-b border-[var(--app-rule)] py-4 pl-0 transition-[opacity,background-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[var(--app-hover)]/65 md:flex-row md:items-baseline md:gap-6 md:pl-3 md:group-hover/list:opacity-60 md:hover:!opacity-100">
+    <article className="group relative flex flex-col gap-2 rounded-xl border-b border-[var(--app-rule)]/70 px-3 py-4 transition-[opacity,background-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[var(--app-surface-card)] md:flex-row md:items-baseline md:gap-6 md:px-4 md:group-hover/list:opacity-65 md:hover:!opacity-100">
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute bottom-0 left-0 top-0 hidden w-[3px] origin-top scale-y-0 bg-[var(--app-accent)] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-y-100 motion-reduce:transition-none md:block"
+        className="pointer-events-none absolute bottom-3 left-0 top-3 hidden w-[3px] origin-top scale-y-0 rounded-full bg-[var(--app-accent)] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-y-100 motion-reduce:transition-none md:block"
       />
       <div className="flex items-center gap-2 md:w-28 md:shrink-0">
-        <span className="font-mono text-sm font-medium text-[var(--app-ink)] [font-variant-numeric:tabular-nums]">
+        <span className="rounded-full bg-[var(--app-hover)] px-2 py-0.5 font-mono text-xs font-medium text-[var(--app-ink)] [font-variant-numeric:tabular-nums]">
           {pub.year > 0 ? pub.year : '—'}
         </span>
         {isInPress ? (
-          <span className="border border-[var(--app-accent)] px-1 py-0.5 text-[10px] text-[var(--app-accent)]">
+          <span className="rounded-full bg-[var(--app-accent)]/15 px-1.5 py-0.5 text-[10px] text-[var(--app-accent)]">
             {pubsText.inPress}
           </span>
         ) : null}
@@ -584,17 +584,17 @@ function PublicationsListSkeleton({
   const pulse = prefersReducedMotion ? '' : 'animate-pulse';
   return (
     <div
-      className="divide-y divide-[var(--app-rule)]"
+      className="space-y-4 py-4"
       role="status"
       aria-live="polite"
       aria-busy="true"
       aria-label={pubsText.loadingPublications}
     >
       {[0, 1, 2].map((i) => (
-        <div key={i} className={`flex flex-col gap-3 py-6 ${pulse}`}>
-          <div className="h-3.5 w-24 bg-[var(--app-hover)]" />
-          <div className="h-5 w-[78%] bg-[var(--app-hover)]" />
-          <div className="h-4 w-[48%] bg-[var(--app-hover)]/70" />
+        <div key={i} className={`flex flex-col gap-3 rounded-2xl bg-[var(--app-surface-card)] p-5 ${pulse}`}>
+          <div className="h-3.5 w-24 rounded-full bg-[var(--app-hover)]" />
+          <div className="h-5 w-[78%] rounded-lg bg-[var(--app-hover)]" />
+          <div className="h-4 w-[48%] rounded-lg bg-[var(--app-hover)]/70" />
         </div>
       ))}
     </div>
@@ -609,6 +609,7 @@ function PublicationsSectionComponent({
   pubSort,
   correspondingOnly,
   activeDomainId,
+  selectedJournal,
   viewMode,
   searchQuery,
   uniqueYears,
@@ -625,6 +626,7 @@ function PublicationsSectionComponent({
   onSortChange,
   onCorrespondingToggle,
   onClearDomainFilter,
+  onSelectJournal,
   onViewModeChange,
   onSearchChange,
   onLoadMore,
@@ -682,273 +684,251 @@ function PublicationsSectionComponent({
   return (
     <section
       id="publications"
-      className="mx-auto max-w-6xl scroll-mt-20 px-6 py-20 md:py-24"
+      className="scroll-mt-16 bg-[var(--app-bg-alt)] py-20 md:py-24"
     >
-      <div className="pb-4">
-        <div className="flex flex-col items-start justify-between gap-3 md:flex-row md:items-end">
-          <h2 className={uiTokens.sectionTitle}>
-            {pubsText.title}
-            {lang === 'en' ? ' ' : ''}
-            {pubsText.subtitle}
-          </h2>
-          <p className="max-w-md text-sm text-[var(--app-muted)] md:text-right">
-            {pubsText.desc}
-          </p>
-        </div>
-      </div>
-      <InkRule thick />
-
-      {/* 無框時間軸圖表 */}
-      {!isLoading && allPublications.length > 0 ? (
-        <PublicationTimelineChart
-          publications={allPublications}
-          selectedFilter={pubFilter}
-          lang={lang}
-          onSelectYear={onFilterChange}
-        />
-      ) : null}
-
-      {/* 直角底線檢索工具列 */}
-      <div className="border-y border-[var(--app-ink)] py-4">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-            <div className="flex items-center gap-2">
-              <label htmlFor="pub-filter-select" className="text-xs text-[var(--app-muted)]">
-                {pubsText.filterBy}
-              </label>
-              <div className="relative">
-                <select
-                  id="pub-filter-select"
-                  value={pubFilter}
-                  onChange={(e) => onFilterChange(e.target.value)}
-                  className={uiTokens.fieldSelect}
-                >
-                  <option value="All">{pubsText.filterAll}</option>
-                  <option value="Selected">{pubsText.filterSelected}</option>
-                  <optgroup label={pubsText.filterYearGroup}>
-                    {uniqueYears.map((year) => {
-                      const isFuture = Number(year) > currentYear;
-                      return (
-                        <option key={year} value={year}>
-                          {isFuture ? `${year} (${pubsText.inPress})` : year}
-                        </option>
-                      );
-                    })}
-                  </optgroup>
-                </select>
-                <ChevronDown
-                  className="pointer-events-none absolute right-1 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--app-muted)]"
-                  aria-hidden
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <label htmlFor="pub-sort-select" className="text-xs text-[var(--app-muted)]">
-                {pubsText.sortLabel}
-              </label>
-              <div className="relative">
-                <select
-                  id="pub-sort-select"
-                  value={pubSort}
-                  onChange={(e) => onSortChange(e.target.value as PubSort)}
-                  className={uiTokens.fieldSelect}
-                >
-                  <option value="newest">{pubsText.sortNewest}</option>
-                  <option value="citations">{pubsText.sortCitations}</option>
-                  <option value="starred">{pubsText.sortStarred}</option>
-                </select>
-                <ChevronDown
-                  className="pointer-events-none absolute right-1 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--app-muted)]"
-                  aria-hidden
-                />
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={onCorrespondingToggle}
-              aria-pressed={correspondingOnly}
-              className={`border-b-2 pb-1 text-sm transition-colors ${
-                correspondingOnly
-                  ? 'border-[var(--app-accent)] font-semibold text-[var(--app-accent)]'
-                  : 'border-transparent text-[var(--app-muted)] hover:text-[var(--app-ink)]'
-              }`}
-            >
-              ★ {pubsText.correspondingOnly}
-            </button>
+      <div className="mx-auto max-w-6xl px-6">
+        <div className="pb-4">
+          <div className="flex flex-col items-start justify-between gap-3 md:flex-row md:items-end">
+            <h2 className={uiTokens.sectionTitle}>
+              {pubsText.title}
+              {lang === 'en' ? ' ' : ''}
+              {pubsText.subtitle}
+            </h2>
+            <p className="max-w-md text-sm text-[var(--app-muted)] md:text-right">
+              {pubsText.desc}
+            </p>
           </div>
+        </div>
+        <InkRule thick />
 
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
-            <div className="relative min-w-0 flex-1 sm:w-64">
-              <Search
-                className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--app-muted)]"
-                aria-hidden
+        {/* BAND 03 上層：雙互動產出圖表分析室（左 7 欄歷年軌跡 ＋ 右 5 欄 Top 10 核心期刊） */}
+        {!isLoading && allPublications.length > 0 ? (
+          <div className="my-8 grid grid-cols-1 items-stretch gap-5 lg:grid-cols-12">
+            <div className="lg:col-span-7">
+              <PublicationTimelineChart
+                publications={allPublications}
+                selectedFilter={pubFilter}
+                lang={lang}
+                onSelectYear={onFilterChange}
               />
-              <input
-                type="search"
-                value={searchQuery}
-                onChange={(e) => onSearchChange(e.target.value)}
-                placeholder={pubsText.searchPlaceholder}
-                aria-label={pubsText.searchAriaLabel}
-                className="w-full rounded-none border-0 border-b border-[var(--app-ink)] bg-transparent py-1.5 pl-6 pr-6 text-sm text-[var(--app-ink)] placeholder:text-[var(--app-muted)]/75 focus:border-[var(--app-accent)] focus:outline-none"
+            </div>
+            <div className="lg:col-span-5">
+              <TopJournalsChart
+                publications={allPublications}
+                selectedJournal={selectedJournal}
+                lang={lang}
+                onSelectJournal={onSelectJournal}
               />
-              {searchQuery ? (
+            </div>
+          </div>
+        ) : null}
+
+        {/* 溫潤圓角檢索工具列 */}
+        <div className="atlas-card mb-6 p-4 sm:p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2">
+                <label htmlFor="pub-filter-select" className="text-xs text-[var(--app-muted)]">
+                  {pubsText.filterBy}
+                </label>
+                <div className="relative">
+                  <select
+                    id="pub-filter-select"
+                    value={pubFilter}
+                    onChange={(e) => onFilterChange(e.target.value)}
+                    className={uiTokens.fieldSelect}
+                  >
+                    <option value="All">{pubsText.filterAll}</option>
+                    <option value="Selected">{pubsText.filterSelected}</option>
+                    <optgroup label={pubsText.filterYearGroup}>
+                      {uniqueYears.map((year) => {
+                        const isFuture = Number(year) > currentYear;
+                        return (
+                          <option key={year} value={year}>
+                            {isFuture ? `${year} (${pubsText.inPress})` : year}
+                          </option>
+                        );
+                      })}
+                    </optgroup>
+                  </select>
+                  <ChevronDown
+                    className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--app-muted)]"
+                    aria-hidden
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <label htmlFor="pub-sort-select" className="text-xs text-[var(--app-muted)]">
+                  {pubsText.sortLabel}
+                </label>
+                <div className="relative">
+                  <select
+                    id="pub-sort-select"
+                    value={pubSort}
+                    onChange={(e) => onSortChange(e.target.value as PubSort)}
+                    className={uiTokens.fieldSelect}
+                  >
+                    <option value="newest">{pubsText.sortNewest}</option>
+                    <option value="citations">{pubsText.sortCitations}</option>
+                    <option value="starred">{pubsText.sortStarred}</option>
+                  </select>
+                  <ChevronDown
+                    className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--app-muted)]"
+                    aria-hidden
+                  />
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={onCorrespondingToggle}
+                aria-pressed={correspondingOnly}
+                className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${
+                  correspondingOnly
+                    ? 'border-[var(--app-accent)] bg-[var(--app-accent)] text-white'
+                    : 'border-[var(--app-rule)] bg-[var(--app-bg)] text-[var(--app-muted)] hover:border-[var(--app-ink)] hover:text-[var(--app-ink)]'
+                }`}
+              >
+                ★ {pubsText.correspondingOnly}
+              </button>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="relative min-w-0 flex-1 sm:w-64">
+                <Search
+                  className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--app-muted)]"
+                  aria-hidden
+                />
+                <input
+                  type="search"
+                  value={searchQuery}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  placeholder={pubsText.searchPlaceholder}
+                  aria-label={pubsText.searchAriaLabel}
+                  className="w-full rounded-full border border-[var(--app-rule)] bg-[var(--app-bg)] py-1.5 pl-9 pr-8 text-sm text-[var(--app-ink)] placeholder:text-[var(--app-muted)]/75 focus:border-[var(--app-accent)] focus:outline-none"
+                />
+                {searchQuery ? (
+                  <button
+                    type="button"
+                    onClick={() => onSearchChange('')}
+                    aria-label={pubsText.clearSearch}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-[var(--app-muted)] hover:text-[var(--app-ink)]"
+                  >
+                    <X className="h-3.5 w-3.5" aria-hidden />
+                  </button>
+                ) : null}
+              </div>
+
+              <div
+                role="group"
+                aria-label="View mode"
+                className="inline-flex rounded-full border border-[var(--app-rule)] bg-[var(--app-bg)] p-0.5 text-xs"
+              >
                 <button
                   type="button"
-                  onClick={() => onSearchChange('')}
-                  aria-label={pubsText.clearSearch}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 p-0.5 text-[var(--app-muted)] hover:text-[var(--app-ink)]"
+                  onClick={() => onViewModeChange('card')}
+                  aria-pressed={viewMode === 'card'}
+                  className={`rounded-full px-3 py-1 transition-colors ${
+                    viewMode === 'card'
+                      ? 'bg-[var(--app-ink)] font-semibold text-[var(--app-bg)]'
+                      : 'text-[var(--app-muted)] hover:text-[var(--app-ink)]'
+                  }`}
                 >
-                  <X className="h-3.5 w-3.5" aria-hidden />
+                  {pubsText.viewCard}
                 </button>
+                <button
+                  type="button"
+                  onClick={() => onViewModeChange('compact')}
+                  aria-pressed={viewMode === 'compact'}
+                  className={`rounded-full px-3 py-1 transition-colors ${
+                    viewMode === 'compact'
+                      ? 'bg-[var(--app-ink)] font-semibold text-[var(--app-bg)]'
+                      : 'text-[var(--app-muted)] hover:text-[var(--app-ink)]'
+                  }`}
+                >
+                  {pubsText.viewCompact}
+                </button>
+              </div>
+
+              {!isLoading ? (
+                <span
+                  className="rounded-full bg-[var(--app-hover)] px-3 py-1 font-mono text-xs text-[var(--app-muted)] [font-variant-numeric:tabular-nums]"
+                  aria-live="polite"
+                >
+                  {pubsText.resultCount.replace('{count}', String(filteredCount))}
+                </span>
               ) : null}
             </div>
-
-            <div
-              role="group"
-              aria-label="View mode"
-              className="inline-flex items-center gap-3 text-sm"
-            >
-              <button
-                type="button"
-                onClick={() => onViewModeChange('card')}
-                aria-pressed={viewMode === 'card'}
-                className={`border-b-2 pb-0.5 transition-colors ${
-                  viewMode === 'card'
-                    ? 'border-[var(--app-ink)] font-semibold text-[var(--app-ink)]'
-                    : 'border-transparent text-[var(--app-muted)] hover:text-[var(--app-ink)]'
-                }`}
-              >
-                {pubsText.viewCard}
-              </button>
-              <span aria-hidden className="text-[var(--app-rule)]">/</span>
-              <button
-                type="button"
-                onClick={() => onViewModeChange('compact')}
-                aria-pressed={viewMode === 'compact'}
-                className={`border-b-2 pb-0.5 transition-colors ${
-                  viewMode === 'compact'
-                    ? 'border-[var(--app-ink)] font-semibold text-[var(--app-ink)]'
-                    : 'border-transparent text-[var(--app-muted)] hover:text-[var(--app-ink)]'
-                }`}
-              >
-                {pubsText.viewCompact}
-              </button>
-            </div>
-
-            {!isLoading ? (
-              <span
-                className="font-mono text-xs text-[var(--app-muted)] [font-variant-numeric:tabular-nums]"
-                aria-live="polite"
-              >
-                {pubsText.resultCount.replace('{count}', String(filteredCount))}
-              </span>
-            ) : null}
           </div>
+
+          {/* 領域／期刊即時篩選狀態膠囊 */}
+          {activeDomain || selectedJournal ? (
+            <div className="mt-3.5 flex flex-wrap items-center gap-2 border-t border-[var(--app-rule)] pt-3 text-xs">
+              {activeDomain ? (
+                <span className="inline-flex items-center gap-2 rounded-full border border-[var(--app-accent)]/40 bg-[var(--app-accent)]/10 px-3 py-1 text-[var(--app-ink)]">
+                  <span
+                    className="h-2 w-2 rounded-full"
+                    style={{ backgroundColor: activeDomain.color }}
+                  />
+                  <span>
+                    {isZh ? '領域：' : 'Area: '}
+                    <strong>{isZh ? activeDomain.labelZh : activeDomain.labelEn}</strong>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={onClearDomainFilter}
+                    aria-label={isZh ? '清除領域篩選' : 'Clear area filter'}
+                    className="rounded-full p-0.5 text-[var(--app-muted)] hover:bg-[var(--app-ink)] hover:text-[var(--app-bg)]"
+                  >
+                    <X className="h-3 w-3" aria-hidden />
+                  </button>
+                </span>
+              ) : null}
+
+              {selectedJournal ? (
+                <span className="inline-flex items-center gap-2 rounded-full border border-[var(--app-accent)]/40 bg-[var(--app-accent)]/10 px-3 py-1 text-[var(--app-ink)]">
+                  <span>
+                    {isZh ? '期刊：' : 'Journal: '}
+                    <strong className="font-journal-italic">{selectedJournal}</strong>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => onSelectJournal(null)}
+                    aria-label={isZh ? '清除期刊篩選' : 'Clear journal filter'}
+                    className="rounded-full p-0.5 text-[var(--app-muted)] hover:bg-[var(--app-ink)] hover:text-[var(--app-bg)]"
+                  >
+                    <X className="h-3 w-3" aria-hidden />
+                  </button>
+                </span>
+              ) : null}
+            </div>
+          ) : null}
+
+          {isUsingFallback ? (
+            <p className="mt-3 rounded-xl border-l-2 border-[var(--app-accent)] bg-[var(--app-bg)] px-3 py-2 text-xs text-[var(--app-accent)]">
+              {pubsText.offlineFallbackNote}
+            </p>
+          ) : null}
         </div>
 
-        {/* 01–05 研究領域連動篩選狀態條（可一鍵清除） */}
-        {activeDomain ? (
-          <div className="mt-3.5 flex flex-wrap items-center justify-between gap-2 border-t border-[var(--app-rule)] pt-3 text-xs">
-            <div className="flex flex-wrap items-center gap-2 text-[var(--app-body)]">
-              <span className="font-mono text-[var(--app-accent)]">
-                0{activeDomain.index + 1}.
-              </span>
-              <span>
-                {isZh ? '目前依研究領域篩選：' : 'Filtered by research area: '}
-                <strong className="font-semibold text-[var(--app-ink)]">
-                  {isZh ? activeDomain.labelZh : activeDomain.labelEn}
-                </strong>
-              </span>
-              <span className="font-mono text-[var(--app-muted)]">
-                ({filteredCount} {isZh ? '篇' : 'works'})
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={onClearDomainFilter}
-              className="inline-flex items-center gap-1 border border-[var(--app-ink)] px-2.5 py-1 text-xs font-medium text-[var(--app-ink)] transition-colors hover:bg-[var(--app-ink)] hover:text-[var(--app-bg)]"
-            >
-              <X className="h-3 w-3" aria-hidden />
-              {isZh ? '清除領域篩選' : 'Clear area filter'}
-            </button>
+        {/* 著作目錄列表 */}
+        {isLoading ? (
+          <PublicationsListSkeleton prefersReducedMotion={prefersReducedMotion} pubsText={pubsText} />
+        ) : filteredCount === 0 ? (
+          <div
+            className="atlas-card py-16 text-center text-sm text-[var(--app-muted)]"
+            role="status"
+            aria-live="polite"
+          >
+            {pubsText.emptyPublications}
           </div>
-        ) : null}
-
-        {isUsingFallback ? (
-          <p className="mt-3 border-l-2 border-[var(--app-accent)] pl-3 text-xs text-[var(--app-accent)]">
-            {pubsText.offlineFallbackNote}
-          </p>
-        ) : null}
-      </div>
-
-      {/* 單欄全寬水平尺規學報書目清單 */}
-      {isLoading ? (
-        <PublicationsListSkeleton prefersReducedMotion={prefersReducedMotion} pubsText={pubsText} />
-      ) : filteredCount === 0 ? (
-        <div
-          className="border-b border-[var(--app-rule)] py-16 text-center text-sm text-[var(--app-muted)]"
-          role="status"
-          aria-live="polite"
-        >
-          {pubsText.emptyPublications}
-        </div>
-      ) : (
-        <LayoutGroup id="publications-figures">
-          <div className="group/list">
-            {showFeaturedStrip
-              ? featuredPublications.map((pub, fi) => {
-                  const key = getPublicationKey(pub, fi);
-                  return (
-                    <PublicationJournalRow
-                      key={key}
-                      pubKey={key}
-                      pub={pub}
-                      pubsText={pubsText}
-                      lang={lang}
-                      isMobile={isMobile}
-                      litePub={litePub}
-                      featuredRank={fi + 1}
-                      index={fi}
-                      locale={locale}
-                      currentYear={currentYear}
-                      expandedKey={expandedKey}
-                      copiedState={copiedState}
-                      onToggleAbstract={onToggleAbstract}
-                      onCopyCitation={onCopyCitation}
-                      onOpenLightbox={onOpenLightbox}
-                    />
-                  );
-                })
-              : null}
-
-            {listAllInFeatured ? (
-              <p className="border-b border-[var(--app-rule)] py-6 text-center text-sm text-[var(--app-muted)]">
-                {pubsText.allInFeaturedNote}
-              </p>
-            ) : null}
-
-            {visiblePublications.length > 0
-              ? viewMode === 'compact'
-                ? visiblePublications.map((pub, i) => {
-                    const key = getPublicationKey(pub, i);
-                    return (
-                      <PublicationCompactRow
-                        key={key}
-                        pubKey={key}
-                        pub={pub}
-                        pubsText={pubsText}
-                        lang={lang}
-                        locale={locale}
-                        currentYear={currentYear}
-                        copiedState={copiedState}
-                        onCopyCitation={onCopyCitation}
-                      />
-                    );
-                  })
-                : visiblePublications.map((pub, i) => {
-                    const key = getPublicationKey(pub, i);
+        ) : (
+          <LayoutGroup id="publications-figures">
+            <div className="group/list space-y-1">
+              {showFeaturedStrip
+                ? featuredPublications.map((pub, fi) => {
+                    const key = getPublicationKey(pub, fi);
                     return (
                       <PublicationJournalRow
                         key={key}
@@ -958,7 +938,8 @@ function PublicationsSectionComponent({
                         lang={lang}
                         isMobile={isMobile}
                         litePub={litePub}
-                        index={i + featuredPublications.length}
+                        featuredRank={fi + 1}
+                        index={fi}
                         locale={locale}
                         currentYear={currentYear}
                         expandedKey={expandedKey}
@@ -969,29 +950,78 @@ function PublicationsSectionComponent({
                       />
                     );
                   })
-              : null}
+                : null}
+
+              {listAllInFeatured ? (
+                <p className="py-6 text-center text-sm text-[var(--app-muted)]">
+                  {pubsText.allInFeaturedNote}
+                </p>
+              ) : null}
+
+              {visiblePublications.length > 0
+                ? viewMode === 'compact'
+                  ? visiblePublications.map((pub, i) => {
+                      const key = getPublicationKey(pub, i);
+                      return (
+                        <PublicationCompactRow
+                          key={key}
+                          pubKey={key}
+                          pub={pub}
+                          pubsText={pubsText}
+                          lang={lang}
+                          locale={locale}
+                          currentYear={currentYear}
+                          copiedState={copiedState}
+                          onCopyCitation={onCopyCitation}
+                        />
+                      );
+                    })
+                  : visiblePublications.map((pub, i) => {
+                      const key = getPublicationKey(pub, i);
+                      return (
+                        <PublicationJournalRow
+                          key={key}
+                          pubKey={key}
+                          pub={pub}
+                          pubsText={pubsText}
+                          lang={lang}
+                          isMobile={isMobile}
+                          litePub={litePub}
+                          index={i + featuredPublications.length}
+                          locale={locale}
+                          currentYear={currentYear}
+                          expandedKey={expandedKey}
+                          copiedState={copiedState}
+                          onToggleAbstract={onToggleAbstract}
+                          onCopyCitation={onCopyCitation}
+                          onOpenLightbox={onOpenLightbox}
+                        />
+                      );
+                    })
+                : null}
+            </div>
+
+            <FigureLightboxModal
+              lightbox={lightbox}
+              closeLabel={pubsText.closeLightbox}
+              onClose={onCloseLightbox}
+            />
+          </LayoutGroup>
+        )}
+
+        {!isLoading && filteredCount > 0 && visiblePublications.length < listRowCount && (
+          <div className="mt-10 flex justify-center">
+            <button
+              type="button"
+              onClick={onLoadMore}
+              className={`${uiTokens.buttonOutline} inline-flex items-center gap-2 px-7 py-2.5 text-sm`}
+            >
+              {pubsText.loadMore}
+              <ChevronDown className="h-4 w-4" aria-hidden />
+            </button>
           </div>
-
-          <FigureLightboxModal
-            lightbox={lightbox}
-            closeLabel={pubsText.closeLightbox}
-            onClose={onCloseLightbox}
-          />
-        </LayoutGroup>
-      )}
-
-      {!isLoading && filteredCount > 0 && visiblePublications.length < listRowCount && (
-        <div className="mt-10 flex justify-center">
-          <button
-            type="button"
-            onClick={onLoadMore}
-            className={`${uiTokens.buttonOutline} inline-flex items-center gap-2 px-7 py-2.5 text-sm`}
-          >
-            {pubsText.loadMore}
-            <ChevronDown className="h-4 w-4" aria-hidden />
-          </button>
-        </div>
-      )}
+        )}
+      </div>
     </section>
   );
 }

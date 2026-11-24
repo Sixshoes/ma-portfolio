@@ -37,9 +37,11 @@ import {
   type PublicationsBundleDoc,
 } from '@/lib/firebase';
 import { PublicationEditorModal } from './PublicationEditorModal';
+import { ChalkboardManagerTab } from './ChalkboardManagerTab';
 
 type AdminFilter = 'all' | 'starred' | 'highCited' | 'missingCover';
 type AdminSort = 'newest' | 'citations' | 'title';
+type AdminSectionTab = 'publications' | 'chalkboards';
 
 const PAGE_SIZE = 25;
 
@@ -58,6 +60,7 @@ export function AdminDashboard() {
   const [filter, setFilter] = useState<AdminFilter>('all');
   const [sort, setSort] = useState<AdminSort>('newest');
   const [page, setPage] = useState(1);
+  const [sectionTab, setSectionTab] = useState<AdminSectionTab>('publications');
 
   const [editorTarget, setEditorTarget] = useState<{ open: boolean; pub: Publication | null }>({
     open: false,
@@ -645,7 +648,7 @@ export function AdminDashboard() {
       {toast ? (
         <div
           role="status"
-          className={`mb-6 flex items-center gap-2.5 rounded-md border px-4 py-3 text-sm ${
+          className={`mb-6 flex items-center gap-2.5 rounded-xl border px-4 py-3 text-sm ${
             toast.type === 'ok'
               ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
               : 'border-red-200 bg-red-50 text-red-700'
@@ -660,7 +663,41 @@ export function AdminDashboard() {
         </div>
       ) : null}
 
-      {/* 統計總覽 */}
+      {/* 後台主功能頁籤：論文著作管理 ⇄ 親筆黑板手稿相簿 */}
+      <div className="mb-6 flex flex-wrap items-center gap-2 border-b border-[#DCE2E8] pb-4">
+        <button
+          type="button"
+          onClick={() => setSectionTab('publications')}
+          className={`rounded-full px-5 py-2 text-sm font-semibold transition-colors ${
+            sectionTab === 'publications'
+              ? 'bg-[#0F4C81] text-white'
+              : 'border border-[#DCE2E8] bg-white text-[#5A6775] hover:border-[#0F4C81] hover:text-[#0F4C81]'
+          }`}
+        >
+          論文著作管理（{items.length}）
+        </button>
+        <button
+          type="button"
+          onClick={() => setSectionTab('chalkboards')}
+          className={`rounded-full px-5 py-2 text-sm font-semibold transition-colors ${
+            sectionTab === 'chalkboards'
+              ? 'bg-[#1B3329] text-[#F3DF87]'
+              : 'border border-[#DCE2E8] bg-white text-[#5A6775] hover:border-[#1B3329] hover:text-[#1B3329]'
+          }`}
+        >
+          黑板手稿相簿（Chalkboards）
+        </button>
+      </div>
+
+      {sectionTab === 'chalkboards' ? (
+        <ChalkboardManagerTab
+          user={user}
+          onTriggerRevalidate={triggerRevalidate}
+          onToast={showToast}
+        />
+      ) : (
+        <>
+          {/* 統計總覽 */}
       <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
         {[
           { label: '總論文數', value: items.length.toLocaleString('en-US'), accent: false },
@@ -958,6 +995,8 @@ export function AdminDashboard() {
           onSave={handleSaveOne}
         />
       ) : null}
+        </>
+      )}
     </div>
   );
 }

@@ -1,23 +1,31 @@
 'use client';
 
-import React, { memo, useCallback, useMemo, useRef, useState } from 'react';
+import React, { memo, useCallback, useMemo, useState } from 'react';
+import { LayoutGroup, motion, useReducedMotion } from 'motion/react';
 import {
-  AnimatePresence,
-  motion,
-  useReducedMotion,
-  useScroll,
-  useTransform,
-} from 'motion/react';
-import { ArrowDown, ChevronDown } from 'lucide-react';
+  ArrowDown,
+  Award,
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  ZoomIn,
+} from 'lucide-react';
 import {
   EDITORIAL_EASE,
-  InkRule,
   MaskedTextReveal,
   RollingNumber,
 } from '@/app/components/EditorialMotion';
+import { DomainDonutChart } from '@/app/components/DomainDonutChart';
+import { ChalkboardFallbackGraphic } from '@/app/components/ChalkboardFallbackGraphic';
+import { ChalkboardGallerySection } from '@/app/components/ChalkboardGallerySection';
 import { ResearchPhysicsGlyph } from '@/app/components/ResearchPhysicsGlyph';
+import {
+  FigureLightboxModal,
+  type FigureLightboxPayload,
+} from '@/app/components/FigureLightboxModal';
 import type { Publication } from '@/lib/publications';
-import { RESEARCH_DOMAINS, publicationMatchesDomain } from '@/lib/researchDomains';
+import type { ChalkboardItem } from '@/lib/chalkboards';
+import { computeDomainStats } from '@/lib/researchDomains';
 import { useRenderProfiler } from './useRenderProfiler';
 import { uiTokens } from './uiTokens';
 
@@ -61,6 +69,7 @@ type HeroStatsResearchSectionProps = {
   totalCitations: number | string;
   hIndexValue?: number | string;
   allPublications: Publication[];
+  chalkboards: ChalkboardItem[];
   activeDomainId: string | null;
   onFilterByDomain: (domainId: string) => void;
   onFilterByKeyword: (keyword: string) => void;
@@ -75,34 +84,36 @@ function HeroStatsResearchSectionComponent({
   totalCitations,
   hIndexValue,
   allPublications,
+  chalkboards,
   activeDomainId,
   onFilterByDomain,
   onFilterByKeyword,
 }: HeroStatsResearchSectionProps) {
   useRenderProfiler('HeroStatsResearchSection');
   const reduceMotion = useReducedMotion();
-  const [isImgError, setIsImgError] = useState(false);
-  const [hoveredResearchIdx, setHoveredResearchIdx] = useState<number | null>(null);
-  const [expandedResearchIdx, setExpandedResearchIdx] = useState<number | null>(null);
-  const onImgError = useCallback(() => setIsImgError(true), []);
+  const isZh = lang === 'zh';
+
+  const heroChalkboards = useMemo(() => {
+    const featured = chalkboards.filter((c) => c.featuredInHero);
+    return featured.length > 0 ? featured : chalkboards;
+  }, [chalkboards]);
+
+  const [heroSlideIdx, setHeroSlideIdx] = useState(0);
+  const [failedHeroIds, setFailedHeroIds] = useState<Record<string, boolean>>({});
+  const [hoveredBlueprintIdx, setHoveredBlueprintIdx] = useState<number | null>(null);
+  const [lightbox, setLightbox] = useState<FigureLightboxPayload | null>(null);
+
+  const safeSlideIdx = heroChalkboards.length > 0 ? heroSlideIdx % heroChalkboards.length : 0;
+  const activeHeroBoard = heroChalkboards[safeSlideIdx];
+  const heroBoardImgFailed = activeHeroBoard ? Boolean(failedHeroIds[activeHeroBoard.id]) : true;
+
   const displayHIndex = hIndexValue ?? statsText.hIndexValue;
 
-  // 裝裱肖像內層微視差景深（-10px -> +14px）
-  const portraitFrameRef = useRef<HTMLElement>(null);
-  const { scrollYProgress: portraitProgress } = useScroll({
-    target: portraitFrameRef,
-    offset: ['start end', 'end start'],
-  });
-  const portraitParallaxY = useTransform(portraitProgress, [0, 1], [-10, 14]);
-
-  // 預計算 01–05 各研究領域的對應論文篇數
-  const domainCounts = useMemo(() => {
-    return RESEARCH_DOMAINS.map((domain) =>
-      allPublications.reduce(
-        (acc, pub) => acc + (publicationMatchesDomain(pub, domain) ? 1 : 0),
-        0,
-      ),
-    );
+  // 動態計算五大領域篇數與總引用數，以及全站最高被引巔峰代表作
+  const domainStats = useMemo(() => computeDomainStats(allPublications), [allPublications]);
+  const landmarkPaper = useMemo(() => {
+    if (allPublications.length === 0) return null;
+    return [...allPublications].sort((a, b) => b.citations - a.citations)[0] ?? null;
   }, [allPublications]);
 
   const scrollToSection = useCallback(
@@ -116,7 +127,18 @@ function HeroStatsResearchSectionComponent({
     [],
   );
 
-  const isZh = lang === 'zh';
+  const openHeroLightbox = useCallback(() => {
+    if (!activeHeroBoard || heroBoardImgFailed) return;
+    setLightbox({
+      layoutId: `hero-board-${activeHeroBoard.id}`,
+      src: activeHeroBoard.imageUrl,
+      alt: isZh ? activeHeroBoard.titleZh : activeHeroBoard.titleEn,
+      title: isZh ? activeHeroBoard.titleZh : activeHeroBoard.titleEn,
+      journal: activeHeroBoard.formulaNote || activeHeroBoard.courseOrTopic || 'Chalkboard Derivation',
+      year: activeHeroBoard.year ? Number(activeHeroBoard.year) || undefined : undefined,
+    });
+  }, [activeHeroBoard, heroBoardImgFailed, isZh]);
+
   const institutionLine = isZh
     ? '佛光大學副校長暨講座教授 · 國立東華大學特聘教授'
     : 'Vice President & Chair Professor, Fo Guang University · Distinguished Professor, NDHU';
@@ -124,333 +146,484 @@ function HeroStatsResearchSectionComponent({
   const heroLabHeadline = isZh
     ? '先進材料與量子元件實驗室'
     : 'Advanced Materials & Quantum Devices';
-  const secondaryCtaLabel = isZh ? '學術歷程' : 'Academic Journey';
-  const portraitName = isZh ? '馬遠榮 副校長' : 'Prof. Yuan-Ron Ma';
-  const portraitAffiliation = isZh
-    ? '佛光大學 · 國立東華大學'
-    : 'Fo Guang University · NDHU';
-  const portraitAlt = isZh
-    ? '馬遠榮副校長肖像照'
-    : 'Portrait of Prof. Yuan-Ron Ma';
 
   return (
-    <>
+    <LayoutGroup id="hero-chalkboard-gallery">
+      {/* BAND 01 · 石灰岩等高線紙底 — 溫潤圓角首屏三區數據圖鑑（黑板實景 ＋ 領域環狀圖 ＋ 巔峰論文） */}
       <section
         id="top"
-        className="mx-auto max-w-6xl px-6 pb-20 pt-28 md:pb-24 md:pt-36"
+        className="atlas-contour-bg relative pb-16 pt-28 md:pb-20 md:pt-32"
       >
-        <div className="grid grid-cols-1 items-start gap-12 md:grid-cols-12 md:items-center md:gap-10 lg:gap-14">
-          {/* 左欄：首屏 0–1,100ms 錯位編排（尺規繪線 → 活字遮罩揭幕 → 精密數據跳表） */}
-          <div className="flex flex-col justify-between md:col-span-7">
-            <div>
-              <motion.p
+        <div className="mx-auto max-w-6xl px-6">
+          {/* 上方人物名銜與雙圓角行動膠囊 */}
+          <div className="mb-8 flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
+            <div className="max-w-3xl">
+              <motion.span
                 initial={reduceMotion ? false : { opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: reduceMotion ? 0 : 0.48, delay: 0.06, ease: EDITORIAL_EASE }}
-                className="mb-4 text-sm text-[var(--app-muted)]"
+                transition={{ duration: reduceMotion ? 0 : 0.45, ease: EDITORIAL_EASE }}
+                className="inline-flex items-center rounded-full border border-[var(--app-rule)] bg-[var(--app-surface-card)]/90 px-3.5 py-1 text-xs font-medium text-[var(--app-muted)] shadow-xs"
               >
                 {institutionLine}
-              </motion.p>
+              </motion.span>
 
-              <h1 className="font-editorial mb-6 text-[var(--app-ink)]">
+              <h1 className="font-editorial mt-4 text-[var(--app-ink)]">
                 <MaskedTextReveal
-                  delay={0.12}
-                  duration={0.63}
-                  innerClassName="text-4xl font-semibold leading-[1.12] tracking-[-0.02em] sm:text-5xl lg:text-[3.35rem]"
+                  delay={0.08}
+                  duration={0.6}
+                  innerClassName="text-4xl font-semibold leading-[1.12] tracking-[-0.02em] sm:text-5xl"
                 >
                   {heroPrimaryName}
+                  <span className="ml-3 hidden text-2xl font-normal text-[var(--app-muted)] sm:inline">
+                    · {heroLabHeadline}
+                  </span>
                 </MaskedTextReveal>
-                <MaskedTextReveal
-                  delay={0.2}
-                  duration={0.63}
-                  className="mt-2"
-                  innerClassName="text-2xl font-medium leading-[1.25] tracking-[-0.015em] text-[var(--app-body)] sm:text-3xl lg:text-[2.1rem]"
-                >
+                <span className="mt-1.5 block text-xl font-medium text-[var(--app-body)] sm:hidden">
                   {heroLabHeadline}
-                </MaskedTextReveal>
+                </span>
               </h1>
 
               <motion.p
-                initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+                initial={reduceMotion ? false : { opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: reduceMotion ? 0 : 0.56, delay: 0.26, ease: EDITORIAL_EASE }}
-                className="mb-8 max-w-xl text-[15px] leading-[1.8] text-[var(--app-body)] md:text-base"
+                transition={{ duration: reduceMotion ? 0 : 0.5, delay: 0.16, ease: EDITORIAL_EASE }}
+                className="mt-3 max-w-2xl text-sm leading-[1.75] text-[var(--app-body)] md:text-[15px]"
               >
                 {heroText.desc}
               </motion.p>
+            </div>
 
-              <motion.div
-                initial={reduceMotion ? false : { opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: reduceMotion ? 0 : 0.54, delay: 0.32, ease: EDITORIAL_EASE }}
-                className="flex flex-wrap items-center gap-3.5"
+            <motion.div
+              initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: reduceMotion ? 0 : 0.5, delay: 0.22, ease: EDITORIAL_EASE }}
+              className="flex shrink-0 flex-wrap items-center gap-3"
+            >
+              <a
+                href="#publications"
+                onClick={(e) => scrollToSection(e, 'publications')}
+                className={`${uiTokens.buttonPrimary} inline-flex items-center gap-2 px-5 py-2.5 text-sm`}
               >
-                <a
-                  href="#publications"
-                  onClick={(e) => scrollToSection(e, 'publications')}
-                  className={`${uiTokens.buttonPrimary} inline-flex items-center gap-2 px-6 py-3 text-sm`}
-                >
-                  {heroText.cta}
-                  <ArrowDown className="h-4 w-4" aria-hidden />
-                </a>
-                <a
-                  href="#about"
-                  onClick={(e) => scrollToSection(e, 'about')}
-                  className={`${uiTokens.buttonOutline} inline-flex items-center px-6 py-3 text-sm`}
-                >
-                  {secondaryCtaLabel}
-                </a>
-              </motion.div>
-            </div>
-
-            {/* 三大統計數據：上下 1px 鋼筆尺規繪線夾住 + 0.85s tabular-nums 滾動跳表 */}
-            <div className="mt-12">
-              <InkRule dark immediate delay={0} />
-              <div className="grid grid-cols-3 divide-x divide-[var(--app-rule)] py-6">
-                {[
-                  { label: statsText.pubs, value: totalPubs },
-                  { label: statsText.citations, value: totalCitations },
-                  { label: statsText.hIndex, value: displayHIndex },
-                ].map((stat, i) => (
-                  <div
-                    key={stat.label}
-                    className={i > 0 ? 'pl-4 sm:pl-6' : 'pr-4'}
-                  >
-                    <div className="font-editorial text-3xl font-semibold tracking-tight text-[var(--app-ink)] sm:text-4xl">
-                      <RollingNumber
-                        value={stat.value}
-                        delay={0.25 + i * 0.06}
-                        duration={0.85}
-                      />
-                    </div>
-                    <div className="mt-1 text-xs text-[var(--app-muted)]">
-                      {stat.label}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <InkRule dark immediate delay={0.08} />
-            </div>
-            <p className="mt-3 text-xs text-[var(--app-muted)]">{statsText.scopusNote}</p>
+                {heroText.cta}
+                <ArrowDown className="h-4 w-4" aria-hidden />
+              </a>
+              <a
+                href="#chalkboards"
+                onClick={(e) => scrollToSection(e, 'chalkboards')}
+                className={`${uiTokens.buttonOutline} inline-flex items-center px-5 py-2.5 text-sm`}
+              >
+                {isZh ? '黑板手稿藝廊' : 'Chalkboard Gallery'}
+              </a>
+            </motion.div>
           </div>
 
-          {/* 右欄：直角裝裱肖像框（黑版外框轉深炭灰 #1A1A17，內襯維持暖銀鹽相紙 #DDD9CE 保護 mix-blend-multiply 人像不變黑） */}
-          <div className="md:col-span-5">
-            <motion.figure
-              ref={portraitFrameRef}
-              initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+          {/* 12 欄三區複合數據圖鑑（溫潤 24px 圓角，告別剛硬方盒） */}
+          <div className="grid grid-cols-1 items-stretch gap-5 lg:grid-cols-12">
+            {/* 左 5 欄：馬副校長真實黑板推導主視覺（支援多張輪播＋墨綠公式圖說底籤） */}
+            <motion.div
+              initial={reduceMotion ? false : { opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: reduceMotion ? 0 : 0.74, delay: 0.18, ease: EDITORIAL_EASE }}
-              className="group/portrait mx-auto w-full max-w-[380px] border border-[var(--app-ink)] bg-[var(--app-surface-card)] p-2.5 md:ml-auto md:mr-0"
+              transition={{ duration: reduceMotion ? 0 : 0.65, delay: 0.12, ease: EDITORIAL_EASE }}
+              className="group relative flex min-h-[360px] flex-col overflow-hidden rounded-[26px] border border-[#2C4B3E] bg-[#1B3329] shadow-[0_20px_48px_-24px_rgba(20,38,30,0.45)] lg:col-span-5"
             >
-              <div className="relative aspect-[4/5] w-full overflow-hidden bg-[var(--portrait-mat)]">
-                {isImgError ? (
-                  <div className="font-editorial flex h-full w-full items-center justify-center text-3xl font-semibold tracking-widest text-[var(--app-muted)]">
-                    YRM
-                  </div>
+              <div
+                onClick={openHeroLightbox}
+                className={`relative flex-1 overflow-hidden ${
+                  heroBoardImgFailed ? '' : 'cursor-zoom-in'
+                }`}
+              >
+                {!activeHeroBoard || heroBoardImgFailed ? (
+                  <ChalkboardFallbackGraphic showPortraitHint />
                 ) : (
                   <motion.div
-                    initial={reduceMotion ? false : { scale: 1.04, opacity: 0.01 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{
-                      duration: reduceMotion ? 0 : 0.74,
-                      delay: 0.18,
-                      ease: EDITORIAL_EASE,
-                    }}
-                    style={reduceMotion ? undefined : { y: portraitParallaxY }}
-                    className="absolute -inset-y-4 inset-x-0 will-change-transform"
+                    key={activeHeroBoard.id}
+                    layoutId={reduceMotion ? undefined : `hero-board-${activeHeroBoard.id}`}
+                    className="h-full w-full"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src="/profile.jpg"
-                      alt={portraitAlt}
+                      src={activeHeroBoard.imageUrl}
+                      alt={isZh ? activeHeroBoard.titleZh : activeHeroBoard.titleEn}
                       fetchPriority="high"
-                      onError={onImgError}
-                      className="h-full w-full object-cover object-top mix-blend-multiply contrast-[1.03] transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/portrait:scale-[1.025]"
+                      onError={() =>
+                        setFailedHeroIds((prev) => ({
+                          ...prev,
+                          [activeHeroBoard.id]: true,
+                        }))
+                      }
+                      className="h-full w-full object-cover object-center transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]"
                     />
                   </motion.div>
                 )}
+
+                {/* 頂部柔和圓角徽章與放大鈕 */}
+                <div className="pointer-events-none absolute inset-x-4 top-4 flex items-center justify-between gap-2">
+                  <span className="rounded-full border border-[#F3DF87]/40 bg-[#152820]/85 px-3 py-1 font-mono text-[10.5px] font-medium tracking-wider text-[#F3DF87] backdrop-blur-sm">
+                    {isZh ? '講堂實景推導' : 'LIVE LECTURE CHALKBOARD'}
+                  </span>
+                  {!heroBoardImgFailed ? (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openHeroLightbox();
+                      }}
+                      aria-label={isZh ? '全螢幕檢視黑板原圖' : 'View chalkboard in full screen'}
+                      className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full border border-[#F3DF87]/40 bg-[#152820]/85 text-[#F4F1EA] backdrop-blur-sm transition-colors hover:bg-[#F3DF87] hover:text-[#152820]"
+                    >
+                      <ZoomIn className="h-3.5 w-3.5" aria-hidden />
+                    </button>
+                  ) : null}
+                </div>
+
+                {/* 若後台有多張首頁精選黑板照，顯示柔和圓形左右輪播箭頭 */}
+                {heroChalkboards.length > 1 ? (
+                  <div className="pointer-events-none absolute inset-x-3 top-1/2 flex -translate-y-1/2 items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setHeroSlideIdx(
+                          (prev) => (prev - 1 + heroChalkboards.length) % heroChalkboards.length,
+                        );
+                      }}
+                      aria-label={isZh ? '上一張黑板手稿' : 'Previous chalkboard'}
+                      className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full border border-[#F3DF87]/35 bg-[#152820]/80 text-[#F4F1EA] backdrop-blur-sm transition-colors hover:bg-[#F3DF87] hover:text-[#152820]"
+                    >
+                      <ChevronLeft className="h-4 w-4" aria-hidden />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setHeroSlideIdx((prev) => (prev + 1) % heroChalkboards.length);
+                      }}
+                      aria-label={isZh ? '下一張黑板手稿' : 'Next chalkboard'}
+                      className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full border border-[#F3DF87]/35 bg-[#152820]/80 text-[#F4F1EA] backdrop-blur-sm transition-colors hover:bg-[#F3DF87] hover:text-[#152820]"
+                    >
+                      <ChevronRight className="h-4 w-4" aria-hidden />
+                    </button>
+                  </div>
+                ) : null}
               </div>
-              <figcaption className="mt-2.5 border-t border-[var(--app-rule)] pt-2.5 text-xs text-[var(--app-muted)]">
-                <span className="font-semibold text-[var(--app-ink)]">{portraitName}</span>
-                <span className="mx-1.5">·</span>
-                <span>{portraitAffiliation}</span>
-              </figcaption>
-            </motion.figure>
-          </div>
-        </div>
-      </section>
 
-      {/* 五大研究領域：01.–05. 電致變色橫掃 + 銅版物理圖騰 + 點擊手風琴展開關鍵詞與論文連動篩選 */}
-      <section
-        id="research"
-        className="mx-auto max-w-6xl scroll-mt-20 px-6 py-20 md:py-24"
-      >
-        <div className="pb-4">
-          <div className="flex flex-col items-start justify-between gap-3 md:flex-row md:items-end">
-            <h2 className={uiTokens.sectionTitle}>
-              {researchText.title}
-              {lang === 'en' ? ' ' : ''}
-              {researchText.subtitle}
-            </h2>
-            <p className="max-w-sm text-sm text-[var(--app-muted)] md:text-right">
-              {researchText.desc}
-              <span className="mt-1 block text-xs text-[var(--app-muted)]/85">
-                {isZh
-                  ? '點擊任一研究領域展開材料關鍵詞並篩選相關著作'
-                  : 'Click any area to explore keywords and filter related works'}
-              </span>
-            </p>
-          </div>
-        </div>
-        <InkRule thick />
+              {/* 底部深墨綠圖說籤 */}
+              <div className="border-t border-[#2E5243] bg-[#152820]/95 px-5 py-4">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="truncate text-xs font-semibold text-[#F4F1EA]">
+                      {activeHeroBoard
+                        ? isZh
+                          ? activeHeroBoard.titleZh
+                          : activeHeroBoard.titleEn
+                        : heroPrimaryName}
+                    </div>
+                    {activeHeroBoard?.formulaNote ? (
+                      <div className="mt-1 truncate font-mono text-[11px] text-[#F3DF87]">
+                        {activeHeroBoard.formulaNote}
+                      </div>
+                    ) : null}
+                  </div>
+                  {heroChalkboards.length > 1 ? (
+                    <span className="shrink-0 rounded-full bg-[#1B3329] px-2.5 py-0.5 font-mono text-[10px] text-[#BFD3C8]">
+                      {safeSlideIdx + 1} / {heroChalkboards.length}
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+            </motion.div>
 
-        <ol className="divide-y divide-[var(--app-rule)]">
-          {researchText.items.map((item, i) => {
-            const num = `${String(i + 1).padStart(2, '0')}.`;
-            const domain = RESEARCH_DOMAINS[i];
-            const domainCount = domainCounts[i] ?? 0;
-            const isExpanded = expandedResearchIdx === i;
-            const isActiveDomain = Boolean(domain && activeDomainId === domain.id);
-            const isGlyphActive = hoveredResearchIdx === i || isExpanded || isActiveDomain;
+            {/* 中 4 欄：五大領域多色互動環狀圖 ＋ 三大精密跳表總指標 */}
+            <motion.div
+              initial={reduceMotion ? false : { opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: reduceMotion ? 0 : 0.65, delay: 0.2, ease: EDITORIAL_EASE }}
+              className="atlas-card flex flex-col justify-between p-5 sm:p-6 lg:col-span-4"
+            >
+              <div>
+                <div className="mb-3 flex items-center justify-between">
+                  <h2 className="font-editorial text-base font-semibold text-[var(--app-ink)]">
+                    {isZh ? '研究領域產出分佈' : 'Research Domain Atlas'}
+                  </h2>
+                  <span className="rounded-full bg-[var(--app-hover)] px-2.5 py-0.5 font-mono text-[10px] text-[var(--app-muted)]">
+                    1993–2027
+                  </span>
+                </div>
 
-            return (
-              <li
-                key={item.title}
-                onMouseEnter={() => setHoveredResearchIdx(i)}
-                onMouseLeave={() => setHoveredResearchIdx((prev) => (prev === i ? null : prev))}
-                className="group relative overflow-hidden"
-              >
-                {/* 電致變色薄膜橫掃底襯（懸停或展開時呈現） */}
-                <span
-                  aria-hidden="true"
-                  className={`pointer-events-none absolute inset-0 origin-left bg-[var(--app-hover)] transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
-                    isExpanded || isActiveDomain
-                      ? 'scale-x-100'
-                      : 'scale-x-0 group-hover:scale-x-100 group-focus-within:scale-x-100'
-                  }`}
+                <DomainDonutChart
+                  publications={allPublications}
+                  lang={lang}
+                  activeDomainId={activeDomainId}
+                  onSelectDomain={onFilterByDomain}
                 />
-                {/* 左側極細強調指示邊線 */}
-                <span
-                  aria-hidden="true"
-                  className={`pointer-events-none absolute bottom-0 left-0 top-0 w-[2.5px] origin-top bg-[var(--app-accent)] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
-                    isExpanded || isActiveDomain
-                      ? 'scale-y-100'
-                      : 'scale-y-0 group-hover:scale-y-100 group-focus-within:scale-y-100'
-                  }`}
-                />
+              </div>
 
-                <button
-                  type="button"
-                  aria-expanded={isExpanded}
-                  aria-controls={`research-drawer-${i}`}
-                  onClick={() => setExpandedResearchIdx((prev) => (prev === i ? null : i))}
-                  className="relative z-10 w-full cursor-pointer px-3 py-6 text-left focus:outline-none md:px-4"
-                >
-                  <div className="grid grid-cols-1 gap-3 md:grid-cols-12 md:items-center md:gap-6">
-                    <div className="flex items-center justify-between md:col-span-1 md:block">
-                      <span
-                        className={`font-editorial inline-block text-lg font-medium [font-variant-numeric:tabular-nums] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
-                          isExpanded || isActiveDomain
-                            ? 'translate-x-1.5 text-[var(--app-accent)]'
-                            : 'text-[var(--app-ink)] group-hover:translate-x-1.5 group-hover:text-[var(--app-accent)]'
-                        }`}
-                      >
-                        {num}
-                      </span>
-                      <div className="flex items-center gap-3 md:hidden">
-                        <ResearchPhysicsGlyph index={i} isActive={isGlyphActive} />
-                        <ChevronDown
-                          className={`h-4 w-4 text-[var(--app-muted)] transition-transform duration-300 ${
-                            isExpanded ? 'rotate-180 text-[var(--app-accent)]' : ''
-                          }`}
-                          aria-hidden
+              {/* 底部三大核心指標精密滾動跳表 */}
+              <div className="mt-5 border-t border-[var(--app-rule)] pt-4">
+                <div className="grid grid-cols-3 divide-x divide-[var(--app-rule)] text-center">
+                  {[
+                    { label: statsText.pubs, value: totalPubs },
+                    { label: statsText.citations, value: totalCitations },
+                    { label: statsText.hIndex, value: displayHIndex },
+                  ].map((stat, i) => (
+                    <div key={stat.label} className="px-1.5">
+                      <div className="font-editorial text-xl font-semibold text-[var(--app-ink)] sm:text-2xl">
+                        <RollingNumber
+                          value={stat.value}
+                          delay={0.25 + i * 0.06}
+                          duration={0.85}
                         />
                       </div>
-                    </div>
-
-                    <h3
-                      className={`font-editorial text-xl font-semibold transition-colors duration-300 md:col-span-3 ${
-                        isExpanded || isActiveDomain
-                          ? 'text-[var(--app-accent)]'
-                          : 'text-[var(--app-ink)] group-hover:text-[var(--app-accent)]'
-                      }`}
-                    >
-                      {item.title}
-                    </h3>
-
-                    <p className="text-sm leading-[1.75] text-[var(--app-body)] md:col-span-6">
-                      {item.desc}
-                    </p>
-
-                    <div className="hidden items-center justify-end gap-3 md:col-span-2 md:flex">
-                      <ResearchPhysicsGlyph index={i} isActive={isGlyphActive} />
-                      <ChevronDown
-                        className={`h-4 w-4 shrink-0 text-[var(--app-muted)] transition-transform duration-300 ${
-                          isExpanded
-                            ? 'rotate-180 text-[var(--app-accent)]'
-                            : 'group-hover:text-[var(--app-ink)]'
-                        }`}
-                        aria-hidden
-                      />
-                    </div>
-                  </div>
-                </button>
-
-                {/* 可展開手風琴抽屜：核心材料關鍵字標籤 + 一鍵捲動過濾論文 */}
-                <AnimatePresence initial={false}>
-                  {isExpanded && domain ? (
-                    <motion.div
-                      id={`research-drawer-${i}`}
-                      key={`drawer-${domain.id}`}
-                      initial={reduceMotion ? { opacity: 1 } : { height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={reduceMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
-                      transition={{ duration: reduceMotion ? 0 : 0.34, ease: EDITORIAL_EASE }}
-                      className="relative z-10 overflow-hidden"
-                    >
-                      <div className="border-t border-[var(--app-rule)] px-3 pb-6 pt-4 md:grid md:grid-cols-12 md:items-center md:gap-6 md:px-4">
-                        <div className="hidden md:col-span-1 md:block" />
-                        <div className="flex flex-wrap items-center gap-2 md:col-span-7">
-                          <span className="mr-1 font-mono text-[11px] uppercase tracking-wider text-[var(--app-muted)]">
-                            {isZh ? '核心關鍵詞' : 'Keywords'}
-                          </span>
-                          {domain.keywords.map((kw) => (
-                            <button
-                              key={kw.label}
-                              type="button"
-                              onClick={() => onFilterByKeyword(kw.query)}
-                              className="border border-[var(--app-rule)] bg-[var(--app-bg)] px-2.5 py-1 font-mono text-xs text-[var(--app-body)] transition-colors hover:border-[var(--app-accent)] hover:text-[var(--app-accent)]"
-                            >
-                              {kw.label}
-                            </button>
-                          ))}
-                        </div>
-                        <div className="mt-4 flex md:col-span-4 md:mt-0 md:justify-end">
-                          <button
-                            type="button"
-                            onClick={() => onFilterByDomain(domain.id)}
-                            className={`${uiTokens.buttonPrimary} inline-flex items-center gap-2 px-4 py-2 text-xs`}
-                          >
-                            <span>
-                              {isZh
-                                ? `篩選此領域相關論文${domainCount > 0 ? `（${domainCount} 篇）` : ''}`
-                                : `Filter related works${domainCount > 0 ? ` (${domainCount})` : ''}`}
-                            </span>
-                            <ArrowDown className="h-3.5 w-3.5" aria-hidden />
-                          </button>
-                        </div>
+                      <div className="mt-0.5 text-[11px] text-[var(--app-muted)]">
+                        {stat.label}
                       </div>
-                    </motion.div>
-                  ) : null}
-                </AnimatePresence>
-              </li>
-            );
-          })}
-        </ol>
-        <InkRule dark />
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-2.5 text-center text-[10.5px] text-[var(--app-muted)]">
+                  {statsText.scopusNote}
+                </p>
+              </div>
+            </motion.div>
+
+            {/* 右 3 欄：琥珀金標題帶「最高被引巔峰代表作櫥窗」 */}
+            <motion.div
+              initial={reduceMotion ? false : { opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: reduceMotion ? 0 : 0.65, delay: 0.28, ease: EDITORIAL_EASE }}
+              className="atlas-card flex flex-col overflow-hidden lg:col-span-3"
+            >
+              {/* 暖琥珀金頂部標誌帶 */}
+              <div className="flex items-center justify-between bg-[#C88A2B] px-5 py-3 text-[#FFFDF7]">
+                <span className="inline-flex items-center gap-1.5 font-mono text-[11px] font-semibold uppercase tracking-wider">
+                  <Award className="h-3.5 w-3.5" aria-hidden />
+                  {isZh ? '最高被引巔峰作' : 'LANDMARK WORK'}
+                </span>
+                {landmarkPaper?.year ? (
+                  <span className="rounded-full bg-black/15 px-2 py-0.5 font-mono text-[10px]">
+                    {landmarkPaper.year}
+                  </span>
+                ) : null}
+              </div>
+
+              <div className="flex flex-1 flex-col justify-between p-5">
+                {landmarkPaper ? (
+                  <>
+                    <div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="font-editorial text-4xl font-semibold tracking-tight text-[var(--app-ink)] [font-variant-numeric:tabular-nums]">
+                          <RollingNumber
+                            value={landmarkPaper.citations}
+                            delay={0.32}
+                            duration={0.9}
+                          />
+                        </span>
+                        <span className="font-mono text-xs font-semibold uppercase tracking-wider text-[#C88A2B]">
+                          {isZh ? '次引用' : 'CITATIONS'}
+                        </span>
+                      </div>
+
+                      <h3 className="font-editorial mt-3.5 line-clamp-4 text-[16px] font-semibold leading-[1.4] text-[var(--app-ink)]">
+                        {landmarkPaper.title}
+                      </h3>
+
+                      <p className="font-journal-italic mt-2.5 text-sm text-[var(--app-accent)]">
+                        {landmarkPaper.journal}
+                      </p>
+
+                      {landmarkPaper.authors ? (
+                        <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-[var(--app-muted)]">
+                          {landmarkPaper.authors}
+                        </p>
+                      ) : null}
+                    </div>
+
+                    <div className="mt-5 flex flex-col gap-2 border-t border-[var(--app-rule)] pt-4">
+                      {landmarkPaper.doi ? (
+                        <a
+                          href={landmarkPaper.doi}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center gap-1.5 rounded-full bg-[var(--app-ink)] px-4 py-2 text-xs font-medium text-[var(--app-bg)] transition-colors hover:bg-[#C88A2B] hover:text-white"
+                        >
+                          {isZh ? '前往原文 DOI' : 'Read Landmark Paper'}
+                          <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+                        </a>
+                      ) : null}
+                      <a
+                        href="#publications"
+                        onClick={(e) => scrollToSection(e, 'publications')}
+                        className="inline-flex items-center justify-center gap-1 rounded-full border border-[var(--app-rule)] px-4 py-1.5 text-xs text-[var(--app-muted)] transition-colors hover:border-[var(--app-ink)] hover:text-[var(--app-ink)]"
+                      >
+                        {isZh ? '瀏覽完整 217 篇著作 ↓' : 'Explore full bibliography ↓'}
+                      </a>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex flex-1 items-center justify-center text-xs text-[var(--app-muted)]">
+                    Loading landmark metrics...
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        </div>
       </section>
-    </>
+
+      {/* BAND 02 · 滿版講堂深墨綠黑板橫幅 (#1B3329) — 上半黑板手稿藝廊 ＋ 下半五大粉筆科學藍圖展櫃 */}
+      <section
+        id="chalkboards"
+        className="chalkboard-hall-bg relative scroll-mt-16 border-y border-[#2C4E3F] py-20 text-[#F4F1EA] md:py-24"
+      >
+        <div className="mx-auto max-w-6xl px-6">
+          {/* 上半層：親筆黑板手稿藝廊 */}
+          <ChalkboardGallerySection
+            chalkboards={chalkboards}
+            lang={lang}
+            onOpenLightbox={setLightbox}
+          />
+
+          {/* 柔和粉筆虛線分隔 */}
+          <div
+            aria-hidden="true"
+            className="mb-14 h-px w-full border-b border-dashed border-[#3B6251]"
+          />
+
+          {/* 下半層：五大研究領域粉筆科學藍圖展櫃 */}
+          <div id="research" className="scroll-mt-24">
+            <div className="mb-8 flex flex-col items-start justify-between gap-3 md:flex-row md:items-end">
+              <div>
+                <span className="inline-flex items-center rounded-full border border-[#E88D84]/40 bg-[#152820] px-3 py-1 font-mono text-[11px] font-medium tracking-wider text-[#E88D84]">
+                  {isZh ? '五大研究藍圖展櫃' : 'FIVE SCIENTIFIC BLUEPRINTS'}
+                </span>
+                <h2 className="font-editorial mt-3 text-3xl font-semibold tracking-tight text-[#F4F1EA] sm:text-4xl">
+                  {researchText.title}
+                  {lang === 'en' ? ' ' : ''}
+                  {researchText.subtitle}
+                </h2>
+              </div>
+              <p className="max-w-md text-sm leading-relaxed text-[#BFD3C8] md:text-right">
+                {isZh
+                  ? '點擊任一座藍圖展櫃或下方材料關鍵詞膠囊，即自動捲動並篩選對應領域論文。'
+                  : 'Click any blueprint showcase or material keyword pill to filter matching works below.'}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+              {domainStats.map(({ domain, count, citations }, i) => {
+                const textItem = researchText.items[i];
+                const isSelected = activeDomainId === domain.id;
+                const isHovered = hoveredBlueprintIdx === i;
+
+                return (
+                  <motion.article
+                    key={domain.id}
+                    initial={reduceMotion ? false : { opacity: 0, y: 14 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: '-50px' }}
+                    transition={{
+                      duration: reduceMotion ? 0 : 0.48,
+                      delay: reduceMotion ? 0 : i * 0.055,
+                      ease: EDITORIAL_EASE,
+                    }}
+                    onMouseEnter={() => setHoveredBlueprintIdx(i)}
+                    onMouseLeave={() =>
+                      setHoveredBlueprintIdx((prev) => (prev === i ? null : prev))
+                    }
+                    className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl border p-4 transition-all duration-300 ${
+                      isSelected
+                        ? 'border-[#F3DF87] bg-[#142920] shadow-[0_14px_34px_-16px_rgba(243,223,135,0.28)]'
+                        : 'border-[#2F5243] bg-[#152820]/90 hover:-translate-y-1 hover:border-[#F3DF87]/65 hover:bg-[#142920]'
+                    }`}
+                  >
+                    <div>
+                      {/* 頂部礦物五色六角／圓潤徽章與篇數 */}
+                      <div className="flex items-center justify-between gap-2">
+                        <span
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-xl font-editorial text-xs font-bold text-white shadow-sm"
+                          style={{ backgroundColor: domain.color }}
+                        >
+                          {domain.roman}
+                        </span>
+                        <span className="rounded-full bg-[#1F3A2F] px-2.5 py-0.5 font-mono text-[10.5px] text-[#F3DF87] [font-variant-numeric:tabular-nums]">
+                          {count} {isZh ? '篇' : 'pubs'}
+                        </span>
+                      </div>
+
+                      {/* 放大 132px 粉筆科學結構藍圖（點擊整區直接篩選論文） */}
+                      <button
+                        type="button"
+                        onClick={() => onFilterByDomain(domain.id)}
+                        className="my-3 flex w-full cursor-pointer flex-col items-center rounded-xl border border-dashed border-[#34594A] bg-[#12221B]/75 py-3 transition-colors group-hover:border-[#F3DF87]/45"
+                      >
+                        <ResearchPhysicsGlyph
+                          index={i}
+                          isActive={isHovered || isSelected}
+                          variant="blueprint"
+                          chalkAccent={domain.chalkColor}
+                        />
+                        <span
+                          className="mt-1 px-2 text-center font-mono text-[10px] tracking-tight"
+                          style={{ color: domain.chalkColor }}
+                        >
+                          {domain.formulaTag}
+                        </span>
+                      </button>
+
+                      {/* 標題與簡介 */}
+                      <h3 className="font-editorial text-lg font-semibold leading-snug text-[#F4F1EA] group-hover:text-[#F3DF87]">
+                        {textItem?.title ?? (isZh ? domain.labelZh : domain.labelEn)}
+                      </h3>
+                      {textItem?.desc ? (
+                        <p className="mt-1.5 line-clamp-3 text-xs leading-relaxed text-[#A7C4B8]">
+                          {textItem.desc}
+                        </p>
+                      ) : null}
+                    </div>
+
+                    {/* 底部材料關鍵詞圓角膠囊 ＋ 引用數與篩選鈕 */}
+                    <div className="mt-4 space-y-3 border-t border-[#28473A] pt-3">
+                      <div className="flex flex-wrap gap-1">
+                        {domain.keywords.slice(0, 3).map((kw) => (
+                          <button
+                            key={kw.label}
+                            type="button"
+                            onClick={() => onFilterByKeyword(kw.query)}
+                            className="rounded-full border border-[#34594A] bg-[#1B3329] px-2 py-0.5 font-mono text-[10px] text-[#D7E6DF] transition-colors hover:border-[#F3DF87] hover:text-[#F3DF87]"
+                          >
+                            {kw.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className="flex items-center justify-between gap-2 text-[11px]">
+                        <span className="font-mono text-[#9FB8AC] [font-variant-numeric:tabular-nums]">
+                          {citations.toLocaleString('en-US')} {isZh ? '引' : 'cit.'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => onFilterByDomain(domain.id)}
+                          className="inline-flex items-center gap-1 rounded-full bg-[#F3DF87]/15 px-2.5 py-1 font-medium text-[#F3DF87] transition-colors hover:bg-[#F3DF87] hover:text-[#152820]"
+                        >
+                          {isZh ? '篩選' : 'Filter'}
+                          <ArrowDown className="h-3 w-3" aria-hidden />
+                        </button>
+                      </div>
+                    </div>
+                  </motion.article>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <FigureLightboxModal
+        lightbox={lightbox}
+        closeLabel={isZh ? '關閉預覽' : 'Close preview'}
+        onClose={() => setLightbox(null)}
+      />
+    </LayoutGroup>
   );
 }
 

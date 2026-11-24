@@ -1,6 +1,6 @@
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { NextResponse } from 'next/server';
-import { PUBLICATIONS_CACHE_TAG } from '@/lib/constants';
+import { CHALKBOARDS_CACHE_TAG, PUBLICATIONS_CACHE_TAG } from '@/lib/constants';
 import { verifyAdminFirebaseToken } from '@/lib/firebaseServer';
 
 /**
@@ -20,10 +20,12 @@ export async function POST(request: Request) {
   }
 
   revalidateTag(PUBLICATIONS_CACHE_TAG);
+  revalidateTag(CHALKBOARDS_CACHE_TAG);
   revalidatePath('/');
   revalidatePath('/main');
   revalidatePath('/api/publications');
   revalidatePath('/api/papers.json');
+  revalidatePath('/api/chalkboards');
 
   return NextResponse.json({
     revalidated: true,

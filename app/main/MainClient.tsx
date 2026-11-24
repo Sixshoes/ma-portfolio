@@ -6,6 +6,7 @@ import { useLanguage } from '../LanguageContext';
 import { dict } from '@/lib/i18n';
 import { vcardData } from '@/lib/impactData';
 import type { Publication } from '@/lib/publications';
+import { DEFAULT_CHALKBOARDS, type ChalkboardItem } from '@/lib/chalkboards';
 import { Navbar } from '@/app/components/Navbar';
 import { CommandPalette } from '@/app/components/CommandPalette';
 import { ErrorBoundary } from '@/app/components/ErrorBoundary';
@@ -34,9 +35,13 @@ const BottomSections = dynamic(
 
 type MainClientProps = {
   initialPublications?: Publication[] | null;
+  initialChalkboards?: ChalkboardItem[] | null;
 };
 
-export function MainClient({ initialPublications = null }: MainClientProps) {
+export function MainClient({
+  initialPublications = null,
+  initialChalkboards = null,
+}: MainClientProps) {
   useRenderProfiler('MainPage');
   const { lang } = useLanguage();
   const isMobile = useIsMobile();
@@ -45,6 +50,10 @@ export function MainClient({ initialPublications = null }: MainClientProps) {
   const t = dict[lang];
 
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
+  const chalkboards =
+    initialChalkboards && initialChalkboards.length > 0
+      ? initialChalkboards
+      : DEFAULT_CHALKBOARDS;
 
   const {
     allPublications,
@@ -52,6 +61,7 @@ export function MainClient({ initialPublications = null }: MainClientProps) {
     pubSort,
     correspondingOnly,
     activeDomainId,
+    selectedJournal,
     viewMode,
     searchQuery,
     uniqueYears,
@@ -68,6 +78,7 @@ export function MainClient({ initialPublications = null }: MainClientProps) {
     handlePubSortChange,
     handleCorrespondingToggle,
     handleDomainFilterChange,
+    handleJournalFilterChange,
     handleKeywordQuickFilter,
     handleViewModeChange,
     handleSearchChange,
@@ -169,6 +180,7 @@ export function MainClient({ initialPublications = null }: MainClientProps) {
           totalCitations={totalCitations}
           hIndexValue={hIndexValue}
           allPublications={allPublications}
+          chalkboards={chalkboards}
           activeDomainId={activeDomainId}
           onFilterByDomain={handleResearchDomainSelect}
           onFilterByKeyword={handleResearchKeywordSelect}
@@ -183,6 +195,7 @@ export function MainClient({ initialPublications = null }: MainClientProps) {
             pubSort={pubSort}
             correspondingOnly={correspondingOnly}
             activeDomainId={activeDomainId}
+            selectedJournal={selectedJournal}
             viewMode={viewMode}
             searchQuery={searchQuery}
             uniqueYears={uniqueYears}
@@ -203,6 +216,7 @@ export function MainClient({ initialPublications = null }: MainClientProps) {
             onSortChange={handlePubSortChange}
             onCorrespondingToggle={handleCorrespondingToggle}
             onClearDomainFilter={handleClearDomainFilter}
+            onSelectJournal={handleJournalFilterChange}
             onViewModeChange={handleViewModeChange}
             onSearchChange={handleSearchChange}
             onLoadMore={handleLoadMore}

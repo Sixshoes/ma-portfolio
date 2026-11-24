@@ -1,7 +1,14 @@
 import {
+  CHALKBOARDS_CACHE_TAG,
+  FIRESTORE_CHALKBOARDS_DOC,
   FIRESTORE_PUBLICATIONS_DOC,
   PUBLICATIONS_CACHE_TAG,
 } from '@/lib/constants';
+import {
+  DEFAULT_CHALKBOARDS,
+  normalizeChalkboardsFromJson,
+  type ChalkboardItem,
+} from '@/lib/chalkboards';
 import { normalizePublicationsFromJson, type Publication } from '@/lib/publications';
 
 type FirestoreValue =
@@ -82,6 +89,56 @@ export async function fetchPublicationsFromFirestoreServer(
     };
   } catch {
     return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * 透過 Firestore 公開 REST API 讀取單一黑板手稿彙總文件 siteData/chalkboards（僅耗 1 次讀取）。
+ * 若尚未建立或環境變數未設定，安全退回內建 DEFAULT_CHALKBOARDS。
+ */
+export async function fetchChalkboardsFromFirestoreServer(
+  revalidateSeconds = 3600,
+): Promise<{ items: ChalkboardItem[]; source: 'firebase' | 'default'; updatedAt?: string }> {
+  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID?.trim();
+  if (!projectId) {
+    return { items: DEFAULT_CHALKBOARDS, source: 'default' };
+  }
+
+  const url = `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(
+    projectId,
+  )}/databases/(default)/documents/${FIRESTORE_CHALKBOARDS_DOC}`;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 5000);
+
+  try {
+    const res = await fetch(url, {
+      next: { revalidate: revalidateSeconds, tags: [CHALKBOARDS_CACHE_TAG] },
+      signal: controller.signal,
+    });
+    if (!res.ok) return { items: DEFAULT_CHALKBOARDS, source: 'default' };
+
+    const doc = (await res.json()) as { fields?: Record<string, FirestoreValue> };
+    if (!doc.fields) return { items: DEFAULT_CHALKBOARDS, source: 'default' };
+
+    const decoded = decodeFirestoreValue({ mapValue: { fields: doc.fields } }) as Record<
+      string,
+      unknown
+    >;
+    const items = normalizeChalkboardsFromJson(decoded.items);
+    if (items.length === 0) {
+      return { items: DEFAULT_CHALKBOARDS, source: 'default' };
+    }
+
+    return {
+      items,
+      source: 'firebase',
+      updatedAt: typeof decoded.updatedAt === 'string' ? decoded.updatedAt : undefined,
+    };
+  } catch {
+    return { items: DEFAULT_CHALKBOARDS, source: 'default' };
   } finally {
     clearTimeout(timer);
   }

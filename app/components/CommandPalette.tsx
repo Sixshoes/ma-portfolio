@@ -270,10 +270,10 @@ export function CommandPalette({
             transition={{ duration: reduceMotion ? 0 : 0.22, ease: EDITORIAL_EASE }}
             onClick={(e) => e.stopPropagation()}
             onKeyDown={handleKeyDown}
-            className="flex max-h-[72vh] w-full max-w-2xl flex-col overflow-hidden border border-[var(--app-ink)] bg-[var(--app-bg)]"
+            className="flex max-h-[72vh] w-full max-w-2xl flex-col overflow-hidden rounded-[24px] border border-[var(--app-rule)] bg-[var(--app-surface-card)] shadow-[0_24px_64px_-24px_rgba(0,0,0,0.45)]"
           >
-            {/* 頂部紙本檢索列 */}
-            <div className="flex items-center gap-3 border-b border-[var(--app-ink)] px-5 py-4">
+            {/* 頂部檢索列 */}
+            <div className="flex items-center gap-3 border-b border-[var(--app-rule)] px-5 py-4">
               <Search className="h-4 w-4 shrink-0 text-[var(--app-muted)]" aria-hidden />
               <input
                 ref={inputRef}
@@ -293,7 +293,7 @@ export function CommandPalette({
                   type="button"
                   onClick={() => setQuery('')}
                   aria-label={isZh ? '清除關鍵字' : 'Clear query'}
-                  className="p-1 text-[var(--app-muted)] transition-colors hover:text-[var(--app-ink)]"
+                  className="rounded-full p-1 text-[var(--app-muted)] transition-colors hover:text-[var(--app-ink)]"
                 >
                   <X className="h-3.5 w-3.5" aria-hidden />
                 </button>
@@ -301,7 +301,7 @@ export function CommandPalette({
               <button
                 type="button"
                 onClick={onClose}
-                className="shrink-0 border border-[var(--app-rule)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--app-muted)] transition-colors hover:border-[var(--app-ink)] hover:text-[var(--app-ink)]"
+                className="shrink-0 rounded-full border border-[var(--app-rule)] px-2.5 py-0.5 font-mono text-[10px] text-[var(--app-muted)] transition-colors hover:border-[var(--app-ink)] hover:text-[var(--app-ink)]"
               >
                 ESC
               </button>

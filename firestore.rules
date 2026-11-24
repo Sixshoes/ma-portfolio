@@ -20,6 +20,13 @@ service cloud.firestore {
         && request.resource.data.totalPapers is int;
     }
 
+    // 親筆黑板手稿相簿彙總文件：公開可讀，僅管理者可寫入
+    match /siteData/chalkboards {
+      allow read: if true;
+      allow write: if isAdmin()
+        && request.resource.data.items is list;
+    }
+
     // 其他路徑一律預設拒絕
     match /{document=**} {
       allow read, write: if false;
