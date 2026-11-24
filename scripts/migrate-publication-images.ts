@@ -328,6 +328,16 @@ async function main() {
   };
 
   const nextItems: Publication[] = allItems.map((p) => ({ ...p }));
+
+  // 先統計跨多篇重複出現的外部圖片網址（多半是通用期刊封面或誤貼同張圖）
+  const externalCoverFreq = new Map<string, number>();
+  for (const p of nextItems) {
+    const c = p.cover_url?.trim() ?? '';
+    if (c && !isProjectStorageUrl(c, projectId)) {
+      externalCoverFreq.set(c, (externalCoverFreq.get(c) ?? 0) + 1);
+    }
+  }
+
   let cursor = 0;
 
   async function worker() {
@@ -348,18 +358,21 @@ async function main() {
         continue;
       }
 
-      // 2. 判定為通用期刊封面／Logo：先清空，若啟用 --backfill 可嘗試 Elsevier 補抓
+      // 2. 判定為通用期刊封面／Logo 或多篇共用同張外連圖：先清空，若啟用 --backfill 可嘗試 Elsevier 補抓
       let clearedAsGeneric = false;
       let validWebp: { webp: Buffer; width: number; height: number } | null = null;
       let fetchedViaBackfill = false;
+      let backfillSourceUrl = '';
 
-      if (cover && isGenericCoverOrLogoUrl(cover)) {
+      const isSharedExternal = cover ? (externalCoverFreq.get(cover) ?? 0) > 1 : false;
+
+      if (cover && (isGenericCoverOrLogoUrl(cover) || isSharedExternal)) {
         clearedAsGeneric = true;
       } else if (cover) {
         validWebp = await fetchAndValidateImageUrl(cover);
       }
 
-      // 3. 若無存活單篇圖，且開啟 --backfill + 具備 10.1016/* DOI + Elsevier Key，補抓 fx1
+      // 3. 若無存活單篇圖，且開啟 --backfill + 具備 10.1016/* DOI + Elsevier Key，補抓 ga1 / fx1 / gr1
       if (
         !validWebp &&
         opts.backfill &&
@@ -370,6 +383,7 @@ async function main() {
         if (fetched.result) {
           validWebp = fetched.result;
           fetchedViaBackfill = true;
+          backfillSourceUrl = fetched.result.sourceUrl;
         }
       }
 
@@ -382,6 +396,8 @@ async function main() {
             authHeader: `Bearer ${accessToken}`,
           });
           pub.cover_url = uploaded.downloadUrl;
+        } else if (fetchedViaBackfill && backfillSourceUrl) {
+          pub.cover_url = backfillSourceUrl;
         }
         if (fetchedViaBackfill) {
           stats.backfilled += 1;
