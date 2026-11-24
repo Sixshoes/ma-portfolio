@@ -1,3 +1,4 @@
+import { PUBLICATIONS_CACHE_TAG } from '@/lib/constants';
 import { normalizePublicationsFromJson, type Publication } from '@/lib/publications';
 import { fetchPublicationsFromFirestoreServer } from '@/lib/firebaseServer';
 
@@ -81,7 +82,6 @@ export function writeCachedPapers(papers: Publication[]): void {
 export async function fetchPapersFromRemote(signal?: AbortSignal): Promise<Publication[]> {
   try {
     const apiRes = await fetch('/api/publications', {
-      cache: 'no-cache',
       signal,
     });
     if (apiRes.ok) {
@@ -94,7 +94,6 @@ export async function fetchPapersFromRemote(signal?: AbortSignal): Promise<Publi
   }
 
   const res = await fetch(LEGACY_PORTAL_PAPERS_URL, {
-    cache: 'no-cache',
     signal,
   });
   if (!res.ok) {
@@ -124,7 +123,7 @@ export async function fetchPapersServerSide(revalidateSeconds = 3600): Promise<P
     const timer = setTimeout(() => controller.abort(), 5000);
     try {
       const res = await fetch(LEGACY_PORTAL_PAPERS_URL, {
-        next: { revalidate: revalidateSeconds, tags: ['publications'] },
+        next: { revalidate: revalidateSeconds, tags: [PUBLICATIONS_CACHE_TAG] },
         signal: controller.signal,
       });
       if (!res.ok) return null;

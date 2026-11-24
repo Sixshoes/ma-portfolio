@@ -34,9 +34,11 @@ NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="your-project.firebasestorage.app"
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="123456789"
 NEXT_PUBLIC_FIREBASE_APP_ID="1:123456789:web:abcdef"
 
-# 允許登入後台與觸發即時快取刷新的管理者信箱（多個用逗號分隔）
+# 允許登入後台與觸發即時快取刷新的管理者信箱（純伺服器端變數，多個用逗號分隔）
 ADMIN_EMAILS="yrma@gm.fgu.edu.tw,你的信箱@gmail.com"
-NEXT_PUBLIC_ADMIN_EMAILS="yrma@gm.fgu.edu.tw,你的信箱@gmail.com"
+
+# 選填：Elsevier API Key（供後台自動抓取 Elsevier 論文圖解摘要 fx1；未填仍可用公開來源與 PDF 抽圖）
+ELSEVIER_API_KEY=""
 ```
 
 > 不需要設定 Service Account 私鑰：後端 `/api/revalidate` 會透過 Google 官方 Identity Toolkit API 直接驗證登入者的 Firebase ID Token 與白名單信箱。

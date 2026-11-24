@@ -1,10 +1,11 @@
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { NextResponse } from 'next/server';
+import { PUBLICATIONS_CACHE_TAG } from '@/lib/constants';
 import { verifyAdminFirebaseToken } from '@/lib/firebaseServer';
 
 /**
  * 後台儲存論文後呼叫此端點，經 Google 驗證 Firebase ID Token 與管理者白名單後，
- * 立即清除 /main 與 /api/publications 的 ISR 快取，讓正式官網秒級生效。
+ * 立即清除根路由 /、/main 與 /api/publications 的 ISR 快取，讓正式官網秒級生效。
  */
 export async function POST(request: Request) {
   const authHeader = request.headers.get('authorization') ?? '';
@@ -18,7 +19,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: verified.error }, { status: verified.status });
   }
 
-  revalidateTag('publications');
+  revalidateTag(PUBLICATIONS_CACHE_TAG);
+  revalidatePath('/');
   revalidatePath('/main');
   revalidatePath('/api/publications');
 

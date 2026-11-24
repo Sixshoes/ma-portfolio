@@ -31,7 +31,6 @@ import {
 import { LEGACY_PORTAL_PAPERS_URL } from '@/lib/papersCache';
 import {
   getFirebaseServices,
-  isEmailAllowedClient,
   isFirebaseConfigured,
   loadPublicationsBundleFromFirestore,
   savePublicationsBundleToFirestore,
@@ -48,6 +47,8 @@ export function AdminDashboard() {
   const configured = isFirebaseConfigured();
   const [user, setUser] = useState<User | null>(null);
   const [authReady, setAuthReady] = useState(!configured);
+  const [adminStatus, setAdminStatus] = useState<'idle' | 'checking' | 'allowed' | 'denied'>('idle');
+  const [adminDenyReason, setAdminDenyReason] = useState<string | null>(null);
   const [bundle, setBundle] = useState<PublicationsBundleDoc | null>(null);
   const [loadingData, setLoadingData] = useState(false);
   const [busyAction, setBusyAction] = useState<string | null>(null);
@@ -86,7 +87,47 @@ export function AdminDashboard() {
     return () => unsub();
   }, [configured]);
 
-  const isAllowed = useMemo(() => isEmailAllowedClient(user?.email), [user?.email]);
+  // 透過伺服器端 GET /api/admin/verify 驗證 Firebase ID Token 與 ADMIN_EMAILS 白名單
+  const verifyServerAdmin = useCallback(async (currentUser: User, signal?: AbortSignal) => {
+    setAdminStatus('checking');
+    setAdminDenyReason(null);
+    try {
+      const token = await currentUser.getIdToken();
+      if (signal?.aborted) return;
+      const res = await fetch('/api/admin/verify', {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${token}` },
+        cache: 'no-store',
+        signal,
+      });
+      if (signal?.aborted) return;
+      const body = (await res.json().catch(() => ({}))) as {
+        isAdmin?: boolean;
+        error?: string;
+      };
+      if (res.ok && body.isAdmin === true) {
+        setAdminStatus('allowed');
+      } else {
+        setAdminStatus('denied');
+        setAdminDenyReason(body.error ?? `驗證失敗（HTTP ${res.status}）`);
+      }
+    } catch (err) {
+      if (signal?.aborted) return;
+      setAdminStatus('denied');
+      setAdminDenyReason(err instanceof Error ? err.message : '無法連線至權限驗證端點');
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!user) {
+      setAdminStatus('idle');
+      setAdminDenyReason(null);
+      return;
+    }
+    const controller = new AbortController();
+    void verifyServerAdmin(user, controller.signal);
+    return () => controller.abort();
+  }, [user, verifyServerAdmin]);
 
   const fetchFirestoreData = useCallback(async () => {
     setLoadingData(true);
@@ -104,10 +145,10 @@ export function AdminDashboard() {
   }, [showToast]);
 
   useEffect(() => {
-    if (user && isAllowed) {
+    if (user && adminStatus === 'allowed') {
       void fetchFirestoreData();
     }
-  }, [user, isAllowed, fetchFirestoreData]);
+  }, [user, adminStatus, fetchFirestoreData]);
 
   const triggerRevalidate = useCallback(
     async (currentUser: User) => {
@@ -356,7 +397,8 @@ export function AdminDashboard() {
             <li>NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET</li>
             <li>NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID</li>
             <li>NEXT_PUBLIC_FIREBASE_APP_ID</li>
-            <li>ADMIN_EMAILS / NEXT_PUBLIC_ADMIN_EMAILS</li>
+            <li>ADMIN_EMAILS（純伺服器端變數）</li>
+            <li>ELSEVIER_API_KEY（選填，伺服器端自動抓摘要圖）</li>
           </ul>
           <Link
             href="/main"
@@ -419,8 +461,18 @@ export function AdminDashboard() {
     );
   }
 
-  // 狀態 3：已登入但非白名單帳號
-  if (!isAllowed) {
+  // 狀態 3：向伺服器端驗證管理員資格中
+  if (adminStatus === 'idle' || adminStatus === 'checking') {
+    return (
+      <div className="flex min-h-screen items-center justify-center gap-3 text-stone-300">
+        <Loader2 className="h-5 w-5 animate-spin text-[#d4af37]" />
+        正在向伺服器驗證管理員權限...
+      </div>
+    );
+  }
+
+  // 狀態 4：已登入但非白名單帳號或驗證失敗
+  if (adminStatus !== 'allowed') {
     return (
       <div className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center px-6">
         <div className="w-full rounded-3xl border border-red-500/35 bg-[#191715] p-8 text-center shadow-2xl">
@@ -428,17 +480,32 @@ export function AdminDashboard() {
             <ShieldAlert className="h-6 w-6" />
           </div>
           <h1 className="font-heading-serif mb-2 text-2xl font-semibold text-stone-100">無管理權限</h1>
-          <p className="mb-6 text-sm text-stone-300">
-            目前登入帳號 <span className="font-mono text-stone-100">{user.email}</span> 不在管理者名單中。
+          <p className="mb-3 text-sm text-stone-300">
+            目前登入帳號 <span className="font-mono text-stone-100">{user.email}</span> 無法通過伺服器端管理員驗證。
           </p>
-          <button
-            type="button"
-            onClick={handleSignOut}
-            className="inline-flex items-center gap-2 rounded-full border border-stone-700 bg-stone-900 px-6 py-2.5 text-sm text-stone-200 hover:bg-stone-800"
-          >
-            <LogOut className="h-4 w-4" />
-            切換其他帳號
-          </button>
+          {adminDenyReason ? (
+            <p className="mb-6 rounded-xl border border-stone-800 bg-[#121110] px-3 py-2 font-mono text-xs text-stone-400">
+              {adminDenyReason}
+            </p>
+          ) : null}
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => void verifyServerAdmin(user)}
+              className="inline-flex items-center gap-2 rounded-full border border-stone-700 bg-stone-900 px-5 py-2.5 text-sm text-stone-200 hover:bg-stone-800"
+            >
+              <RefreshCw className="h-4 w-4" />
+              重新驗證
+            </button>
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="inline-flex items-center gap-2 rounded-full border border-stone-700 bg-stone-900 px-5 py-2.5 text-sm text-stone-200 hover:bg-stone-800"
+            >
+              <LogOut className="h-4 w-4" />
+              切換其他帳號
+            </button>
+          </div>
         </div>
       </div>
     );

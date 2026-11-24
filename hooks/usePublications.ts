@@ -74,8 +74,10 @@ export function usePublications(
     }
   }, [hasInitial, initialPublications]);
 
-  // Always revalidate against B-site via HTTP ETag (cache: 'no-cache')
+  // SSR 已注入非空 initialPublications 時，直接信任 On-Demand ISR 最新輸出，不再於掛載時重複全量拉取
   useEffect(() => {
+    if (hasInitial) return;
+
     const controller = new AbortController();
     let cancelled = false;
 
@@ -97,12 +99,7 @@ export function usePublications(
         return;
       } catch (err) {
         if (cancelled || controller.signal.aborted) return;
-        console.warn('Fetch papers.json failed, using cache/fallback:', err);
-
-        if (hasInitial) {
-          setIsLoading(false);
-          return;
-        }
+        console.warn('Fetch publications failed, using cache/fallback:', err);
 
         const cached = readCachedPapers();
         if (cached && cached.length > 0) {

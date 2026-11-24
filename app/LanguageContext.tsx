@@ -20,8 +20,12 @@ const LANG_CHANGE_EVENT = 'preferred-lang-change';
 
 function detectDefaultLang(): Lang {
   if (typeof navigator === 'undefined') return 'en';
-  const browserLang = (navigator.language || '').toLowerCase();
-  return browserLang.startsWith('zh') ? 'zh' : 'en';
+  const candidates =
+    Array.isArray(navigator.languages) && navigator.languages.length > 0
+      ? navigator.languages
+      : [navigator.language];
+  const hasZh = candidates.some((code) => (code || '').toLowerCase().startsWith('zh'));
+  return hasZh ? 'zh' : 'en';
 }
 
 function readStoredLang(): Lang {

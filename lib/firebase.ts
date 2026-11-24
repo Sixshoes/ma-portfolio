@@ -17,13 +17,16 @@ import {
   type FirebaseStorage,
 } from 'firebase/storage';
 import {
+  PUBLICATIONS_COLLECTION,
+  PUBLICATIONS_DOC_ID,
+} from '@/lib/constants';
+import {
   computeHIndex,
   normalizePublicationsFromJson,
   type Publication,
 } from '@/lib/publications';
 
-export const PUBLICATIONS_COLLECTION = 'siteData';
-export const PUBLICATIONS_DOC_ID = 'publications';
+export { PUBLICATIONS_COLLECTION, PUBLICATIONS_DOC_ID };
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY?.trim() ?? '',
@@ -40,22 +43,6 @@ export function isFirebaseConfigured(): boolean {
 
 export function isFirebaseStorageConfigured(): boolean {
   return isFirebaseConfigured() && Boolean(firebaseConfig.storageBucket);
-}
-
-export function getAdminEmailWhitelist(): string[] {
-  const raw = process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? '';
-  return raw
-    .split(',')
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-}
-
-export function isEmailAllowedClient(email: string | null | undefined): boolean {
-  if (!email) return false;
-  const whitelist = getAdminEmailWhitelist();
-  // 若未設定前端白名單提示，仍由 Firestore Rules 與後端 /api/revalidate 嚴格把關
-  if (whitelist.length === 0) return true;
-  return whitelist.includes(email.trim().toLowerCase());
 }
 
 export type FirebaseServices = {

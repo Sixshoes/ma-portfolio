@@ -1,7 +1,8 @@
+import {
+  FIRESTORE_PUBLICATIONS_DOC,
+  PUBLICATIONS_CACHE_TAG,
+} from '@/lib/constants';
 import { normalizePublicationsFromJson, type Publication } from '@/lib/publications';
-
-const FIRESTORE_COLLECTION = 'siteData';
-const FIRESTORE_DOC_ID = 'publications';
 
 type FirestoreValue =
   | { stringValue: string }
@@ -53,14 +54,14 @@ export async function fetchPublicationsFromFirestoreServer(
 
   const url = `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(
     projectId,
-  )}/databases/(default)/documents/${FIRESTORE_COLLECTION}/${FIRESTORE_DOC_ID}`;
+  )}/databases/(default)/documents/${FIRESTORE_PUBLICATIONS_DOC}`;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 5000);
 
   try {
     const res = await fetch(url, {
-      next: { revalidate: revalidateSeconds, tags: ['publications'] },
+      next: { revalidate: revalidateSeconds, tags: [PUBLICATIONS_CACHE_TAG] },
       signal: controller.signal,
     });
     if (!res.ok) return null;
@@ -87,7 +88,7 @@ export async function fetchPublicationsFromFirestoreServer(
 }
 
 export function getServerAdminWhitelist(): string[] {
-  const raw = process.env.ADMIN_EMAILS ?? process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? '';
+  const raw = process.env.ADMIN_EMAILS ?? '';
   return raw
     .split(',')
     .map((email) => email.trim().toLowerCase())
