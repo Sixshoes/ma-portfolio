@@ -277,6 +277,8 @@ export function CommandPalette({
               <Search className="h-4 w-4 shrink-0 text-[var(--app-muted)]" aria-hidden />
               <input
                 ref={inputRef}
+                id="cmdk-search-input"
+                name="cmdk-search"
                 type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
@@ -286,7 +288,7 @@ export function CommandPalette({
                     : `Search ${publications.length} papers, journals, years, or commands…`
                 }
                 aria-label={isZh ? '快速檢索關鍵字' : 'Quick search query'}
-                className="w-full bg-transparent text-sm text-[var(--app-ink)] placeholder:text-[var(--app-muted)] focus:outline-none"
+                className="w-full bg-transparent text-sm text-[var(--app-ink)] placeholder:text-[var(--app-muted)] focus:outline-none focus-visible:outline-none"
               />
               {query ? (
                 <button

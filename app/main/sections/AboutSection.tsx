@@ -113,9 +113,9 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
       <div className="mx-auto max-w-6xl px-6">
         <div className="pb-4">
           <h2 className={uiTokens.sectionTitle}>
-            {aboutText.title}
-            {lang === 'en' ? ' ' : ''}
-            {aboutText.subtitle}
+            {lang === 'en'
+              ? `${aboutText.title} ${aboutText.subtitle}`
+              : `${aboutText.title}${aboutText.subtitle}`}
           </h2>
         </div>
         <InkRule thick className="mb-8" />
@@ -186,11 +186,13 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                   ) : (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      src="/profile.jpg"
+                      src="/profile-avatar.webp"
                       alt={isZh ? '馬遠榮副校長肖像照' : 'Portrait of Prof. Yuan-Ron Ma'}
+                      width={80}
+                      height={80}
                       loading="lazy"
                       onError={() => setPortraitError(true)}
-                      className="h-full w-full object-cover object-top mix-blend-multiply contrast-[1.03]"
+                      className="h-full w-full scale-110 object-cover object-[50%_18%] mix-blend-multiply contrast-[1.04]"
                     />
                   )}
                 </div>

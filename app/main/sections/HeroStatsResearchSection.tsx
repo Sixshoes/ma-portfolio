@@ -217,15 +217,10 @@ function HeroStatsResearchSectionComponent({
             </motion.div>
           </div>
 
-          {/* 12 欄三區複合數據圖鑑（溫潤 24px 圓角，告別剛硬方盒） */}
-          <div className="grid grid-cols-1 items-stretch gap-5 lg:grid-cols-12">
-            {/* 左 5 欄：馬副校長真實黑板推導主視覺（支援多張輪播＋墨綠公式圖說底籤） */}
-            <motion.div
-              initial={reduceMotion ? false : { opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: reduceMotion ? 0 : 0.65, delay: 0.12, ease: EDITORIAL_EASE }}
-              className="group relative flex min-h-[360px] flex-col overflow-hidden rounded-[26px] border border-[#2C4B3E] bg-[#1B3329] shadow-[0_20px_48px_-24px_rgba(20,38,30,0.45)] lg:col-span-5"
-            >
+          {/* 12 欄三區複合數據圖鑑（平板採滿寬黑板＋雙欄圖卡，桌機採 5/4/3 三欄） */}
+          <div className="grid grid-cols-1 items-stretch gap-5 md:grid-cols-2 lg:grid-cols-12">
+            {/* 左 5 欄：馬副校長真實黑板推導主視覺（零隱藏延遲直繪 LCP，支援多張輪播＋墨綠公式底籤） */}
+            <div className="group relative flex min-h-[340px] flex-col overflow-hidden rounded-[26px] border border-[#2C4B3E] bg-[#1B3329] shadow-[0_20px_48px_-24px_rgba(20,38,30,0.45)] md:col-span-2 lg:col-span-5 lg:min-h-[360px]">
               <div
                 onClick={openHeroLightbox}
                 className={`relative flex-1 overflow-hidden ${
@@ -244,7 +239,10 @@ function HeroStatsResearchSectionComponent({
                     <img
                       src={activeHeroBoard.imageUrl}
                       alt={isZh ? activeHeroBoard.titleZh : activeHeroBoard.titleEn}
+                      width={1024}
+                      height={768}
                       fetchPriority="high"
+                      decoding="sync"
                       onError={() =>
                         setFailedHeroIds((prev) => ({
                           ...prev,
@@ -307,11 +305,11 @@ function HeroStatsResearchSectionComponent({
                 ) : null}
               </div>
 
-              {/* 底部深墨綠圖說籤 */}
-              <div className="border-t border-[#2E5243] bg-[#152820]/95 px-5 py-4">
-                <div className="flex items-center justify-between gap-2">
+              {/* 底部深墨綠圖說籤（手機端自然換行，不裁斷尾端指數 ]⁻¹） */}
+              <div className="border-t border-[#2E5243] bg-[#152820]/95 px-5 py-3.5">
+                <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <div className="truncate text-xs font-semibold text-[#F4F1EA]">
+                    <div className="text-xs font-semibold leading-snug text-[#F4F1EA]">
                       {activeHeroBoard
                         ? isZh
                           ? activeHeroBoard.titleZh
@@ -319,7 +317,7 @@ function HeroStatsResearchSectionComponent({
                         : heroPrimaryName}
                     </div>
                     {activeHeroBoard?.formulaNote ? (
-                      <div className="mt-1 truncate font-mono text-[11px] text-[#F3DF87]">
+                      <div className="mt-1 break-words font-mono text-[11px] leading-snug text-[#F3DF87]">
                         {activeHeroBoard.formulaNote}
                       </div>
                     ) : null}
@@ -331,14 +329,14 @@ function HeroStatsResearchSectionComponent({
                   ) : null}
                 </div>
               </div>
-            </motion.div>
+            </div>
 
             {/* 中 4 欄：五大領域多色互動環狀圖 ＋ 三大精密跳表總指標 */}
             <motion.div
-              initial={reduceMotion ? false : { opacity: 0, y: 14 }}
+              initial={reduceMotion ? false : { opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: reduceMotion ? 0 : 0.65, delay: 0.2, ease: EDITORIAL_EASE }}
-              className="atlas-card flex flex-col justify-between p-5 sm:p-6 lg:col-span-4"
+              transition={{ duration: reduceMotion ? 0 : 0.55, delay: 0.08, ease: EDITORIAL_EASE }}
+              className="atlas-card flex flex-col justify-between p-5 sm:p-6 md:col-span-1 lg:col-span-4"
             >
               <div>
                 <div className="mb-3 flex items-center justify-between">
@@ -383,21 +381,21 @@ function HeroStatsResearchSectionComponent({
               </div>
             </motion.div>
 
-            {/* 右 3 欄：琥珀金標題帶「最高被引巔峰代表作櫥窗」 */}
+            {/* 右 3 欄：琥珀金標題帶「最高被引巔峰代表作櫥窗」（WCAG AAA 深墨字高對比、完整標題不截斷） */}
             <motion.div
-              initial={reduceMotion ? false : { opacity: 0, y: 14 }}
+              initial={reduceMotion ? false : { opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: reduceMotion ? 0 : 0.65, delay: 0.28, ease: EDITORIAL_EASE }}
-              className="atlas-card flex flex-col overflow-hidden lg:col-span-3"
+              transition={{ duration: reduceMotion ? 0 : 0.55, delay: 0.14, ease: EDITORIAL_EASE }}
+              className="atlas-card flex flex-col overflow-hidden md:col-span-1 lg:col-span-3"
             >
-              {/* 暖琥珀金頂部標誌帶 */}
-              <div className="flex items-center justify-between bg-[#C88A2B] px-5 py-3 text-[#FFFDF7]">
-                <span className="inline-flex items-center gap-1.5 font-mono text-[11px] font-semibold uppercase tracking-wider">
+              {/* 暖琥珀金頂部標誌帶（深墨字 #1A1205 對比度 > 7.5:1） */}
+              <div className="flex items-center justify-between bg-[#D99B32] px-5 py-3 text-[#1A1205]">
+                <span className="inline-flex items-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-wider">
                   <Award className="h-3.5 w-3.5" aria-hidden />
                   {isZh ? '最高被引巔峰作' : 'LANDMARK WORK'}
                 </span>
                 {landmarkPaper?.year ? (
-                  <span className="rounded-full bg-black/15 px-2 py-0.5 font-mono text-[10px]">
+                  <span className="rounded-full bg-[#1A1205]/15 px-2 py-0.5 font-mono text-[10px] font-semibold">
                     {landmarkPaper.year}
                   </span>
                 ) : null}
@@ -411,16 +409,16 @@ function HeroStatsResearchSectionComponent({
                         <span className="font-editorial text-4xl font-semibold tracking-tight text-[var(--app-ink)] [font-variant-numeric:tabular-nums]">
                           <RollingNumber
                             value={landmarkPaper.citations}
-                            delay={0.32}
-                            duration={0.9}
+                            delay={0.28}
+                            duration={0.85}
                           />
                         </span>
-                        <span className="font-mono text-xs font-semibold uppercase tracking-wider text-[#C88A2B]">
+                        <span className="font-mono text-xs font-semibold uppercase tracking-wider text-[#A46B15] dark:text-[#F3DF87]">
                           {isZh ? '次引用' : 'CITATIONS'}
                         </span>
                       </div>
 
-                      <h3 className="font-editorial mt-3.5 line-clamp-4 text-[16px] font-semibold leading-[1.4] text-[var(--app-ink)]">
+                      <h3 className="font-editorial mt-3.5 text-[15.5px] font-semibold leading-[1.45] text-[var(--app-ink)]">
                         {landmarkPaper.title}
                       </h3>
 
@@ -429,7 +427,7 @@ function HeroStatsResearchSectionComponent({
                       </p>
 
                       {landmarkPaper.authors ? (
-                        <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-[var(--app-muted)]">
+                        <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-[var(--app-muted)]">
                           {landmarkPaper.authors}
                         </p>
                       ) : null}
@@ -493,9 +491,9 @@ function HeroStatsResearchSectionComponent({
                 {isZh ? '五大研究藍圖展櫃' : 'FIVE SCIENTIFIC BLUEPRINTS'}
               </span>
               <h2 className="font-editorial mt-3 text-3xl font-semibold tracking-tight text-[#F4F1EA] sm:text-4xl">
-                {researchText.title}
-                {lang === 'en' ? ' ' : ''}
-                {researchText.subtitle}
+                {lang === 'en'
+                  ? `${researchText.title} ${researchText.subtitle}`
+                  : `${researchText.title}${researchText.subtitle}`}
               </h2>
             </div>
 
@@ -521,13 +519,15 @@ function HeroStatsResearchSectionComponent({
                       setHoveredBlueprintIdx((prev) => (prev === i ? null : prev))
                     }
                     className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl border p-4 transition-all duration-300 ${
+                      i === 4 ? 'sm:col-span-2 lg:col-span-1' : ''
+                    } ${
                       isSelected
                         ? 'border-[#F3DF87] bg-[#142920] shadow-[0_14px_34px_-16px_rgba(243,223,135,0.28)]'
                         : 'border-[#2F5243] bg-[#152820]/90 hover:-translate-y-1 hover:border-[#F3DF87]/65 hover:bg-[#142920]'
                     }`}
                   >
                     <div>
-                      {/* 頂部礦物五色六角／圓潤徽章與篇數 */}
+                      {/* 頂部礦物五色圓潤徽章與篇數 */}
                       <div className="flex items-center justify-between gap-2">
                         <span
                           className="inline-flex h-8 w-8 items-center justify-center rounded-xl font-editorial text-xs font-bold text-white shadow-sm"
@@ -540,11 +540,11 @@ function HeroStatsResearchSectionComponent({
                         </span>
                       </div>
 
-                      {/* 放大 132px 粉筆科學結構藍圖（點擊整區直接篩選論文） */}
+                      {/* 統一高度 180px 粉筆藍圖框，確保五張卡片標題完全水平對齊 */}
                       <button
                         type="button"
                         onClick={() => onFilterByDomain(domain.id)}
-                        className="my-3 flex w-full cursor-pointer flex-col items-center rounded-xl border border-dashed border-[#34594A] bg-[#12221B]/75 py-3 transition-colors group-hover:border-[#F3DF87]/45"
+                        className="my-3 flex h-[180px] w-full cursor-pointer flex-col items-center justify-between rounded-xl border border-dashed border-[#34594A] bg-[#12221B]/75 px-2 py-2.5 transition-colors group-hover:border-[#F3DF87]/45"
                       >
                         <ResearchPhysicsGlyph
                           index={i}
@@ -553,7 +553,7 @@ function HeroStatsResearchSectionComponent({
                           chalkAccent={domain.chalkColor}
                         />
                         <span
-                          className="mt-1 px-2 text-center font-mono text-[10px] tracking-tight"
+                          className="flex min-h-[2rem] items-center justify-center text-center font-mono text-[10px] leading-tight tracking-tight"
                           style={{ color: domain.chalkColor }}
                         >
                           {domain.formulaTag}
@@ -571,9 +571,9 @@ function HeroStatsResearchSectionComponent({
                       ) : null}
                     </div>
 
-                    {/* 底部材料關鍵詞圓角膠囊 ＋ 引用數與篩選鈕 */}
+                    {/* 底部材料關鍵詞圓角膠囊（固定最小高度對齊分隔線）＋ 引用數與篩選鈕 */}
                     <div className="mt-4 space-y-3 border-t border-[#28473A] pt-3">
-                      <div className="flex flex-wrap gap-1">
+                      <div className="flex min-h-[3.25rem] flex-wrap content-start gap-1">
                         {domain.keywords.slice(0, 3).map((kw) => (
                           <button
                             key={kw.label}

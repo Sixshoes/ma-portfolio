@@ -125,8 +125,8 @@ function ChalkboardGallerySectionComponent({
                     ) : null}
                   </div>
 
-                  {/* 右 5 欄：策展說明與關鍵公式籤 */}
-                  <div className="flex flex-col justify-between gap-6 p-6 sm:p-8 lg:col-span-5">
+                  {/* 右 5 欄：策展說明與關鍵公式籤（垂直置中消除留白、公式不於括號內斷行） */}
+                  <div className="flex flex-col justify-center gap-5 p-6 sm:p-8 lg:col-span-5">
                     <div>
                       <div className="flex flex-wrap items-center gap-2 text-xs">
                         {item.courseOrTopic ? (
@@ -153,7 +153,7 @@ function ChalkboardGallerySectionComponent({
                           <div className="font-mono text-[10px] uppercase tracking-wider text-[#E88D84]">
                             {isZh ? '推導核心方程' : 'KEY DERIVATION'}
                           </div>
-                          <div className="mt-1.5 break-words font-mono text-sm leading-relaxed text-[#F3DF87]">
+                          <div className="mt-1.5 font-mono text-[13px] leading-relaxed text-[#F3DF87] [text-wrap:balance]">
                             {item.formulaNote}
                           </div>
                         </div>

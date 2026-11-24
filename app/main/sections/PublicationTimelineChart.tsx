@@ -32,6 +32,7 @@ function PublicationTimelineChartComponent({
   const [waveFinished, setWaveFinished] = useState(false);
 
   const chartRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(chartRef, { once: true, margin: '-60px' });
   const reduceMotion = useReducedMotion();
   const currentYear = new Date().getFullYear();
@@ -114,6 +115,15 @@ function PublicationTimelineChartComponent({
     const timer = window.setTimeout(() => setWaveFinished(true), totalWaveMs);
     return () => window.clearTimeout(timer);
   }, [isInView, waveFinished, reduceMotion, buckets.length]);
+
+  // 手機窄螢幕可橫向捲動時，預設捲至最右側優先呈現近年高產高峰（2011–2027）
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    if (el.scrollWidth > el.clientWidth + 4) {
+      el.scrollLeft = el.scrollWidth - el.clientWidth;
+    }
+  }, [buckets.length]);
 
   if (buckets.length < 2) return null;
 
@@ -285,52 +295,61 @@ function PublicationTimelineChartComponent({
         </div>
       </div>
 
-      {/* 長條圖本體（圓角柱頂 + 膠囊懸停跟隨標記） */}
-      <div className="overflow-x-auto pb-1">
-        <div className="relative min-w-[540px] pt-8">
-          <div className="pointer-events-none absolute left-11 right-0 top-0 h-7">
-            <AnimatePresence>
-              {hoveredBucket && hoveredBucket.count > 0 ? (
-                <motion.div
-                  key="timeline-floating-marker"
-                  initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 4 }}
-                  animate={{
-                    opacity: 1,
-                    y: 0,
-                    left: `${hoveredPct}%`,
-                  }}
-                  exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 3 }}
-                  transition={{ duration: reduceMotion ? 0 : 0.18, ease: EDITORIAL_EASE }}
-                  style={{ transform: 'translateX(-50%)' }}
-                  className="absolute top-0 whitespace-nowrap rounded-full border border-[var(--app-ink)] bg-[var(--app-surface-card)] px-2.5 py-0.5 font-mono text-[11px] text-[var(--app-ink)] shadow-sm [font-variant-numeric:tabular-nums]"
-                >
-                  <span className="font-semibold">{hoveredBucket.year}</span>
-                  <span className="mx-1.5 text-[var(--app-muted)]">·</span>
-                  <span className="text-[var(--app-accent)]">
-                    {metric === 'papers'
-                      ? `${hoveredBucket.count} ${isZh ? '篇' : 'pubs'}`
-                      : `${hoveredBucket.citations.toLocaleString('en-US')} ${isZh ? '引' : 'cit.'}`}
-                  </span>
-                </motion.div>
-              ) : null}
-            </AnimatePresence>
-          </div>
+      {/* 長條圖本體（固定左側 Y 軸不隨手機滑動跑掉；桌機自動拉滿卡片高度消除空白；右側留白防止 2027 被裁切） */}
+      <div className="flex flex-1 items-stretch gap-2 pt-1">
+        {/* 固定左側 Y 軸刻度 */}
+        <div
+          aria-hidden="true"
+          className="flex w-8 shrink-0 flex-col justify-between pb-7 pt-8 text-right font-mono text-[10px] text-[var(--app-muted)] [font-variant-numeric:tabular-nums]"
+        >
+          {[1, 0.5, 0].map((ratio, idx) => (
+            <span key={idx} className="leading-none">
+              {Math.round(maxMetricValue * ratio).toLocaleString('en-US')}
+            </span>
+          ))}
+        </div>
 
-          <div className="pointer-events-none absolute inset-x-0 bottom-7 top-8 flex flex-col justify-between">
-            {[1, 0.5, 0].map((ratio, idx) => (
-              <div key={idx} className="flex items-center gap-2">
-                <span className="w-9 shrink-0 text-right font-mono text-[10px] text-[var(--app-muted)] [font-variant-numeric:tabular-nums]">
-                  {Math.round(maxMetricValue * ratio).toLocaleString('en-US')}
-                </span>
-                <div className="h-px flex-1 border-b border-dashed border-[var(--app-rule)]" />
-              </div>
-            ))}
-          </div>
+        {/* 右側可捲動柱狀繪圖區 */}
+        <div ref={scrollContainerRef} className="min-w-0 flex-1 overflow-x-auto pb-1">
+          <div className="relative min-w-[510px] pr-3 pt-8 lg:min-w-0">
+            <div className="pointer-events-none absolute left-0 right-3 top-0 h-7">
+              <AnimatePresence>
+                {hoveredBucket && hoveredBucket.count > 0 ? (
+                  <motion.div
+                    key="timeline-floating-marker"
+                    initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 4 }}
+                    animate={{
+                      opacity: 1,
+                      y: 0,
+                      left: `${hoveredPct}%`,
+                    }}
+                    exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 3 }}
+                    transition={{ duration: reduceMotion ? 0 : 0.18, ease: EDITORIAL_EASE }}
+                    style={{ transform: 'translateX(-50%)' }}
+                    className="absolute top-0 whitespace-nowrap rounded-full border border-[var(--app-ink)] bg-[var(--app-surface-card)] px-2.5 py-0.5 font-mono text-[11px] text-[var(--app-ink)] shadow-sm [font-variant-numeric:tabular-nums]"
+                  >
+                    <span className="font-semibold">{hoveredBucket.year}</span>
+                    <span className="mx-1.5 text-[var(--app-muted)]">·</span>
+                    <span className="text-[var(--app-accent)]">
+                      {metric === 'papers'
+                        ? `${hoveredBucket.count} ${isZh ? '篇' : 'pubs'}`
+                        : `${hoveredBucket.citations.toLocaleString('en-US')} ${isZh ? '引' : 'cit.'}`}
+                    </span>
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+            </div>
 
-          <div
-            className="relative z-10 ml-11 flex h-44 items-end gap-[3px] sm:gap-1"
-            onMouseLeave={() => setHoveredYear(null)}
-          >
+            <div className="pointer-events-none absolute inset-x-0 bottom-7 top-8 flex flex-col justify-between pr-3">
+              {[1, 0.5, 0].map((_, idx) => (
+                <div key={idx} className="h-px w-full border-b border-dashed border-[var(--app-rule)]" />
+              ))}
+            </div>
+
+            <div
+              className="relative z-10 flex h-52 items-end gap-[2.5px] sm:gap-[3px] lg:h-[310px]"
+              onMouseLeave={() => setHoveredYear(null)}
+            >
             {buckets.map((b, idx) => {
               const value = metric === 'papers' ? b.count : b.citations;
               const heightPct = value > 0 ? Math.max(6, (value / maxMetricValue) * 100) : 0;
@@ -442,6 +461,7 @@ function PublicationTimelineChartComponent({
                 </div>
               );
             })}
+            </div>
           </div>
         </div>
       </div>

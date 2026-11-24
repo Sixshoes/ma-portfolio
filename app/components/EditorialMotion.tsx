@@ -115,6 +115,9 @@ function parseNumericStat(value: number | string): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+/** 記錄已執行過進場跳表的目標值，避免切換晝夜主題或捲離後重設閃回 0 */
+const animatedNumericTargets = new Set<number>();
+
 /** 精密等寬滾動跳表：以隱藏終值鎖定寬度並搭 tabular-nums，計數過程零左右晃動 */
 export function RollingNumber({
   value,
@@ -133,23 +136,29 @@ export function RollingNumber({
     return String(value);
   }, [numericTarget, value, locale]);
 
+  // 初始顯示終值（確保 SSR 與離屏切換主題絕不閃回 0），僅在首次進入頂部視口時平滑遞增
   const [displayValue, setDisplayValue] = useState<number>(() =>
-    numericTarget !== null && reduce ? numericTarget : 0,
+    numericTarget !== null ? numericTarget : 0,
   );
-  const hasAnimatedRef = useRef(false);
+  const hasAnimatedRef = useRef(
+    numericTarget !== null && animatedNumericTargets.has(numericTarget),
+  );
 
   useEffect(() => {
     if (numericTarget === null) return;
-    if (reduce) {
+    if (reduce || animatedNumericTargets.has(numericTarget)) {
       setDisplayValue(numericTarget);
       hasAnimatedRef.current = true;
       return;
     }
     if (!inView) return;
 
-    const startFrom = hasAnimatedRef.current ? displayValue : 0;
-    const effectiveDelay = hasAnimatedRef.current ? 0 : delay;
+    const alreadyRan = hasAnimatedRef.current;
     hasAnimatedRef.current = true;
+    animatedNumericTargets.add(numericTarget);
+
+    const startFrom = alreadyRan ? displayValue : 0;
+    const effectiveDelay = alreadyRan ? 0 : delay;
 
     const controls = animate(startFrom, numericTarget, {
       duration,

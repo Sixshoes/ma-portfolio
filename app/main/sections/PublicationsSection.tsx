@@ -689,9 +689,9 @@ function PublicationsSectionComponent({
       <div className="mx-auto max-w-6xl px-6">
         <div className="pb-4">
           <h2 className={uiTokens.sectionTitle}>
-            {pubsText.title}
-            {lang === 'en' ? ' ' : ''}
-            {pubsText.subtitle}
+            {lang === 'en'
+              ? `${pubsText.title} ${pubsText.subtitle}`
+              : `${pubsText.title}${pubsText.subtitle}`}
           </h2>
         </div>
         <InkRule thick />
@@ -718,11 +718,11 @@ function PublicationsSectionComponent({
           </div>
         ) : null}
 
-        {/* 溫潤圓角檢索工具列 */}
+        {/* 溫潤圓角檢索工具列（桌機單行緊湊對齊；手機端搜尋框獨立全寬不擠壓） */}
         <div className="atlas-card mb-6 p-4 sm:p-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-3.5 xl:flex-row xl:items-center xl:justify-between">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <div className="flex items-center gap-1.5">
                 <label htmlFor="pub-filter-select" className="text-xs text-[var(--app-muted)]">
                   {pubsText.filterBy}
                 </label>
@@ -753,7 +753,7 @@ function PublicationsSectionComponent({
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <label htmlFor="pub-sort-select" className="text-xs text-[var(--app-muted)]">
                   {pubsText.sortLabel}
                 </label>
@@ -779,7 +779,7 @@ function PublicationsSectionComponent({
                 type="button"
                 onClick={onCorrespondingToggle}
                 aria-pressed={correspondingOnly}
-                className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${
+                className={`rounded-full border px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors ${
                   correspondingOnly
                     ? 'border-[var(--app-accent)] bg-[var(--app-accent)] text-white'
                     : 'border-[var(--app-rule)] bg-[var(--app-bg)] text-[var(--app-muted)] hover:border-[var(--app-ink)] hover:text-[var(--app-ink)]'
@@ -789,13 +789,15 @@ function PublicationsSectionComponent({
               </button>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="relative min-w-0 flex-1 sm:w-64">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <div className="relative basis-full sm:basis-auto sm:w-52">
                 <Search
                   className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--app-muted)]"
                   aria-hidden
                 />
                 <input
+                  id="pub-search-input"
+                  name="q"
                   type="search"
                   value={searchQuery}
                   onChange={(e) => onSearchChange(e.target.value)}
@@ -818,13 +820,13 @@ function PublicationsSectionComponent({
               <div
                 role="group"
                 aria-label="View mode"
-                className="inline-flex rounded-full border border-[var(--app-rule)] bg-[var(--app-bg)] p-0.5 text-xs"
+                className="inline-flex shrink-0 rounded-full border border-[var(--app-rule)] bg-[var(--app-bg)] p-0.5 text-xs"
               >
                 <button
                   type="button"
                   onClick={() => onViewModeChange('card')}
                   aria-pressed={viewMode === 'card'}
-                  className={`rounded-full px-3 py-1 transition-colors ${
+                  className={`rounded-full px-3 py-1 whitespace-nowrap transition-colors ${
                     viewMode === 'card'
                       ? 'bg-[var(--app-ink)] font-semibold text-[var(--app-bg)]'
                       : 'text-[var(--app-muted)] hover:text-[var(--app-ink)]'
@@ -836,7 +838,7 @@ function PublicationsSectionComponent({
                   type="button"
                   onClick={() => onViewModeChange('compact')}
                   aria-pressed={viewMode === 'compact'}
-                  className={`rounded-full px-3 py-1 transition-colors ${
+                  className={`rounded-full px-3 py-1 whitespace-nowrap transition-colors ${
                     viewMode === 'compact'
                       ? 'bg-[var(--app-ink)] font-semibold text-[var(--app-bg)]'
                       : 'text-[var(--app-muted)] hover:text-[var(--app-ink)]'
@@ -848,7 +850,7 @@ function PublicationsSectionComponent({
 
               {!isLoading ? (
                 <span
-                  className="rounded-full bg-[var(--app-hover)] px-3 py-1 font-mono text-xs text-[var(--app-muted)] [font-variant-numeric:tabular-nums]"
+                  className="ml-auto shrink-0 rounded-full bg-[var(--app-hover)] px-3 py-1 font-mono text-xs text-[var(--app-muted)] [font-variant-numeric:tabular-nums] sm:ml-0"
                   aria-live="polite"
                 >
                   {pubsText.resultCount.replace('{count}', String(filteredCount))}

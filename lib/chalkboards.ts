@@ -19,7 +19,7 @@ export interface ChalkboardItem {
 export const DEFAULT_CHALKBOARDS: ChalkboardItem[] = [
   {
     id: 'quantum-tunneling-barrier',
-    imageUrl: '/chalkboard-quantum-tunneling.jpg',
+    imageUrl: '/chalkboard-quantum-tunneling.webp',
     titleZh: '量子穿隧效應與矩形位能障穿透係數推導',
     titleEn: 'Quantum Tunneling & STM Barrier Transmission Derivation',
     formulaNote: 'T = |F/A|² = [1 + V₀² sinh²(κL) / 4E(V₀ − E)]⁻¹',

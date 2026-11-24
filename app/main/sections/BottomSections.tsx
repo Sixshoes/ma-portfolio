@@ -146,9 +146,9 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
           <div className="pb-4">
             <div className="flex flex-col items-start justify-between gap-3 md:flex-row md:items-end">
               <h2 className={uiTokens.sectionTitle}>
-                {t.impact.title}
-                {lang === 'en' ? ' ' : ''}
-                {t.impact.subtitle}
+                {lang === 'en'
+                  ? `${t.impact.title} ${t.impact.subtitle}`
+                  : `${t.impact.title}${t.impact.subtitle}`}
               </h2>
               <p className="rounded-full bg-[var(--app-hover)] px-3 py-1 text-xs text-[var(--app-muted)]">
                 {t.impact.source}
@@ -171,12 +171,12 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
                 }}
                 className="overflow-hidden rounded-[26px] border border-[#2C473C] bg-[#16231E] p-6 text-[#F4F1EA] shadow-[0_20px_48px_-24px_rgba(16,28,23,0.55)] sm:p-7"
               >
-                <div className="mb-6 flex items-start justify-between gap-4 border-b border-[#2B4339] pb-4">
+                <div className="mb-6 flex flex-col items-start gap-2.5 border-b border-[#2B4339] pb-4 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                   <div>
                     <span className="font-mono text-[11px] uppercase tracking-wider text-[#A7C4B8]">
                       {inst.index} {inst.location}
                     </span>
-                    <h3 className="font-editorial mt-1 text-2xl font-semibold text-[#F4F1EA]">
+                    <h3 className="font-editorial mt-1 text-xl font-semibold text-[#F4F1EA] sm:text-2xl">
                       {inst.name}
                     </h3>
                   </div>
@@ -264,9 +264,9 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
         <div className="mx-auto max-w-6xl px-6">
           <div className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
             <h2 className={uiTokens.sectionTitle}>
-              {t.contact.title}
-              {lang === 'en' ? ' ' : ''}
-              {t.contact.subtitle}
+              {lang === 'en'
+                ? `${t.contact.title} ${t.contact.subtitle}`
+                : `${t.contact.title}${t.contact.subtitle}`}
             </h2>
 
             <button

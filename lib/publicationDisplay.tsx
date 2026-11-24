@@ -21,7 +21,7 @@ export function parseTakeawayLines(takeaway?: string): string[] {
 }
 
 const HIGHLIGHT_NAME =
-  /(馬遠榮|Yuan-Ron\s+Ma|Y\.\s*-?\s*R\.\s*Ma|Y\.\s*R\.\s*Ma|\bMa\s*,\s*Y\.?\s*-?\s*R\.?)/i;
+  /(馬遠榮|Yuan[\u2010-\u2015-]Ron\s+Ma|Y\.\s*[\u2010-\u2015-]?\s*R\.\s*Ma|Y\.\s*R\.\s*Ma|\bMa\s*,\s*Y\.?\s*[\u2010-\u2015-]?\s*R\.?)/i;
 
 export function splitAuthorsHighlighted(authors: string): ReactNode[] {
   const segments = authors.split(/,\s*/).filter(Boolean);

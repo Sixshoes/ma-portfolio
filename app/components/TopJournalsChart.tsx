@@ -1,7 +1,7 @@
 'use client';
 
-import React, { memo, useMemo } from 'react';
-import { motion, useReducedMotion } from 'motion/react';
+import React, { memo, useMemo, useRef } from 'react';
+import { motion, useInView, useReducedMotion } from 'motion/react';
 import { X } from 'lucide-react';
 import type { Publication } from '@/lib/publications';
 import { EDITORIAL_EASE } from './EditorialMotion';
@@ -39,6 +39,8 @@ function TopJournalsChartComponent({
   lang,
   onSelectJournal,
 }: TopJournalsChartProps) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(cardRef, { once: true, amount: 0.15 });
   const reduceMotion = useReducedMotion();
   const isZh = lang === 'zh';
 
@@ -69,7 +71,7 @@ function TopJournalsChartComponent({
   if (rows.length === 0) return null;
 
   return (
-    <div className="atlas-card flex h-full flex-col justify-between p-5 sm:p-6">
+    <div ref={cardRef} className="atlas-card flex h-full flex-col justify-between p-5 sm:p-6">
       <div>
         <div className="mb-4 flex items-center justify-between gap-2">
           <h3 className="font-editorial text-lg font-semibold text-[var(--app-ink)]">
@@ -129,8 +131,7 @@ function TopJournalsChartComponent({
                 <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--app-rule)]/55">
                   <motion.div
                     initial={reduceMotion ? { scaleX: 1 } : { scaleX: 0 }}
-                    whileInView={{ scaleX: 1 }}
-                    viewport={{ once: true, margin: '-40px' }}
+                    animate={{ scaleX: isInView || reduceMotion ? 1 : 0 }}
                     transition={{
                       duration: reduceMotion ? 0 : 0.65,
                       delay: reduceMotion ? 0 : idx * 0.035,
@@ -141,7 +142,7 @@ function TopJournalsChartComponent({
                       transformOrigin: 'left',
                       backgroundColor: isSelected ? 'var(--app-accent)' : barColor,
                     }}
-                    className="h-full rounded-r-full"
+                    className="h-full rounded-r-full will-change-transform"
                   />
                 </div>
               </button>
