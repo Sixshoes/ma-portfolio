@@ -23,6 +23,7 @@ export async function POST(request: Request) {
   revalidatePath('/');
   revalidatePath('/main');
   revalidatePath('/api/publications');
+  revalidatePath('/api/papers.json');
 
   return NextResponse.json({
     revalidated: true,
