@@ -30,21 +30,23 @@ type AboutSectionProps = {
 const TAB_IDS = ['roles', 'admin', 'service', 'awards'] as const;
 type AboutTab = (typeof TAB_IDS)[number];
 
-/** 瑞士編年履歷列：純粹 1px 細線與等寬年份對齊 */
-function renderLedgerRow(text: string) {
+/** 左側年份、右側內文的無框學報時間尺規列 */
+function renderChronoRow(text: string) {
   const match = text.match(/(.*?)\s*\(([^)]+)\)$/);
   if (match) {
     return (
-      <div className="flex flex-col gap-1 border-b border-[#DCE2E8] px-3 py-3.5 transition-colors last:border-0 hover:bg-white sm:flex-row sm:items-baseline sm:justify-between sm:gap-6">
-        <span className="text-[15px] leading-relaxed text-[#11161C]">{match[1]}</span>
-        <span className="font-mono text-xs leading-snug text-[#5A6775] [font-variant-numeric:tabular-nums] sm:max-w-[42%] sm:shrink-0 sm:text-right">
+      <div className="flex flex-col gap-1 border-b border-[#D4D1C8] px-2 py-4 transition-colors duration-150 last:border-b-0 hover:bg-[#EFECE6] sm:flex-row sm:items-baseline sm:gap-6">
+        <span className="font-mono text-xs leading-snug text-[#5C5953] [font-variant-numeric:tabular-nums] sm:w-44 sm:shrink-0">
           {match[2]}
+        </span>
+        <span className="flex-1 text-[15px] leading-relaxed text-[#141413]">
+          {match[1]}
         </span>
       </div>
     );
   }
   return (
-    <div className="border-b border-[#DCE2E8] px-3 py-3.5 text-[15px] leading-relaxed text-[#11161C] last:border-0">
+    <div className="border-b border-[#D4D1C8] px-2 py-4 text-[15px] leading-relaxed text-[#141413] last:border-b-0 hover:bg-[#EFECE6]">
       {text}
     </div>
   );
@@ -63,7 +65,6 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
   });
 
   const tablistLabel = lang === 'zh' ? '學術履歷分類' : 'Resume categories';
-  const sectionKicker = lang === 'zh' ? '個人簡歷與領導' : 'CURRICULUM VITAE';
 
   const handleTabKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLButtonElement>, currentId: AboutTab) => {
@@ -94,13 +95,9 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
   return (
     <section
       id="about"
-      className="mx-auto max-w-7xl scroll-mt-20 border-t border-[#DCE2E8] px-6 py-20 md:py-24"
+      className="mx-auto max-w-6xl scroll-mt-20 px-6 py-20 md:py-24"
     >
-      <div className="mb-10 md:mb-12">
-        <div className="mb-2.5 flex items-center gap-2.5">
-          <span className="h-[2px] w-5 bg-[#0F4C81]" aria-hidden />
-          <span className={uiTokens.sectionKicker}>{sectionKicker}</span>
-        </div>
+      <div className={`mb-10 ${uiTokens.sectionHeaderRule}`}>
         <h2 className={uiTokens.sectionTitle}>
           {aboutText.title}
           {lang === 'en' ? ' ' : ''}
@@ -109,94 +106,86 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
       </div>
 
       <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-12 lg:gap-12">
-        {/* 左側黏性瑞士目錄欄 */}
+        {/* 左側無框黏性章節目錄 */}
         <div className="lg:sticky lg:top-24 lg:col-span-4">
-          <div className="rounded-lg border border-[#DCE2E8] bg-white p-6">
-            <h3 className="mb-2.5 text-lg font-semibold text-[#11161C]">
-              {aboutText.leadership}
-            </h3>
-            <p className="mb-6 text-sm leading-[1.75] text-[#475569]">
-              {aboutText.leadershipDesc}
-            </p>
+          <h3 className="font-editorial mb-3 text-xl font-semibold text-[#141413]">
+            {aboutText.leadership}
+          </h3>
+          <p className="mb-8 text-sm leading-[1.8] text-[#2D2C29]">
+            {aboutText.leadershipDesc}
+          </p>
 
-            <div
-              role="tablist"
-              aria-label={tablistLabel}
-              className="divide-y divide-[#DCE2E8] border-t border-[#DCE2E8]"
-            >
-              {tabs.map(({ id, label, count }) => {
-                const selected = tab === id;
-                return (
-                  <button
-                    key={id}
-                    ref={(el) => {
-                      tabRefs.current[id] = el;
-                    }}
-                    type="button"
-                    role="tab"
-                    aria-selected={selected}
-                    tabIndex={selected ? 0 : -1}
-                    id={`about-tab-${id}`}
-                    aria-controls={`about-panel-${id}`}
-                    onClick={() => setTab(id)}
-                    onKeyDown={(e) => handleTabKeyDown(e, id)}
-                    className={`group flex w-full items-center justify-between py-3 text-left transition-colors ${
-                      selected
-                        ? 'font-semibold text-[#0F4C81]'
-                        : 'text-[#5A6775] hover:text-[#11161C]'
-                    }`}
-                  >
-                    <span className="flex items-center gap-2.5 text-sm">
-                      <span
-                        className={`h-[2px] transition-all duration-150 ${
-                          selected
-                            ? 'w-4 bg-[#0F4C81]'
-                            : 'w-2 bg-[#CBD5E1] group-hover:w-3 group-hover:bg-[#64748B]'
-                        }`}
-                        aria-hidden
-                      />
-                      {label}
-                    </span>
+          <div
+            role="tablist"
+            aria-label={tablistLabel}
+            className="divide-y divide-[#D4D1C8] border-y border-[#141413]"
+          >
+            {tabs.map(({ id, label, count }) => {
+              const selected = tab === id;
+              return (
+                <button
+                  key={id}
+                  ref={(el) => {
+                    tabRefs.current[id] = el;
+                  }}
+                  type="button"
+                  role="tab"
+                  aria-selected={selected}
+                  tabIndex={selected ? 0 : -1}
+                  id={`about-tab-${id}`}
+                  aria-controls={`about-panel-${id}`}
+                  onClick={() => setTab(id)}
+                  onKeyDown={(e) => handleTabKeyDown(e, id)}
+                  className={`flex w-full items-center justify-between py-3.5 text-left transition-colors ${
+                    selected
+                      ? 'font-semibold text-[#141413]'
+                      : 'text-[#5C5953] hover:text-[#141413]'
+                  }`}
+                >
+                  <span className="flex items-center gap-3 text-sm">
                     <span
-                      className={`font-mono text-xs [font-variant-numeric:tabular-nums] ${
-                        selected ? 'font-semibold text-[#0F4C81]' : 'text-[#64748B]'
+                      className={`h-[2px] transition-all duration-150 ${
+                        selected ? 'w-4 bg-[#141413]' : 'w-2 bg-[#D4D1C8]'
                       }`}
-                    >
-                      {String(count).padStart(2, '0')}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+                      aria-hidden
+                    />
+                    {label}
+                  </span>
+                  <span className="font-mono text-xs text-[#5C5953] [font-variant-numeric:tabular-nums]">
+                    {String(count).padStart(2, '0')}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {/* 右側編年履歷主欄 */}
+        {/* 右側無框編年履歷表（左側年份、右側內文） */}
         <div className="min-h-[18rem] lg:col-span-8">
           {tab === 'roles' && (
             <div
               role="tabpanel"
               id="about-panel-roles"
               aria-labelledby="about-tab-roles"
-              className="space-y-8"
+              className="space-y-10"
             >
               <div>
-                <div className="mb-2.5 font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-[#0F4C81]">
+                <h4 className="font-editorial mb-3 text-base font-semibold text-[#141413]">
                   {aboutText.roleLabel}
-                </div>
-                <div className="overflow-hidden rounded-lg border border-[#DCE2E8] bg-[#FAFBFC]">
+                </h4>
+                <div className="border-y border-[#141413]">
                   {aboutText.roles.map((role, idx) => (
-                    <div key={idx}>{renderLedgerRow(role)}</div>
+                    <div key={idx}>{renderChronoRow(role)}</div>
                   ))}
                 </div>
               </div>
               <div>
-                <div className="mb-2.5 font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-[#5A6775]">
+                <h4 className="font-editorial mb-3 text-base font-semibold text-[#141413]">
                   {aboutText.eduLabel}
-                </div>
-                <div className="overflow-hidden rounded-lg border border-[#DCE2E8] bg-[#FAFBFC]">
+                </h4>
+                <div className="border-y border-[#141413]">
                   {aboutText.edu.map((eduItem, idx) => (
-                    <div key={idx}>{renderLedgerRow(eduItem)}</div>
+                    <div key={idx}>{renderChronoRow(eduItem)}</div>
                   ))}
                 </div>
               </div>
@@ -205,19 +194,19 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
 
           {tab === 'admin' && (
             <div role="tabpanel" id="about-panel-admin" aria-labelledby="about-tab-admin">
-              <div className="mb-2.5 font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-[#0F4C81]">
+              <h4 className="font-editorial mb-3 text-base font-semibold text-[#141413]">
                 {aboutText.adminLabel}
-              </div>
-              <div className="overflow-hidden rounded-lg border border-[#DCE2E8] bg-[#FAFBFC]">
+              </h4>
+              <div className="border-y border-[#141413]">
                 {(isExpandedAdmin ? aboutText.admin : aboutText.admin.slice(0, 6)).map((item, idx) => (
-                  <div key={idx}>{renderLedgerRow(item)}</div>
+                  <div key={idx}>{renderChronoRow(item)}</div>
                 ))}
               </div>
               {aboutText.admin.length > 6 && (
                 <button
                   type="button"
                   onClick={() => setIsExpandedAdmin(!isExpandedAdmin)}
-                  className="mt-5 inline-flex items-center gap-2 rounded-md border border-[#C5CFD8] bg-white px-4 py-2 font-mono text-xs font-medium text-[#2B3642] transition-colors hover:border-[#0F4C81] hover:text-[#0F4C81]"
+                  className={`${uiTokens.buttonOutline} mt-6 px-5 py-2 text-xs`}
                 >
                   {isExpandedAdmin
                     ? lang === 'zh'
@@ -233,13 +222,13 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
 
           {tab === 'service' && (
             <div role="tabpanel" id="about-panel-service" aria-labelledby="about-tab-service">
-              <div className="mb-2.5 font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-[#0F4C81]">
+              <h4 className="font-editorial mb-3 text-base font-semibold text-[#141413]">
                 {aboutText.serviceLabel}
-              </div>
-              <div className="overflow-hidden rounded-lg border border-[#DCE2E8] bg-[#FAFBFC]">
+              </h4>
+              <div className="border-y border-[#141413]">
                 {(isExpandedService ? aboutText.service : aboutText.service.slice(0, 6)).map(
                   (item, idx) => (
-                    <div key={idx}>{renderLedgerRow(item)}</div>
+                    <div key={idx}>{renderChronoRow(item)}</div>
                   ),
                 )}
               </div>
@@ -247,7 +236,7 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                 <button
                   type="button"
                   onClick={() => setIsExpandedService(!isExpandedService)}
-                  className="mt-5 inline-flex items-center gap-2 rounded-md border border-[#C5CFD8] bg-white px-4 py-2 font-mono text-xs font-medium text-[#2B3642] transition-colors hover:border-[#0F4C81] hover:text-[#0F4C81]"
+                  className={`${uiTokens.buttonOutline} mt-6 px-5 py-2 text-xs`}
                 >
                   {isExpandedService
                     ? lang === 'zh'
@@ -263,12 +252,12 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
 
           {tab === 'awards' && (
             <div role="tabpanel" id="about-panel-awards" aria-labelledby="about-tab-awards">
-              <div className="mb-2.5 font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-[#0F4C81]">
+              <h4 className="font-editorial mb-3 text-base font-semibold text-[#141413]">
                 {aboutText.awardsLabel}
-              </div>
-              <div className="overflow-hidden rounded-lg border border-[#DCE2E8] bg-[#FAFBFC]">
+              </h4>
+              <div className="border-y border-[#141413]">
                 {aboutText.awards.map((item, idx) => (
-                  <div key={idx}>{renderLedgerRow(item)}</div>
+                  <div key={idx}>{renderChronoRow(item)}</div>
                 ))}
               </div>
             </div>

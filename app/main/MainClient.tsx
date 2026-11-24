@@ -18,7 +18,7 @@ const PublicationsSection = dynamic(
   () => import('./sections/PublicationsSection').then((mod) => mod.PublicationsSection),
   {
     loading: () => (
-      <section className="mx-auto max-w-7xl px-6 py-16 text-sm text-[#5A6775]">
+      <section className="mx-auto max-w-6xl px-6 py-16 text-sm text-[#5C5953]">
         Loading publications...
       </section>
     ),
@@ -81,8 +81,8 @@ export function MainClient({ initialPublications = null }: MainClientProps) {
   }, []);
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden bg-[#F6F7F8] font-sans text-[#2B3642]">
-      <Navbar navText={t.nav} />
+    <main className="relative min-h-screen overflow-x-hidden bg-[#F7F6F2] font-sans text-[#2D2C29]">
+      <Navbar navText={t.nav} lang={lang} />
 
       <div>
         <HeroStatsResearchSection

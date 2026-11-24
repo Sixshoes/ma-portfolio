@@ -2,26 +2,37 @@
 
 @theme inline {
   --font-sans: var(--font-inter), "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-inter), "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-newsreader), var(--font-noto-serif-tc), "Songti TC", "PMingLiU", Georgia, serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 :root {
   color-scheme: light;
-  /* 方案 A：冷調實驗室紙張灰白＋深普魯士藍瑞士學術系統 */
-  --app-bg: #F6F7F8;
-  --app-surface: #FFFFFF;
-  --app-elevated: #EEF1F5;
-  --app-hairline: #DCE2E8;
-  --app-hairline-strong: #C5CFD8;
-  --app-ink: #11161C;
-  --app-body: #2B3642;
-  --app-muted: #5A6775;
-  --app-accent: #0F4C81;
-  --app-accent-hover: #0B3A63;
-  --app-accent-soft: #EBF2F8;
+  /* 路線一：經典書卷雜誌風（Alabaster Paper + Deep Print Ink + Oxford Blue） */
+  --app-bg: #F7F6F2;
+  --portrait-mat: #E6E4DD;
+  --app-ink: #141413;
+  --app-body: #2D2C29;
+  --app-muted: #5C5953;
+  --app-rule: #D4D1C8;
+  --app-hover: #EFECE6;
+  --app-accent: #1B365D;
   background-color: var(--app-bg);
   color: var(--app-ink);
+}
+
+@layer utilities {
+  /* 全程維持正體書卷襯線體，嚴禁中文合成假斜體 */
+  .font-editorial {
+    font-family: var(--font-newsreader), var(--font-noto-serif-tc), "Songti TC", "PMingLiU", Georgia, serif;
+    font-style: normal;
+  }
+
+  /* 僅供英文書目之期刊名稱使用正統拉丁斜體 */
+  .font-journal-italic {
+    font-family: var(--font-newsreader), Georgia, serif;
+    font-style: italic;
+  }
 }
 
 html {
@@ -35,7 +46,7 @@ html {
 }
 
 :focus-visible {
-  outline: 2px solid #0F4C81;
+  outline: 1.5px solid #141413;
   outline-offset: 2px;
 }
 

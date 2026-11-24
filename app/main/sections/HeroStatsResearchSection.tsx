@@ -1,7 +1,6 @@
 'use client';
 
 import React, { memo, useCallback, useState } from 'react';
-import Image from 'next/image';
 import { ArrowDown } from 'lucide-react';
 import { useRenderProfiler } from './useRenderProfiler';
 import { uiTokens } from './uiTokens';
@@ -47,8 +46,6 @@ type HeroStatsResearchSectionProps = {
   hIndexValue?: number | string;
 };
 
-const ROMAN_NUMERALS = ['I', 'II', 'III', 'IV', 'V', 'VI'] as const;
-
 function formatStatValue(val: number | string): string {
   return typeof val === 'number' ? val.toLocaleString('en-US') : val;
 }
@@ -63,9 +60,7 @@ function HeroStatsResearchSectionComponent({
   hIndexValue,
 }: HeroStatsResearchSectionProps) {
   useRenderProfiler('HeroStatsResearchSection');
-  const [isImgLoaded, setIsImgLoaded] = useState(false);
   const [isImgError, setIsImgError] = useState(false);
-  const onImgLoaded = useCallback(() => setIsImgLoaded(true), []);
   const onImgError = useCallback(() => setIsImgError(true), []);
   const displayHIndex = hIndexValue ?? statsText.hIndexValue;
 
@@ -80,58 +75,55 @@ function HeroStatsResearchSectionComponent({
     [],
   );
 
-  const secondaryCtaLabel = lang === 'zh' ? '學術歷程' : 'Academic Journey';
-  const portraitName = lang === 'zh' ? '馬遠榮 副校長' : 'Prof. Yuan-Ron Ma';
-  const portraitAffiliation =
-    lang === 'zh'
-      ? '佛光大學講座教授 · 國立東華大學特聘教授'
-      : 'Fo Guang University · National Dong Hwa University';
-  const researchKicker = lang === 'zh' ? '研究主軸' : 'RESEARCH DOMAINS';
+  const isZh = lang === 'zh';
+  const institutionLine = isZh
+    ? '佛光大學副校長暨講座教授 · 國立東華大學特聘教授'
+    : 'Vice President & Chair Professor, Fo Guang University · Distinguished Professor, NDHU';
+  const heroPrimaryName = isZh ? '馬遠榮' : 'Prof. Yuan-Ron Ma';
+  const heroLabHeadline = isZh
+    ? '先進材料與量子元件實驗室'
+    : 'Advanced Materials & Quantum Devices';
+  const secondaryCtaLabel = isZh ? '學術歷程' : 'Academic Journey';
+  const portraitName = isZh ? '馬遠榮 副校長' : 'Prof. Yuan-Ron Ma';
+  const portraitAffiliation = isZh
+    ? '佛光大學 · 國立東華大學'
+    : 'Fo Guang University · NDHU';
+  const portraitAlt = isZh
+    ? '馬遠榮副校長肖像照'
+    : 'Portrait of Prof. Yuan-Ron Ma';
 
   return (
     <>
       <section
         id="top"
-        className="mx-auto max-w-7xl px-6 pb-16 pt-24 md:pb-24 md:pt-32"
+        className="mx-auto max-w-6xl px-6 pb-20 pt-28 md:pb-24 md:pt-36"
       >
         <div className="grid grid-cols-1 items-start gap-12 md:grid-cols-12 md:items-center md:gap-10 lg:gap-14">
-          {/* 左側：純粹字體排印與動態實績橫條（零斜體裁切、零假斜體） */}
+          {/* 左欄：全墨黑正體書卷襯線排版（零破折號小標、零局部塗藍、零假斜體） */}
           <div className="flex flex-col justify-between md:col-span-7">
             <div>
-              <div className="mb-5 flex items-center gap-3">
-                <span className="h-[2px] w-7 bg-[#0F4C81]" aria-hidden />
-                <span className="font-mono text-xs font-medium uppercase tracking-[0.16em] text-[#0F4C81]">
-                  {heroText.role}
-                </span>
-              </div>
+              <p className="mb-4 text-sm text-[#5C5953]">
+                {institutionLine}
+              </p>
 
-              <h1 className="mb-6 text-4xl font-semibold leading-[1.12] tracking-[-0.03em] text-[#11161C] sm:text-5xl lg:text-[3.5rem]">
-                <span className="text-[#0F4C81]">{heroText.title1}</span>
-                {lang === 'en' ? ' ' : null}
-                <span>{heroText.title2}</span>
-                {heroText.title3 ? (
-                  <>
-                    <br />
-                    <span className="font-medium text-[#2B3642]">{heroText.title3}</span>{' '}
-                    <span className="font-medium text-[#2B3642]">{heroText.title4}</span>
-                  </>
-                ) : (
-                  <>
-                    <br />
-                    <span className="font-medium text-[#2B3642]">{heroText.title4}</span>
-                  </>
-                )}
+              <h1 className="font-editorial mb-6 text-[#141413]">
+                <span className="block text-4xl font-semibold leading-[1.12] tracking-[-0.02em] sm:text-5xl lg:text-[3.35rem]">
+                  {heroPrimaryName}
+                </span>
+                <span className="mt-2 block text-2xl font-medium leading-[1.25] tracking-[-0.015em] text-[#2D2C29] sm:text-3xl lg:text-[2.1rem]">
+                  {heroLabHeadline}
+                </span>
               </h1>
 
-              <p className="mb-8 max-w-xl text-base leading-[1.75] text-[#475569] md:text-[1.05rem]">
+              <p className="mb-8 max-w-xl text-[15px] leading-[1.8] text-[#2D2C29] md:text-base">
                 {heroText.desc}
               </p>
 
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3.5">
                 <a
                   href="#publications"
                   onClick={(e) => scrollToSection(e, 'publications')}
-                  className={`${uiTokens.buttonPrimaryStrong} inline-flex items-center gap-2 rounded-md px-6 py-3 text-xs font-semibold uppercase tracking-[0.12em]`}
+                  className={`${uiTokens.buttonPrimary} inline-flex items-center gap-2 px-6 py-3 text-sm`}
                 >
                   {heroText.cta}
                   <ArrowDown className="h-4 w-4" aria-hidden />
@@ -139,141 +131,106 @@ function HeroStatsResearchSectionComponent({
                 <a
                   href="#about"
                   onClick={(e) => scrollToSection(e, 'about')}
-                  className={`${uiTokens.buttonGhost} inline-flex items-center rounded-md px-5 py-3 text-xs font-semibold uppercase tracking-[0.12em]`}
+                  className={`${uiTokens.buttonOutline} inline-flex items-center px-6 py-3 text-sm`}
                 >
                   {secondaryCtaLabel}
                 </a>
               </div>
             </div>
 
-            {/* 首屏動態數據橫條 */}
-            <div className="mt-10 border-t border-[#DCE2E8] pt-7">
-              <div className="grid grid-cols-3 gap-4 sm:gap-6">
+            {/* 三大統計數據：上下 1px 墨黑尺規夾住，全部統一墨黑書卷襯線大字 */}
+            <div className="mt-12 border-y border-[#141413] py-6">
+              <div className="grid grid-cols-3 divide-x divide-[#D4D1C8]">
                 {[
-                  { label: statsText.pubs, value: formatStatValue(totalPubs), accent: false },
-                  { label: statsText.citations, value: formatStatValue(totalCitations), accent: false },
-                  { label: statsText.hIndex, value: formatStatValue(displayHIndex), accent: true },
+                  { label: statsText.pubs, value: formatStatValue(totalPubs) },
+                  { label: statsText.citations, value: formatStatValue(totalCitations) },
+                  { label: statsText.hIndex, value: formatStatValue(displayHIndex) },
                 ].map((stat, i) => (
                   <div
                     key={stat.label}
-                    className={i > 0 ? 'border-l border-[#DCE2E8] pl-4 sm:pl-6' : ''}
+                    className={i > 0 ? 'pl-4 sm:pl-6' : 'pr-4'}
                   >
-                    <div
-                      className={`font-mono text-2xl font-semibold tracking-tight [font-variant-numeric:tabular-nums] sm:text-3xl md:text-[2.1rem] ${
-                        stat.accent ? 'text-[#0F4C81]' : 'text-[#11161C]'
-                      }`}
-                    >
+                    <div className="font-editorial text-3xl font-semibold tracking-tight text-[#141413] [font-variant-numeric:tabular-nums] sm:text-4xl">
                       {stat.value}
                     </div>
-                    <div className="mt-1 font-mono text-[11px] uppercase tracking-[0.12em] text-[#5A6775]">
+                    <div className="mt-1 text-xs text-[#5C5953]">
                       {stat.label}
                     </div>
                   </div>
                 ))}
               </div>
-              <p className="mt-4 font-mono text-[11px] text-[#64748B]">{statsText.scopusNote}</p>
             </div>
+            <p className="mt-3 text-xs text-[#5C5953]">{statsText.scopusNote}</p>
           </div>
 
-          {/* 右側：乾淨個人肖像卡（移除重黑漸層遮罩，保留單純 1px 瑞士細框與獨立署名列） */}
+          {/* 右欄：直角裝裱霧暖礦石灰肖像框（mix-blend-multiply 自然消融白底 JPG） */}
           <div className="md:col-span-5">
-            <figure className="mx-auto w-full max-w-[380px] overflow-hidden rounded-lg border border-[#DCE2E8] bg-white md:ml-auto md:mr-0">
-              <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#EEF1F5]">
+            <figure className="mx-auto w-full max-w-[380px] border border-[#141413] bg-[#F7F6F2] p-2.5 md:ml-auto md:mr-0">
+              <div className="aspect-[4/5] w-full overflow-hidden bg-[#E6E4DD]">
                 {isImgError ? (
-                  <div className="flex h-full w-full items-center justify-center font-mono text-3xl font-semibold tracking-widest text-[#0F4C81]/70">
+                  <div className="font-editorial flex h-full w-full items-center justify-center text-3xl font-semibold tracking-widest text-[#5C5953]">
                     YRM
                   </div>
                 ) : (
-                  <Image
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
                     src="/profile.jpg"
-                    alt="馬遠榮副校長個人照 (Prof. Y.R. Ma)"
-                    fill
-                    priority
-                    sizes="(max-width: 768px) 92vw, 380px"
-                    onLoad={onImgLoaded}
+                    alt={portraitAlt}
+                    fetchPriority="high"
                     onError={onImgError}
-                    className={`object-cover object-top transition-opacity duration-300 ${
-                      isImgLoaded ? 'opacity-100' : 'opacity-0'
-                    }`}
+                    className="h-full w-full object-cover object-top mix-blend-multiply contrast-[1.03]"
                   />
                 )}
               </div>
-              <figcaption className="border-t border-[#DCE2E8] bg-white px-5 py-4">
-                <div className="text-base font-semibold tracking-tight text-[#11161C]">
-                  {portraitName}
-                </div>
-                <div className="mt-0.5 font-mono text-[11px] text-[#5A6775]">
-                  {portraitAffiliation}
-                </div>
+              <figcaption className="mt-2.5 border-t border-[#D4D1C8] pt-2.5 text-xs text-[#4A4843]">
+                <span className="font-semibold text-[#141413]">{portraitName}</span>
+                <span className="mx-1.5">·</span>
+                <span>{portraitAffiliation}</span>
               </figcaption>
             </figure>
           </div>
         </div>
       </section>
 
-      {/* 五大研究領域：純粹字體排印、羅馬數字與 1px 瑞士格線（零空白圖框、零光暈動畫） */}
+      {/* 五大研究領域：01.–05. 全寬水平尺規列表（拆除所有圓角卡片與裝飾 Icon） */}
       <section
         id="research"
-        className="mx-auto max-w-7xl scroll-mt-20 border-t border-[#DCE2E8] px-6 py-20 md:py-24"
+        className="mx-auto max-w-6xl scroll-mt-20 px-6 py-20 md:py-24"
       >
-        <div className="mb-10 flex flex-col items-start justify-between gap-4 md:mb-12 md:flex-row md:items-end">
-          <div>
-            <div className="mb-2.5 flex items-center gap-2.5">
-              <span className="h-[2px] w-5 bg-[#0F4C81]" aria-hidden />
-              <span className={uiTokens.sectionKicker}>{researchKicker}</span>
-            </div>
-            <h2 className={uiTokens.sectionTitle}>
-              {researchText.title}
-              {lang === 'en' ? ' ' : ''}
-              {researchText.subtitle}
-            </h2>
-          </div>
-          <p className="max-w-sm text-sm leading-relaxed text-[#5A6775] md:text-right">
+        <div
+          className={`flex flex-col items-start justify-between gap-3 md:flex-row md:items-end ${uiTokens.sectionHeaderRule}`}
+        >
+          <h2 className={uiTokens.sectionTitle}>
+            {researchText.title}
+            {lang === 'en' ? ' ' : ''}
+            {researchText.subtitle}
+          </h2>
+          <p className="max-w-sm text-sm text-[#5C5953] md:text-right">
             {researchText.desc}
           </p>
         </div>
 
-        <div className="overflow-hidden rounded-lg border border-[#DCE2E8] bg-[#DCE2E8]">
-          <div className="grid grid-cols-1 gap-px md:grid-cols-2 lg:grid-cols-6">
-            {researchText.items.map((item, i) => {
-              const roman = ROMAN_NUMERALS[i] ?? String(i + 1);
-              const Icon = item.icon;
-              const spanClass =
-                researchText.items.length === 5
-                  ? i < 3
-                    ? 'lg:col-span-2'
-                    : i === 4
-                      ? 'md:col-span-2 lg:col-span-3'
-                      : 'lg:col-span-3'
-                  : 'lg:col-span-2';
-              return (
-                <div
-                  key={item.title}
-                  className={`${spanClass} group relative bg-white p-7 transition-colors duration-150 hover:bg-[#FAFBFC] md:p-8`}
-                >
-                  <div
-                    aria-hidden
-                    className="pointer-events-none absolute inset-x-0 top-0 h-[2px] origin-left scale-x-0 bg-[#0F4C81] transition-transform duration-150 group-hover:scale-x-100"
-                  />
-                  <div className="flex h-full flex-col">
-                    <div className="mb-6 flex items-center justify-between">
-                      <span className="font-mono text-sm font-semibold tracking-wider text-[#0F4C81]">
-                        {roman}
-                      </span>
-                      <Icon className="h-5 w-5 stroke-[1.5] text-[#64748B] transition-colors duration-150 group-hover:text-[#0F4C81]" />
-                    </div>
-                    <h3 className="mb-2.5 text-lg font-semibold tracking-tight text-[#11161C] transition-colors duration-150 group-hover:text-[#0F4C81]">
-                      {item.title}
-                    </h3>
-                    <p className="text-sm leading-relaxed text-[#475569]">
-                      {item.desc}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        <ol className="divide-y divide-[#D4D1C8] border-b border-[#141413]">
+          {researchText.items.map((item, i) => {
+            const num = `${String(i + 1).padStart(2, '0')}.`;
+            return (
+              <li
+                key={item.title}
+                className="grid grid-cols-1 gap-2 px-2 py-6 transition-colors duration-150 hover:bg-[#EFECE6] md:grid-cols-12 md:items-baseline md:gap-6"
+              >
+                <span className="font-editorial text-lg font-medium text-[#141413] [font-variant-numeric:tabular-nums] md:col-span-1">
+                  {num}
+                </span>
+                <h3 className="font-editorial text-xl font-semibold text-[#141413] md:col-span-4">
+                  {item.title}
+                </h3>
+                <p className="text-sm leading-[1.75] text-[#2D2C29] md:col-span-7">
+                  {item.desc}
+                </p>
+              </li>
+            );
+          })}
+        </ol>
       </section>
     </>
   );

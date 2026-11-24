@@ -1,11 +1,25 @@
 import type { Metadata } from 'next';
-import { Inter, JetBrains_Mono } from 'next/font/google';
+import { Inter, JetBrains_Mono, Newsreader, Noto_Serif_TC } from 'next/font/google';
 import './globals.css';
 import { LanguageProvider } from './LanguageContext';
-import ScrollToTop from './ScrollToTop';
 import { getSiteUrl } from '@/lib/site-url';
 
 const siteUrl = getSiteUrl();
+
+const newsreader = Newsreader({
+  weight: ['400', '500', '600'],
+  style: ['normal', 'italic'],
+  subsets: ['latin'],
+  variable: '--font-newsreader',
+  display: 'swap',
+});
+
+const notoSerifTc = Noto_Serif_TC({
+  weight: ['600', '700'],
+  subsets: ['latin'],
+  variable: '--font-noto-serif-tc',
+  display: 'swap',
+});
 
 const inter = Inter({
   subsets: ['latin'],
@@ -81,7 +95,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${mono.variable}`}
+      className={`${newsreader.variable} ${notoSerifTc.variable} ${inter.variable} ${mono.variable}`}
     >
       <head>
         <script
@@ -89,13 +103,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
         />
       </head>
-      <body className="bg-[var(--app-bg)] font-sans text-[var(--app-body)] antialiased selection:bg-[#0F4C81]/15 selection:text-[#11161C]">
-        <LanguageProvider>
-          <>
-            {children}
-            <ScrollToTop />
-          </>
-        </LanguageProvider>
+      <body className="bg-[var(--app-bg)] font-sans text-[var(--app-body)] antialiased selection:bg-[#1B365D]/15 selection:text-[#141413]">
+        <LanguageProvider>{children}</LanguageProvider>
       </body>
     </html>
   );
