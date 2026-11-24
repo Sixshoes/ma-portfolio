@@ -150,25 +150,22 @@ export function AdminDashboard() {
     }
   }, [user, adminStatus, fetchFirestoreData]);
 
-  const triggerRevalidate = useCallback(
-    async (currentUser: User) => {
-      try {
-        const token = await currentUser.getIdToken();
-        const res = await fetch('/api/revalidate', {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) {
-          const body = (await res.json().catch(() => ({}))) as { error?: string };
-          return { ok: false, error: body.error ?? `HTTP ${res.status}` };
-        }
-        return { ok: true };
-      } catch (err) {
-        return { ok: false, error: err instanceof Error ? err.message : '網路錯誤' };
+  const triggerRevalidate = useCallback(async (currentUser: User) => {
+    try {
+      const token = await currentUser.getIdToken();
+      const res = await fetch('/api/revalidate', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { error?: string };
+        return { ok: false, error: body.error ?? `HTTP ${res.status}` };
       }
-    },
-    [],
-  );
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: err instanceof Error ? err.message : '網路錯誤' };
+    }
+  }, []);
 
   const persistAndPublish = useCallback(
     async (nextItems: Publication[], successLabel: string) => {
@@ -341,9 +338,14 @@ export function AdminDashboard() {
     }
   };
 
+  const getIdToken = useCallback(async () => {
+    if (!user) throw new Error('尚未登入管理者帳號');
+    return user.getIdToken();
+  }, [user]);
+
   const items = useMemo(() => bundle?.items ?? [], [bundle]);
   const missingCoverCount = useMemo(
-    () => items.filter((p) => !p.cover_url && !p.file_img).length,
+    () => items.filter((p) => !p.cover_url?.trim()).length,
     [items],
   );
   const totalCitations = useMemo(() => items.reduce((s, p) => s + p.citations, 0), [items]);
@@ -354,7 +356,7 @@ export function AdminDashboard() {
     let list = items;
     if (filter === 'starred') list = list.filter((p) => p.is_star === '是');
     else if (filter === 'highCited') list = list.filter((p) => p.citations >= 50);
-    else if (filter === 'missingCover') list = list.filter((p) => !p.cover_url && !p.file_img);
+    else if (filter === 'missingCover') list = list.filter((p) => !p.cover_url?.trim());
 
     if (q) {
       list = list.filter((p) =>
@@ -377,20 +379,20 @@ export function AdminDashboard() {
   if (!configured) {
     return (
       <div className="mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center px-6 py-16">
-        <div className="w-full rounded-3xl border border-stone-700/70 bg-[#191715] p-8 shadow-2xl">
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-[#d4af37]/40 bg-[#2a241c] text-[#d4af37]">
-            <AlertTriangle className="h-6 w-6" />
+        <div className="w-full rounded-lg border border-[#DCE2E8] bg-white p-8 shadow-sm">
+          <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg border border-[#0F4C81]/25 bg-[#EBF2F8] text-[#0F4C81]">
+            <AlertTriangle className="h-5 w-5" />
           </div>
-          <h1 className="font-heading-serif mb-3 text-2xl font-semibold text-stone-100">
+          <h1 className="mb-3 text-xl font-semibold text-[#11161C]">
             Firebase 尚未設定環境變數
           </h1>
-          <p className="mb-5 text-sm leading-relaxed text-stone-300">
+          <p className="mb-5 text-sm leading-relaxed text-[#475569]">
             目前官網仍正常使用 B 站備援資料運作。請依專案根目錄的{' '}
-            <code className="rounded bg-stone-800 px-1.5 py-0.5 text-[#e8dcc4]">FIREBASE_SETUP.md</code>{' '}
-            步驟，於 <code className="rounded bg-stone-800 px-1.5 py-0.5 text-[#e8dcc4]">.env.local</code> 與 Vercel
+            <code className="rounded bg-[#EEF1F5] px-1.5 py-0.5 text-[#0F4C81]">FIREBASE_SETUP.md</code>{' '}
+            步驟，於 <code className="rounded bg-[#EEF1F5] px-1.5 py-0.5 text-[#0F4C81]">.env.local</code> 與 Vercel
             填入以下環境變數後重新整理：
           </p>
-          <ul className="mb-6 space-y-1.5 rounded-2xl border border-stone-800 bg-[#121110] p-4 font-mono text-xs text-stone-300">
+          <ul className="mb-6 space-y-1.5 rounded-md border border-[#DCE2E8] bg-[#F6F7F8] p-4 font-mono text-xs text-[#2B3642]">
             <li>NEXT_PUBLIC_FIREBASE_API_KEY</li>
             <li>NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN</li>
             <li>NEXT_PUBLIC_FIREBASE_PROJECT_ID</li>
@@ -402,7 +404,7 @@ export function AdminDashboard() {
           </ul>
           <Link
             href="/"
-            className="inline-flex items-center gap-2 rounded-full border border-stone-700 bg-stone-900 px-5 py-2.5 text-sm text-stone-200 transition-colors hover:border-[#c4a77d] hover:text-[#e8dcc4]"
+            className="inline-flex items-center gap-2 rounded-md border border-[#C5CFD8] bg-white px-4 py-2 text-sm font-medium text-[#11161C] transition-colors hover:border-[#0F4C81] hover:text-[#0F4C81]"
           >
             返回正式官網
             <ExternalLink className="h-4 w-4" />
@@ -415,8 +417,8 @@ export function AdminDashboard() {
   // 載入 Auth 狀態中
   if (!authReady) {
     return (
-      <div className="flex min-h-screen items-center justify-center gap-3 text-stone-300">
-        <Loader2 className="h-5 w-5 animate-spin text-[#d4af37]" />
+      <div className="flex min-h-screen items-center justify-center gap-3 text-[#5A6775]">
+        <Loader2 className="h-5 w-5 animate-spin text-[#0F4C81]" />
         正在確認登入狀態...
       </div>
     );
@@ -426,18 +428,16 @@ export function AdminDashboard() {
   if (!user) {
     return (
       <div className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center px-6">
-        <div className="w-full rounded-3xl border border-stone-700/70 bg-[#191715] p-8 text-center shadow-2xl">
-          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-[#d4af37]/40 bg-[#2a241c] text-[#d4af37]">
-            <LogIn className="h-6 w-6" />
+        <div className="w-full rounded-lg border border-[#DCE2E8] bg-white p-8 text-center shadow-sm">
+          <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-lg border border-[#0F4C81]/25 bg-[#EBF2F8] text-[#0F4C81]">
+            <LogIn className="h-5 w-5" />
           </div>
-          <h1 className="font-heading-serif mb-2 text-2xl font-semibold text-stone-100">
-            著作管理後台
-          </h1>
-          <p className="mb-7 text-sm text-stone-300">
-            請使用已授權的管理者 Google 帳號登入，即可管理論文清單、上傳圖片並即時更新官網。
+          <h1 className="mb-2 text-xl font-semibold text-[#11161C]">著作管理後台</h1>
+          <p className="mb-7 text-sm text-[#5A6775]">
+            請使用已授權的管理者 Google 帳號登入，即可管理論文清單、抓取或抽取圖解摘要並即時更新官網。
           </p>
           {toast ? (
-            <div className="mb-5 rounded-xl border border-red-500/40 bg-red-950/50 px-4 py-2.5 text-xs text-red-200">
+            <div className="mb-5 rounded-md border border-red-200 bg-red-50 px-4 py-2.5 text-xs text-red-700">
               {toast.text}
             </div>
           ) : null}
@@ -445,14 +445,14 @@ export function AdminDashboard() {
             type="button"
             disabled={busyAction === 'auth'}
             onClick={handleSignIn}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#dcc08e] to-[#c4a265] px-6 py-3 text-sm font-semibold text-stone-950 transition-all hover:brightness-105 disabled:opacity-50"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#0F4C81] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0B3A63] disabled:opacity-50"
           >
             {busyAction === 'auth' ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
             使用 Google 帳號登入
           </button>
           <Link
             href="/"
-            className="mt-4 inline-block text-xs text-stone-400 transition-colors hover:text-stone-200"
+            className="mt-4 inline-block text-xs text-[#5A6775] transition-colors hover:text-[#0F4C81]"
           >
             ← 返回正式官網
           </Link>
@@ -464,8 +464,8 @@ export function AdminDashboard() {
   // 狀態 3：向伺服器端驗證管理員資格中
   if (adminStatus === 'idle' || adminStatus === 'checking') {
     return (
-      <div className="flex min-h-screen items-center justify-center gap-3 text-stone-300">
-        <Loader2 className="h-5 w-5 animate-spin text-[#d4af37]" />
+      <div className="flex min-h-screen items-center justify-center gap-3 text-[#5A6775]">
+        <Loader2 className="h-5 w-5 animate-spin text-[#0F4C81]" />
         正在向伺服器驗證管理員權限...
       </div>
     );
@@ -475,24 +475,24 @@ export function AdminDashboard() {
   if (adminStatus !== 'allowed') {
     return (
       <div className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center px-6">
-        <div className="w-full rounded-3xl border border-red-500/35 bg-[#191715] p-8 text-center shadow-2xl">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-red-500/40 bg-red-950/50 text-red-300">
+        <div className="w-full rounded-lg border border-red-200 bg-white p-8 text-center shadow-sm">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600">
             <ShieldAlert className="h-6 w-6" />
           </div>
-          <h1 className="font-heading-serif mb-2 text-2xl font-semibold text-stone-100">無管理權限</h1>
-          <p className="mb-3 text-sm text-stone-300">
-            目前登入帳號 <span className="font-mono text-stone-100">{user.email}</span> 無法通過伺服器端管理員驗證。
+          <h1 className="mb-2 text-xl font-semibold text-[#11161C]">無管理權限</h1>
+          <p className="mb-3 text-sm text-[#475569]">
+            目前登入帳號 <span className="font-mono font-medium text-[#11161C]">{user.email}</span> 無法通過伺服器端管理員驗證。
           </p>
           {adminDenyReason ? (
-            <p className="mb-6 rounded-xl border border-stone-800 bg-[#121110] px-3 py-2 font-mono text-xs text-stone-400">
+            <p className="mb-6 rounded-md border border-[#DCE2E8] bg-[#F6F7F8] px-3 py-2 font-mono text-xs text-[#5A6775]">
               {adminDenyReason}
             </p>
           ) : null}
-          <div className="flex flex-wrap items-center justify-center gap-3">
+          <div className="flex flex-wrap items-center justify-center gap-2.5">
             <button
               type="button"
               onClick={() => void verifyServerAdmin(user)}
-              className="inline-flex items-center gap-2 rounded-full border border-stone-700 bg-stone-900 px-5 py-2.5 text-sm text-stone-200 hover:bg-stone-800"
+              className="inline-flex items-center gap-2 rounded-md border border-[#C5CFD8] bg-white px-4 py-2 text-sm text-[#11161C] hover:border-[#0F4C81] hover:text-[#0F4C81]"
             >
               <RefreshCw className="h-4 w-4" />
               重新驗證
@@ -500,7 +500,7 @@ export function AdminDashboard() {
             <button
               type="button"
               onClick={handleSignOut}
-              className="inline-flex items-center gap-2 rounded-full border border-stone-700 bg-stone-900 px-5 py-2.5 text-sm text-stone-200 hover:bg-stone-800"
+              className="inline-flex items-center gap-2 rounded-md border border-[#C5CFD8] bg-white px-4 py-2 text-sm text-[#11161C] hover:border-red-300 hover:text-red-600"
             >
               <LogOut className="h-4 w-4" />
               切換其他帳號
@@ -511,25 +511,24 @@ export function AdminDashboard() {
     );
   }
 
-  // 狀態 4：管理後台主介面
+  // 狀態 5：管理後台主介面
   return (
     <div className="mx-auto max-w-7xl px-6 py-8 md:py-10">
-      {/* 頂部導覽列 */}
-      <header className="mb-8 flex flex-col gap-4 border-b border-stone-800 pb-6 md:flex-row md:items-center md:justify-between">
+      <header className="mb-8 flex flex-col gap-4 border-b border-[#DCE2E8] pb-6 md:flex-row md:items-center md:justify-between">
         <div>
-          <div className="font-mono text-xs uppercase tracking-[0.2em] text-[#d4af37]">
-            Firebase CMS • Firestore + Storage
+          <div className="font-mono text-xs font-medium uppercase tracking-[0.16em] text-[#0F4C81]">
+            Firebase CMS · Firestore + Storage
           </div>
-          <h1 className="font-heading-serif mt-1 text-3xl font-semibold text-stone-100">
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-[#11161C] md:text-3xl">
             馬遠榮副校長 著作管理後台
           </h1>
-          <p className="mt-1 text-xs text-stone-400">
-            登入帳號：<span className="font-mono text-stone-200">{user.email}</span>
+          <p className="mt-1 text-xs text-[#5A6775]">
+            登入帳號：<span className="font-mono text-[#11161C]">{user.email}</span>
             {bundle?.updatedAt ? (
               <>
                 {' '}
-                • 最後發布：
-                <span className="font-mono text-stone-300">
+                · 最後發布：
+                <span className="font-mono text-[#2B3642]">
                   {new Date(bundle.updatedAt).toLocaleString('zh-TW')}
                 </span>
               </>
@@ -537,11 +536,11 @@ export function AdminDashboard() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2">
           <Link
             href="/"
             target="_blank"
-            className="inline-flex items-center gap-1.5 rounded-full border border-stone-700 bg-stone-900 px-4 py-2 text-xs font-medium text-stone-200 transition-colors hover:border-[#c4a77d] hover:text-[#e8dcc4]"
+            className="inline-flex items-center gap-1.5 rounded-md border border-[#C5CFD8] bg-white px-3.5 py-2 text-xs font-medium text-[#11161C] transition-colors hover:border-[#0F4C81] hover:text-[#0F4C81]"
           >
             查看正式官網
             <ExternalLink className="h-3.5 w-3.5" />
@@ -550,7 +549,7 @@ export function AdminDashboard() {
             type="button"
             disabled={busyAction !== null}
             onClick={handleManualRevalidate}
-            className="inline-flex items-center gap-1.5 rounded-full border border-stone-700 bg-stone-900 px-4 py-2 text-xs font-medium text-stone-200 transition-colors hover:border-[#c4a77d] hover:text-[#e8dcc4] disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-md border border-[#C5CFD8] bg-white px-3.5 py-2 text-xs font-medium text-[#11161C] transition-colors hover:border-[#0F4C81] hover:text-[#0F4C81] disabled:opacity-50"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${busyAction === 'revalidating' ? 'animate-spin' : ''}`} />
             刷新官網快取
@@ -558,7 +557,7 @@ export function AdminDashboard() {
           <button
             type="button"
             onClick={handleSignOut}
-            className="inline-flex items-center gap-1.5 rounded-full border border-stone-800 bg-stone-950 px-4 py-2 text-xs text-stone-300 transition-colors hover:border-red-500/40 hover:text-red-200"
+            className="inline-flex items-center gap-1.5 rounded-md border border-[#DCE2E8] bg-white px-3.5 py-2 text-xs text-[#5A6775] transition-colors hover:border-red-300 hover:text-red-600"
           >
             <LogOut className="h-3.5 w-3.5" />
             登出
@@ -566,14 +565,13 @@ export function AdminDashboard() {
         </div>
       </header>
 
-      {/* 即時訊息條 */}
       {toast ? (
         <div
           role="status"
-          className={`mb-6 flex items-center gap-2.5 rounded-2xl border px-5 py-3.5 text-sm ${
+          className={`mb-6 flex items-center gap-2.5 rounded-md border px-4 py-3 text-sm ${
             toast.type === 'ok'
-              ? 'border-emerald-500/40 bg-emerald-950/45 text-emerald-200'
-              : 'border-red-500/40 bg-red-950/45 text-red-200'
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+              : 'border-red-200 bg-red-50 text-red-700'
           }`}
         >
           {toast.type === 'ok' ? (
@@ -585,41 +583,45 @@ export function AdminDashboard() {
         </div>
       ) : null}
 
-      {/* 統計總覽卡片 */}
+      {/* 統計總覽 */}
       <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
         {[
-          { label: '總論文數', value: items.length.toLocaleString('en-US') },
-          { label: '總引用次數', value: totalCitations.toLocaleString('en-US') },
-          { label: '即時 H-Index', value: String(hIndex) },
-          { label: '尚缺圖片篇數', value: String(missingCoverCount) },
+          { label: '總論文數', value: items.length.toLocaleString('en-US'), accent: false },
+          { label: '總引用次數', value: totalCitations.toLocaleString('en-US'), accent: false },
+          { label: '即時 H-Index', value: String(hIndex), accent: true },
+          { label: '無摘要圖篇數', value: String(missingCoverCount), accent: false },
         ].map((card) => (
           <div
             key={card.label}
-            className="rounded-2xl border border-stone-800 bg-[#191715] px-5 py-4"
+            className="rounded-lg border border-[#DCE2E8] bg-white px-5 py-4"
           >
-            <div className="font-mono text-xs text-stone-400">{card.label}</div>
-            <div className="font-heading-serif mt-1.5 text-3xl font-semibold text-stone-100">
+            <div className="font-mono text-xs text-[#5A6775]">{card.label}</div>
+            <div
+              className={`mt-1.5 font-mono text-3xl font-semibold [font-variant-numeric:tabular-nums] ${
+                card.accent ? 'text-[#0F4C81]' : 'text-[#11161C]'
+              }`}
+            >
               {card.value}
             </div>
           </div>
         ))}
       </div>
 
-      {/* 首次啟用導引：Firestore 尚無資料時顯示一鍵搬家按鈕 */}
+      {/* 首次啟用導引 */}
       {!loadingData && items.length === 0 ? (
-        <div className="mb-8 rounded-3xl border border-[#d4af37]/40 bg-gradient-to-br from-[#262017] to-[#171513] p-7">
-          <h2 className="font-heading-serif mb-2 text-2xl font-semibold text-[#f0e4cc]">
-            Firestore 尚未建立論文資料 — 一鍵完成 Notion / B 站搬家
+        <div className="mb-8 rounded-lg border border-[#0F4C81]/30 bg-[#EBF2F8] p-6">
+          <h2 className="mb-2 text-lg font-semibold text-[#11161C]">
+            Firestore 尚未建立論文資料 — 一鍵匯入資料
           </h2>
-          <p className="mb-5 max-w-2xl text-sm leading-relaxed text-stone-300">
-            點擊下方按鈕即可自動抓取目前 B 站的 218 篇論文並寫入 Firebase Firestore（單一彙總文件，官網讀取極省額度），完成後正式官網會立即切換為讀取 Firebase，即可安心退掉 Notion 與 B 站。
+          <p className="mb-4 max-w-2xl text-sm leading-relaxed text-[#2B3642]">
+            點擊下方按鈕即可自動抓取現有 218 篇論文並寫入 Firebase Firestore（單一彙總文件，全站讀取極省額度），或匯入清洗後的本機 JSON。
           </p>
           <div className="flex flex-wrap gap-3">
             <button
               type="button"
               disabled={busyAction !== null}
               onClick={handleImportFromPortal}
-              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#dcc08e] to-[#c4a265] px-6 py-2.5 text-sm font-semibold text-stone-950 transition-all hover:brightness-105 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-md bg-[#0F4C81] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0B3A63] disabled:opacity-50"
             >
               {busyAction === 'importing' ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -632,23 +634,23 @@ export function AdminDashboard() {
               type="button"
               disabled={busyAction !== null}
               onClick={() => fileImportRef.current?.click()}
-              className="inline-flex items-center gap-2 rounded-full border border-stone-700 bg-stone-900 px-5 py-2.5 text-sm text-stone-200 hover:border-[#c4a77d]"
+              className="inline-flex items-center gap-2 rounded-md border border-[#C5CFD8] bg-white px-4 py-2.5 text-sm font-medium text-[#11161C] hover:border-[#0F4C81] hover:text-[#0F4C81]"
             >
               <Upload className="h-4 w-4" />
-              或從本機上傳 papers.json
+              從本機上傳 JSON
             </button>
           </div>
         </div>
       ) : null}
 
       {/* 操作列與篩選 */}
-      <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-stone-800 bg-[#191715] p-4">
+      <div className="mb-6 flex flex-col gap-4 rounded-lg border border-[#DCE2E8] bg-white p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => setEditorTarget({ open: true, pub: null })}
-              className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#dcc08e] to-[#c4a265] px-5 py-2 text-sm font-semibold text-stone-950 transition-all hover:brightness-105"
+              className="inline-flex items-center gap-1.5 rounded-md bg-[#0F4C81] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0B3A63]"
             >
               <Plus className="h-4 w-4" />
               新增論文
@@ -668,7 +670,7 @@ export function AdminDashboard() {
               type="button"
               disabled={busyAction !== null}
               onClick={() => fileImportRef.current?.click()}
-              className="inline-flex items-center gap-1.5 rounded-full border border-stone-700 bg-stone-900 px-4 py-2 text-xs text-stone-200 hover:border-[#c4a77d]"
+              className="inline-flex items-center gap-1.5 rounded-md border border-[#C5CFD8] bg-white px-3.5 py-2 text-xs font-medium text-[#2B3642] hover:border-[#0F4C81] hover:text-[#0F4C81]"
             >
               <Upload className="h-3.5 w-3.5" />
               匯入 JSON
@@ -677,7 +679,7 @@ export function AdminDashboard() {
               type="button"
               disabled={items.length === 0}
               onClick={handleExportJson}
-              className="inline-flex items-center gap-1.5 rounded-full border border-stone-700 bg-stone-900 px-4 py-2 text-xs text-stone-200 hover:border-[#c4a77d] disabled:opacity-40"
+              className="inline-flex items-center gap-1.5 rounded-md border border-[#C5CFD8] bg-white px-3.5 py-2 text-xs font-medium text-[#2B3642] hover:border-[#0F4C81] hover:text-[#0F4C81] disabled:opacity-40"
             >
               <Download className="h-3.5 w-3.5" />
               匯出備份 JSON
@@ -687,7 +689,7 @@ export function AdminDashboard() {
                 type="button"
                 disabled={busyAction !== null}
                 onClick={handleImportFromPortal}
-                className="inline-flex items-center gap-1.5 rounded-full border border-stone-800 bg-stone-950 px-4 py-2 text-xs text-stone-400 hover:border-stone-600 hover:text-stone-200"
+                className="inline-flex items-center gap-1.5 rounded-md border border-[#DCE2E8] bg-[#F6F7F8] px-3.5 py-2 text-xs text-[#5A6775] hover:border-[#94A3B8] hover:text-[#11161C]"
               >
                 <CloudDownload className="h-3.5 w-3.5" />
                 從 B 站重同步
@@ -696,7 +698,7 @@ export function AdminDashboard() {
           </div>
 
           <div className="relative w-full sm:w-72">
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#64748B]" />
             <input
               type="search"
               value={search}
@@ -705,19 +707,19 @@ export function AdminDashboard() {
                 setPage(1);
               }}
               placeholder="搜尋標題、期刊、年份、DOI..."
-              className="w-full rounded-full border border-stone-700 bg-[#121110] py-2 pl-10 pr-4 text-sm text-stone-100 placeholder:text-stone-500 focus:border-[#d4af37] focus:outline-none"
+              className="w-full rounded-md border border-[#DCE2E8] bg-[#F6F7F8] py-2 pl-9 pr-3 text-sm text-[#11161C] placeholder:text-[#94A3B8] focus:border-[#0F4C81] focus:bg-white focus:outline-none"
             />
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-stone-800/80 pt-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#EEF1F5] pt-3">
           <div className="flex flex-wrap gap-2">
             {(
               [
                 ['all', `全部 (${items.length})`],
                 ['starred', '通訊作者'],
                 ['highCited', '高引用 (≥50)'],
-                ['missingCover', `缺圖 (${missingCoverCount})`],
+                ['missingCover', `無摘要圖 (${missingCoverCount})`],
               ] as const
             ).map(([key, label]) => (
               <button
@@ -727,10 +729,10 @@ export function AdminDashboard() {
                   setFilter(key);
                   setPage(1);
                 }}
-                className={`rounded-full border px-3.5 py-1 font-mono text-xs transition-colors ${
+                className={`rounded-md border px-3 py-1 font-mono text-xs transition-colors ${
                   filter === key
-                    ? 'border-[#d4af37]/70 bg-[#332a1d] text-[#f0e4cc]'
-                    : 'border-stone-700/80 bg-[#121110] text-stone-300 hover:border-stone-600'
+                    ? 'border-[#0F4C81] bg-[#EBF2F8] font-semibold text-[#0F4C81]'
+                    : 'border-[#DCE2E8] bg-[#F6F7F8] text-[#5A6775] hover:border-[#94A3B8] hover:text-[#11161C]'
                 }`}
               >
                 {label}
@@ -743,13 +745,13 @@ export function AdminDashboard() {
               value={sort}
               onChange={(e) => setSort(e.target.value as AdminSort)}
               aria-label="排序方式"
-              className="rounded-full border border-stone-700 bg-[#121110] px-3.5 py-1.5 font-mono text-xs text-stone-200 focus:border-[#d4af37] focus:outline-none"
+              className="rounded-md border border-[#DCE2E8] bg-[#F6F7F8] px-3 py-1.5 font-mono text-xs text-[#11161C] focus:border-[#0F4C81] focus:outline-none"
             >
               <option value="newest">最新年份優先</option>
               <option value="citations">引用次數高到低</option>
               <option value="title">標題 A–Z</option>
             </select>
-            <span className="font-mono text-xs text-stone-400">
+            <span className="font-mono text-xs text-[#5A6775]">
               符合 {filteredItems.length} 篇
             </span>
           </div>
@@ -758,21 +760,21 @@ export function AdminDashboard() {
 
       {/* 論文清單 */}
       {loadingData ? (
-        <div className="flex items-center justify-center gap-2 py-20 text-stone-400">
-          <Loader2 className="h-5 w-5 animate-spin text-[#d4af37]" />
+        <div className="flex items-center justify-center gap-2 py-20 text-[#5A6775]">
+          <Loader2 className="h-5 w-5 animate-spin text-[#0F4C81]" />
           正在讀取 Firestore 資料...
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="divide-y divide-[#DCE2E8] overflow-hidden rounded-lg border border-[#DCE2E8] bg-white">
           {pageItems.map((pub, idx) => {
             const key = getPublicationKey(pub, idx);
-            const thumb = pub.cover_url || pub.file_img;
+            const thumb = pub.cover_url?.trim() || '';
             return (
               <div
                 key={key}
-                className="flex flex-col gap-4 rounded-2xl border border-stone-800/85 bg-[#191715] p-4 transition-colors hover:border-stone-700 sm:flex-row sm:items-center"
+                className="flex flex-col gap-4 p-4 transition-colors hover:bg-[#FAFBFC] sm:flex-row sm:items-center"
               >
-                <div className="flex h-16 w-24 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-stone-800 bg-[#121110]">
+                <div className="flex h-14 w-24 shrink-0 items-center justify-center overflow-hidden rounded border border-[#DCE2E8] bg-[#F6F7F8]">
                   {thumb ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -780,37 +782,37 @@ export function AdminDashboard() {
                       alt=""
                       loading="lazy"
                       referrerPolicy="no-referrer"
-                      className="h-full w-full object-contain p-1"
+                      className="h-full w-full object-contain bg-white p-1"
                     />
                   ) : (
-                    <span className="inline-flex items-center gap-1 font-mono text-[10px] text-stone-500">
-                      <ImageOff className="h-3.5 w-3.5" /> 缺圖
+                    <span className="inline-flex items-center gap-1 font-mono text-[10px] text-[#94A3B8]">
+                      <ImageOff className="h-3.5 w-3.5" /> 純文字
                     </span>
                   )}
                 </div>
 
                 <div className="min-w-0 flex-1">
                   <div className="mb-1 flex flex-wrap items-center gap-2 text-xs">
-                    <span className="rounded bg-stone-800 px-2 py-0.5 font-mono font-semibold text-stone-200">
+                    <span className="rounded bg-[#EBF2F8] px-2 py-0.5 font-mono font-semibold text-[#0F4C81]">
                       {pub.year || '-'}
                     </span>
                     {pub.is_star === '是' ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-[#332a1d] px-2.5 py-0.5 text-[11px] text-[#f0e4cc]">
-                        <Star className="h-3 w-3 fill-[#d4af37] text-[#d4af37]" />
+                      <span className="inline-flex items-center gap-1 font-medium text-[#0F4C81]">
+                        <Star className="h-3 w-3 fill-[#0F4C81] text-[#0F4C81]" />
                         通訊作者
                       </span>
                     ) : null}
-                    <span className="font-mono text-stone-300">引用：{pub.citations}</span>
-                    <span className="truncate text-stone-400">• {pub.journal}</span>
+                    <span className="font-mono text-[#2B3642]">引用：{pub.citations}</span>
+                    <span className="truncate text-[#5A6775]">· {pub.journal}</span>
                   </div>
-                  <h3 className="line-clamp-2 font-medium text-stone-100">{pub.title}</h3>
+                  <h3 className="line-clamp-2 text-sm font-medium text-[#11161C]">{pub.title}</h3>
                 </div>
 
                 <div className="flex shrink-0 items-center gap-2">
                   <button
                     type="button"
                     onClick={() => setEditorTarget({ open: true, pub })}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-stone-700 bg-stone-900 px-3.5 py-1.5 text-xs text-stone-200 transition-colors hover:border-[#d4af37] hover:text-[#f0e4cc]"
+                    className="inline-flex items-center gap-1.5 rounded-md border border-[#C5CFD8] bg-white px-3 py-1.5 text-xs font-medium text-[#11161C] transition-colors hover:border-[#0F4C81] hover:text-[#0F4C81]"
                   >
                     <Pencil className="h-3.5 w-3.5" />
                     編輯
@@ -819,7 +821,7 @@ export function AdminDashboard() {
                     type="button"
                     disabled={busyAction !== null}
                     onClick={() => handleDeleteOne(pub)}
-                    className="inline-flex items-center gap-1 rounded-full border border-stone-800 bg-stone-950 px-3 py-1.5 text-xs text-stone-400 transition-colors hover:border-red-500/50 hover:text-red-300 disabled:opacity-40"
+                    className="inline-flex items-center gap-1 rounded-md border border-[#DCE2E8] bg-white px-3 py-1.5 text-xs text-[#5A6775] transition-colors hover:border-red-300 hover:text-red-600 disabled:opacity-40"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                     刪除
@@ -838,18 +840,18 @@ export function AdminDashboard() {
             type="button"
             disabled={safePage <= 1}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
-            className="rounded-full border border-stone-700 bg-stone-900 px-4 py-2 text-stone-200 disabled:opacity-40"
+            className="rounded-md border border-[#C5CFD8] bg-white px-4 py-2 text-[#11161C] hover:border-[#0F4C81] disabled:opacity-40"
           >
             上一頁
           </button>
-          <span className="text-stone-300">
+          <span className="text-[#5A6775]">
             第 {safePage} / {totalPages} 頁
           </span>
           <button
             type="button"
             disabled={safePage >= totalPages}
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            className="rounded-full border border-stone-700 bg-stone-900 px-4 py-2 text-stone-200 disabled:opacity-40"
+            className="rounded-md border border-[#C5CFD8] bg-white px-4 py-2 text-[#11161C] hover:border-[#0F4C81] disabled:opacity-40"
           >
             下一頁
           </button>
@@ -861,6 +863,7 @@ export function AdminDashboard() {
         <PublicationEditorModal
           initial={editorTarget.pub}
           isSaving={busyAction === 'saving'}
+          getIdToken={getIdToken}
           onClose={() => setEditorTarget({ open: false, pub: null })}
           onSave={handleSaveOne}
         />

@@ -229,6 +229,7 @@ export async function compressImageToWebp(
 export async function uploadPublicationImage(
   file: File,
   folder: 'covers' | 'journals',
+  customSlug?: string,
 ): Promise<string> {
   if (!isFirebaseStorageConfigured()) {
     throw new Error('尚未設定 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET。');
@@ -243,13 +244,23 @@ export async function uploadPublicationImage(
   const { storage } = getFirebaseServices();
   const { blob, contentType, extension } = await compressImageToWebp(file);
 
-  const safeStem = file.name
-    .replace(/\.[^.]+$/, '')
-    .replace(/[^a-zA-Z0-9_-]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 40) || 'figure';
+  const safeCustom = customSlug
+    ? customSlug
+        .toLowerCase()
+        .replace(/[^a-z0-9-]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 96)
+    : '';
 
-  const objectPath = `publications/${folder}/${Date.now()}-${safeStem}.${extension}`;
+  const safeStem =
+    file.name
+      .replace(/\.[^.]+$/, '')
+      .replace(/[^a-zA-Z0-9_-]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 40) || 'figure';
+
+  const fileName = safeCustom ? `${safeCustom}.${extension}` : `${Date.now()}-${safeStem}.${extension}`;
+  const objectPath = `publications/${folder}/${fileName}`;
   const storageRef = ref(storage, objectPath);
 
   await uploadBytes(storageRef, blob, {
