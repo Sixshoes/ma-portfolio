@@ -1,8 +1,16 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
+import {
+  AnimatePresence,
+  motion,
+  useReducedMotion,
+  useScroll,
+  useSpring,
+} from 'motion/react';
 import { X, Menu } from 'lucide-react';
 import { LanguageSwitcher } from '@/app/components/LanguageSwitcher';
+import { EDITORIAL_EASE } from '@/app/components/EditorialMotion';
 import type { NavText } from '@/lib/i18n';
 
 type NavbarProps = {
@@ -13,9 +21,25 @@ type NavbarProps = {
 const SECTION_ORDER = ['research', 'publications', 'about', 'impact', 'contact'] as const;
 type SectionId = (typeof SECTION_ORDER)[number];
 
+const SECTION_NUMBERS: Record<SectionId, string> = {
+  research: '01',
+  publications: '02',
+  about: '03',
+  impact: '04',
+  contact: '05',
+};
+
 export function Navbar({ navText, lang }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<SectionId | null>(null);
+  const reduceMotion = useReducedMotion();
+
+  const { scrollYProgress } = useScroll();
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 180,
+    damping: 28,
+    restDelta: 0.001,
+  });
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -90,13 +114,39 @@ export function Navbar({ navText, lang }: NavbarProps) {
   return (
     <nav className="fixed left-0 top-0 z-50 w-full border-b border-[#D4D1C8] bg-[#F7F6F2]/95 backdrop-blur-sm">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <a
-          href="#top"
-          onClick={handleScrollTop}
-          className="font-editorial text-lg font-semibold tracking-tight text-[#141413] transition-colors hover:text-[#1B365D] md:text-xl"
-        >
-          {brandName}
-        </a>
+        <div className="flex min-w-0 items-baseline gap-2.5">
+          <a
+            href="#top"
+            onClick={handleScrollTop}
+            className="font-editorial shrink-0 text-lg font-semibold tracking-tight text-[#141413] transition-colors hover:text-[#1B365D] md:text-xl"
+          >
+            {brandName}
+          </a>
+
+          {/* 捲過首屏後動態淡入之期刊章節小頁眉（例：· § 02 發表著作） */}
+          <div className="hidden min-w-0 overflow-hidden sm:flex sm:items-baseline">
+            <AnimatePresence mode="wait" initial={false}>
+              {activeSection ? (
+                <motion.span
+                  key={`${lang}-${activeSection}`}
+                  initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -5 }}
+                  transition={{ duration: reduceMotion ? 0 : 0.24, ease: EDITORIAL_EASE }}
+                  className="inline-flex items-baseline gap-1.5 truncate text-xs text-[#5C5953]"
+                >
+                  <span aria-hidden="true" className="text-[#ABA79E]">
+                    ·
+                  </span>
+                  <span className="font-mono text-[11px] font-medium text-[#1B365D] [font-variant-numeric:tabular-nums]">
+                    § {SECTION_NUMBERS[activeSection]}
+                  </span>
+                  <span className="truncate text-[#2D2C29]">{navText[activeSection]}</span>
+                </motion.span>
+              ) : null}
+            </AnimatePresence>
+          </div>
+        </div>
 
         <div className="flex items-center gap-6 lg:gap-8">
           <div className="hidden items-center space-x-6 text-sm font-normal text-[#5C5953] lg:flex">
@@ -147,6 +197,16 @@ export function Navbar({ navText, lang }: NavbarProps) {
         </div>
       </div>
 
+      {/* 頂部 1.5px 牛津深海藍墨水閱讀進度條 */}
+      <motion.div
+        aria-hidden="true"
+        style={{
+          scaleX: reduceMotion ? scrollYProgress : smoothProgress,
+          transformOrigin: 'left',
+        }}
+        className="pointer-events-none absolute bottom-0 left-0 h-[1.5px] w-full bg-[#1B365D] will-change-transform"
+      />
+
       {isMenuOpen ? (
         <div
           id="mobile-nav-menu"
@@ -172,6 +232,9 @@ export function Navbar({ navText, lang }: NavbarProps) {
                     isActive ? 'font-semibold text-[#141413]' : 'text-[#5C5953] hover:text-[#141413]'
                   }`}
                 >
+                  <span className="mr-2 font-mono text-xs text-[#1B365D]">
+                    § {SECTION_NUMBERS[item]}
+                  </span>
                   {navText[item]}
                 </a>
               );

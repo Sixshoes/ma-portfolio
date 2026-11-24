@@ -1,6 +1,7 @@
 'use client';
 
 import React, { memo, useCallback, useRef, useState } from 'react';
+import { InkRule } from '@/app/components/EditorialMotion';
 import { useRenderProfiler } from './useRenderProfiler';
 import { uiTokens } from './uiTokens';
 
@@ -97,13 +98,14 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
       id="about"
       className="mx-auto max-w-6xl scroll-mt-20 px-6 py-20 md:py-24"
     >
-      <div className={`mb-10 ${uiTokens.sectionHeaderRule}`}>
+      <div className="pb-4">
         <h2 className={uiTokens.sectionTitle}>
           {aboutText.title}
           {lang === 'en' ? ' ' : ''}
           {aboutText.subtitle}
         </h2>
       </div>
+      <InkRule thick className="mb-10" />
 
       <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-12 lg:gap-12">
         {/* 左側無框黏性章節目錄 */}

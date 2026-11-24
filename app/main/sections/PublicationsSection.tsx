@@ -1,7 +1,7 @@
 'use client';
 
 import React, { memo, useCallback, useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, LayoutGroup } from 'motion/react';
 import {
   Check,
   ChevronDown,
@@ -16,6 +16,11 @@ import { Publication, getPublicationKey } from '@/lib/publications';
 import type { PublicationsText } from '@/lib/i18n';
 import type { PubSort, PubViewMode } from '@/hooks/usePublications';
 import { parseTakeawayLines, splitAuthorsHighlighted } from '@/lib/publicationDisplay';
+import { EDITORIAL_EASE, InkRule } from '@/app/components/EditorialMotion';
+import {
+  FigureLightboxModal,
+  type FigureLightboxPayload,
+} from '@/app/components/FigureLightboxModal';
 import { useRenderProfiler } from './useRenderProfiler';
 import { uiTokens } from './uiTokens';
 import { PublicationLazyImage } from './PublicationLazyImage';
@@ -23,12 +28,7 @@ import { PublicationTimelineChart } from './PublicationTimelineChart';
 
 type Lang = 'en' | 'zh';
 
-type LightboxState = {
-  src: string;
-  alt: string;
-  title: string;
-  journal: string;
-} | null;
+type LightboxState = FigureLightboxPayload | null;
 
 type PublicationsSectionProps = {
   pubsText: PublicationsText;
@@ -150,6 +150,19 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
     setFailedUrl(figureUrl);
   }, [figureUrl]);
 
+  const figLayoutId = `pub-fig-${featuredRank !== undefined ? `feat-${featuredRank}-` : ''}${pubKey}`;
+
+  const openFigure = useCallback(() => {
+    onOpenLightbox({
+      layoutId: figLayoutId,
+      src: figureUrl,
+      alt: pub.title,
+      title: pub.title,
+      journal: pub.journal,
+      year: pub.year,
+    });
+  }, [onOpenLightbox, figLayoutId, figureUrl, pub.title, pub.journal, pub.year]);
+
   return (
     <article
       style={
@@ -157,8 +170,13 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
           ? { contentVisibility: 'auto', containIntrinsicSize: showFigure ? '210px' : '148px' }
           : undefined
       }
-      className="group border-b border-[#D4D1C8] py-7 transition-colors duration-150 hover:bg-[#EFECE6]/55"
+      className="group relative border-b border-[#D4D1C8] py-7 pl-0 transition-[opacity,background-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[#EFECE6]/55 md:pl-3 md:group-hover/list:opacity-60 md:hover:!opacity-100"
     >
+      {/* 當前閱讀行左側 3px 牛津深海藍書籤線 */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute bottom-0 left-0 top-0 hidden w-[3px] origin-top scale-y-0 bg-[#1B365D] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-y-100 motion-reduce:transition-none md:block"
+      />
       <div className="flex flex-col gap-5 md:flex-row md:items-start md:gap-8">
         {/* 左欄：年份、預刊、通訊星號與代表作小標 */}
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 md:w-28 md:shrink-0 md:flex-col md:gap-1.5">
@@ -232,19 +250,35 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
             <button
               type="button"
               onClick={() => onCopyCitation(pubKey, pub)}
-              className="inline-flex items-center gap-1 transition-colors hover:text-[#141413]"
+              className="inline-flex h-5 items-center overflow-hidden transition-colors hover:text-[#141413]"
             >
-              {isCopied ? (
-                <>
-                  <Check className="h-3.5 w-3.5 text-[#1B365D]" aria-hidden />
-                  <span className="text-[#1B365D]">{pubsText.copiedCitation}</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="h-3.5 w-3.5" aria-hidden />
-                  {pubsText.copyCitation}
-                </>
-              )}
+              <AnimatePresence mode="wait" initial={false}>
+                {isCopied ? (
+                  <motion.span
+                    key="copied"
+                    initial={litePub ? { opacity: 1 } : { y: 8, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={litePub ? { opacity: 0 } : { y: -8, opacity: 0 }}
+                    transition={{ duration: litePub ? 0 : 0.2, ease: EDITORIAL_EASE }}
+                    className="inline-flex items-center gap-1 font-medium text-[#1B365D]"
+                  >
+                    <Check className="h-3.5 w-3.5 text-[#1B365D]" aria-hidden />
+                    <span>{pubsText.copiedCitation}</span>
+                  </motion.span>
+                ) : (
+                  <motion.span
+                    key="copy"
+                    initial={litePub ? { opacity: 1 } : { y: 8, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={litePub ? { opacity: 0 } : { y: -8, opacity: 0 }}
+                    transition={{ duration: litePub ? 0 : 0.2, ease: EDITORIAL_EASE }}
+                    className="inline-flex items-center gap-1"
+                  >
+                    <Copy className="h-3.5 w-3.5" aria-hidden />
+                    <span>{pubsText.copyCitation}</span>
+                  </motion.span>
+                )}
+              </AnimatePresence>
             </button>
 
             {altmetricHref ? (
@@ -294,35 +328,36 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
           </AnimatePresence>
         </div>
 
-        {/* 右欄：僅於具備有效單篇摘要圖時顯示直角白底縮圖（不印 GRAPHICAL ABSTRACT 大寫標籤） */}
+        {/* 右欄：僅於具備有效單篇摘要圖時顯示直角白底縮圖（點擊縮圖以 layoutId 絲滑展開紙白暗房燈箱） */}
         {showFigure ? (
           <div className="w-full shrink-0 md:w-[230px] lg:w-[252px]">
-            <div className="group/img relative flex aspect-[16/10] w-full items-center justify-center overflow-hidden border border-[#D4D1C8] bg-white p-2">
+            <motion.div
+              layoutId={litePub ? undefined : figLayoutId}
+              transition={{ duration: 0.36, ease: EDITORIAL_EASE }}
+              onClick={openFigure}
+              className="group/img relative flex aspect-[16/10] w-full cursor-zoom-in items-center justify-center overflow-hidden border border-[#D4D1C8] bg-white p-2 transition-colors hover:border-[#141413]"
+            >
               <PublicationLazyImage
                 key={figureUrl}
                 src={figureUrl}
                 alt={pub.title}
                 eager={eagerMain}
                 onUnavailable={handleUnavailable}
-                className="h-full w-full object-contain transition-transform duration-200 group-hover/img:scale-[1.02]"
+                className="h-full w-full object-contain transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/img:scale-[1.03]"
               />
               <button
                 type="button"
-                onClick={() =>
-                  onOpenLightbox({
-                    src: figureUrl,
-                    alt: pub.title,
-                    title: pub.title,
-                    journal: pub.journal,
-                  })
-                }
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openFigure();
+                }}
                 aria-label={pubsText.zoomFigure}
                 title={pubsText.zoomFigure}
                 className="absolute right-1.5 top-1.5 z-10 flex h-7 w-7 items-center justify-center border border-[#D4D1C8] bg-[#F7F6F2]/95 text-[#141413] opacity-85 transition-colors hover:border-[#141413] hover:bg-[#141413] hover:text-[#F7F6F2] group-hover/img:opacity-100 md:opacity-0"
               >
                 <ZoomIn className="h-3.5 w-3.5" aria-hidden />
               </button>
-            </div>
+            </motion.div>
           </div>
         ) : null}
       </div>
@@ -379,7 +414,11 @@ const PublicationCompactRow = memo(function PublicationCompactRow({
   const isInPress = pub.year > currentYear;
 
   return (
-    <article className="group flex flex-col gap-2 border-b border-[#D4D1C8] py-4 transition-colors hover:bg-[#EFECE6]/55 md:flex-row md:items-baseline md:gap-6">
+    <article className="group relative flex flex-col gap-2 border-b border-[#D4D1C8] py-4 pl-0 transition-[opacity,background-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[#EFECE6]/55 md:flex-row md:items-baseline md:gap-6 md:pl-3 md:group-hover/list:opacity-60 md:hover:!opacity-100">
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute bottom-0 left-0 top-0 hidden w-[3px] origin-top scale-y-0 bg-[#1B365D] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-y-100 motion-reduce:transition-none md:block"
+      />
       <div className="flex items-center gap-2 md:w-28 md:shrink-0">
         <span className="font-mono text-sm font-medium text-[#141413] [font-variant-numeric:tabular-nums]">
           {pub.year > 0 ? pub.year : '—'}
@@ -524,14 +563,9 @@ function PublicationsSectionComponent({
     setLightbox(payload);
   }, []);
 
-  useEffect(() => {
-    if (!lightbox) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setLightbox(null);
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [lightbox]);
+  const onCloseLightbox = useCallback(() => {
+    setLightbox(null);
+  }, []);
 
   const showFeaturedStrip = !isLoading && filteredCount > 0 && featuredPublications.length > 0;
 
@@ -540,18 +574,19 @@ function PublicationsSectionComponent({
       id="publications"
       className="mx-auto max-w-6xl scroll-mt-20 px-6 py-20 md:py-24"
     >
-      <div
-        className={`flex flex-col items-start justify-between gap-3 md:flex-row md:items-end ${uiTokens.sectionHeaderRule}`}
-      >
-        <h2 className={uiTokens.sectionTitle}>
-          {pubsText.title}
-          {lang === 'en' ? ' ' : ''}
-          {pubsText.subtitle}
-        </h2>
-        <p className="max-w-md text-sm text-[#5C5953] md:text-right">
-          {pubsText.desc}
-        </p>
+      <div className="pb-4">
+        <div className="flex flex-col items-start justify-between gap-3 md:flex-row md:items-end">
+          <h2 className={uiTokens.sectionTitle}>
+            {pubsText.title}
+            {lang === 'en' ? ' ' : ''}
+            {pubsText.subtitle}
+          </h2>
+          <p className="max-w-md text-sm text-[#5C5953] md:text-right">
+            {pubsText.desc}
+          </p>
+        </div>
       </div>
+      <InkRule thick />
 
       {/* 無框時間軸圖表 */}
       {!isLoading && allPublications.length > 0 ? (
@@ -722,57 +757,11 @@ function PublicationsSectionComponent({
           {pubsText.emptyPublications}
         </div>
       ) : (
-        <div>
-          {showFeaturedStrip
-            ? featuredPublications.map((pub, fi) => {
-                const key = getPublicationKey(pub, fi);
-                return (
-                  <PublicationJournalRow
-                    key={key}
-                    pubKey={key}
-                    pub={pub}
-                    pubsText={pubsText}
-                    isMobile={isMobile}
-                    litePub={litePub}
-                    featuredRank={fi + 1}
-                    index={fi}
-                    locale={locale}
-                    currentYear={currentYear}
-                    expandedKey={expandedKey}
-                    copiedKey={copiedKey}
-                    onToggleAbstract={onToggleAbstract}
-                    onCopyCitation={onCopyCitation}
-                    onOpenLightbox={onOpenLightbox}
-                  />
-                );
-              })
-            : null}
-
-          {listAllInFeatured ? (
-            <p className="border-b border-[#D4D1C8] py-6 text-center text-sm text-[#5C5953]">
-              {pubsText.allInFeaturedNote}
-            </p>
-          ) : null}
-
-          {visiblePublications.length > 0
-            ? viewMode === 'compact'
-              ? visiblePublications.map((pub, i) => {
-                  const key = getPublicationKey(pub, i);
-                  return (
-                    <PublicationCompactRow
-                      key={key}
-                      pubKey={key}
-                      pub={pub}
-                      pubsText={pubsText}
-                      locale={locale}
-                      currentYear={currentYear}
-                      copiedKey={copiedKey}
-                      onCopyCitation={onCopyCitation}
-                    />
-                  );
-                })
-              : visiblePublications.map((pub, i) => {
-                  const key = getPublicationKey(pub, i);
+        <LayoutGroup id="publications-figures">
+          <div className="group/list">
+            {showFeaturedStrip
+              ? featuredPublications.map((pub, fi) => {
+                  const key = getPublicationKey(pub, fi);
                   return (
                     <PublicationJournalRow
                       key={key}
@@ -781,7 +770,8 @@ function PublicationsSectionComponent({
                       pubsText={pubsText}
                       isMobile={isMobile}
                       litePub={litePub}
-                      index={i + featuredPublications.length}
+                      featuredRank={fi + 1}
+                      index={fi}
                       locale={locale}
                       currentYear={currentYear}
                       expandedKey={expandedKey}
@@ -792,8 +782,62 @@ function PublicationsSectionComponent({
                     />
                   );
                 })
-            : null}
-        </div>
+              : null}
+
+            {listAllInFeatured ? (
+              <p className="border-b border-[#D4D1C8] py-6 text-center text-sm text-[#5C5953]">
+                {pubsText.allInFeaturedNote}
+              </p>
+            ) : null}
+
+            {visiblePublications.length > 0
+              ? viewMode === 'compact'
+                ? visiblePublications.map((pub, i) => {
+                    const key = getPublicationKey(pub, i);
+                    return (
+                      <PublicationCompactRow
+                        key={key}
+                        pubKey={key}
+                        pub={pub}
+                        pubsText={pubsText}
+                        locale={locale}
+                        currentYear={currentYear}
+                        copiedKey={copiedKey}
+                        onCopyCitation={onCopyCitation}
+                      />
+                    );
+                  })
+                : visiblePublications.map((pub, i) => {
+                    const key = getPublicationKey(pub, i);
+                    return (
+                      <PublicationJournalRow
+                        key={key}
+                        pubKey={key}
+                        pub={pub}
+                        pubsText={pubsText}
+                        isMobile={isMobile}
+                        litePub={litePub}
+                        index={i + featuredPublications.length}
+                        locale={locale}
+                        currentYear={currentYear}
+                        expandedKey={expandedKey}
+                        copiedKey={copiedKey}
+                        onToggleAbstract={onToggleAbstract}
+                        onCopyCitation={onCopyCitation}
+                        onOpenLightbox={onOpenLightbox}
+                      />
+                    );
+                  })
+              : null}
+          </div>
+
+          {/* 科學圖解摘要紙白霧化暗房燈箱（支援 layoutId 絲滑展開與 ESC 關閉） */}
+          <FigureLightboxModal
+            lightbox={lightbox}
+            closeLabel={pubsText.closeLightbox}
+            onClose={onCloseLightbox}
+          />
+        </LayoutGroup>
       )}
 
       {!isLoading && filteredCount > 0 && visiblePublications.length < listRowCount && (
@@ -808,63 +852,6 @@ function PublicationsSectionComponent({
           </button>
         </div>
       )}
-
-      {/* 科學圖解摘要直角燈箱 */}
-      <AnimatePresence>
-        {lightbox ? (
-          <motion.div
-            key="pub-lightbox"
-            role="dialog"
-            aria-modal="true"
-            aria-label={lightbox.title}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            onClick={() => setLightbox(null)}
-            className="fixed inset-0 z-[100000] flex items-center justify-center bg-[#141413]/75 p-4 backdrop-blur-sm md:p-8"
-          >
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-              onClick={(e) => e.stopPropagation()}
-              className="relative flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden border border-[#141413] bg-[#F7F6F2]"
-            >
-              <div className="flex items-start justify-between gap-4 border-b border-[#D4D1C8] px-6 py-4">
-                <div className="min-w-0">
-                  <div className="font-journal-italic text-sm text-[#5C5953]">
-                    {lightbox.journal}
-                  </div>
-                  <h4 className="font-editorial mt-1 line-clamp-2 text-base font-semibold text-[#141413]">
-                    {lightbox.title}
-                  </h4>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setLightbox(null)}
-                  aria-label={pubsText.closeLightbox}
-                  className="shrink-0 border border-[#D4D1C8] p-1.5 text-[#5C5953] transition-colors hover:border-[#141413] hover:text-[#141413]"
-                >
-                  <X className="h-4 w-4" aria-hidden />
-                </button>
-              </div>
-              <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-[#E6E4DD] p-5 md:p-8">
-                <div className="border border-[#D4D1C8] bg-white p-3">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={lightbox.src}
-                    alt={lightbox.alt}
-                    referrerPolicy="no-referrer"
-                    className="max-h-[66vh] max-w-full object-contain"
-                  />
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
     </section>
   );
 }

@@ -2,6 +2,7 @@
 
 import React, { memo, useCallback, useEffect, useState } from 'react';
 import { Check, Copy, Download, Mail } from 'lucide-react';
+import { InkRule } from '@/app/components/EditorialMotion';
 import { useRenderProfiler } from './useRenderProfiler';
 import { uiTokens } from './uiTokens';
 import { impactData } from '@/lib/impactData';
@@ -133,16 +134,17 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
         id="impact"
         className="mx-auto max-w-6xl scroll-mt-20 px-6 py-20 md:py-24"
       >
-        <div
-          className={`flex flex-col items-start justify-between gap-3 md:flex-row md:items-end ${uiTokens.sectionHeaderRule}`}
-        >
-          <h2 className={uiTokens.sectionTitle}>
-            {t.impact.title}
-            {lang === 'en' ? ' ' : ''}
-            {t.impact.subtitle}
-          </h2>
-          <p className="text-xs text-[#5C5953]">{t.impact.source}</p>
+        <div className="pb-4">
+          <div className="flex flex-col items-start justify-between gap-3 md:flex-row md:items-end">
+            <h2 className={uiTokens.sectionTitle}>
+              {t.impact.title}
+              {lang === 'en' ? ' ' : ''}
+              {t.impact.subtitle}
+            </h2>
+            <p className="text-xs text-[#5C5953]">{t.impact.source}</p>
+          </div>
         </div>
+        <InkRule thick />
 
         <div className="grid grid-cols-1 divide-y divide-[#D4D1C8] border-b border-[#141413] lg:grid-cols-2 lg:divide-x lg:divide-y-0">
           {institutions.map((inst, idx) => (
@@ -231,7 +233,8 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
         id="contact"
         className="mx-auto max-w-6xl scroll-mt-20 px-6 pb-8 pt-20 md:pt-24"
       >
-        <div className="border-t-2 border-[#141413] pt-8">
+        <InkRule thick />
+        <div className="pt-8">
           <div className="mb-10 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
             <h2 className={uiTokens.sectionTitle}>
               {t.contact.title}
