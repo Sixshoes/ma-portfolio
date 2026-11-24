@@ -2,23 +2,35 @@
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 @theme inline {
-  --font-sans: var(--font-inter), "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-newsreader), var(--font-noto-serif-tc), "Songti TC", "PMingLiU", Georgia, serif;
-  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  /* 直接寫明 "Noto Sans TC" 與 "Noto Serif TC" 真實家族字串，徹底封殺空變數與新細明體 PMingLiU */
+  --font-sans: var(--font-jakarta), "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --font-serif: var(--font-source-serif), "Noto Serif TC", "PingFang TC", Georgia, serif;
+  --font-mono: var(--font-jetbrains-mono), "Noto Sans TC", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
-/* 關閉 View Transitions 預設交叉淡化，確保電致變色圓形光圈邊緣乾淨銳利 */
+/* 關閉 View Transitions 預設交叉淡化並鎖定圖層順序，消除切換夜間時左下角白色三角殘影 */
+::view-transition {
+  background-color: var(--app-bg);
+}
+
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
   mix-blend-mode: normal;
 }
 
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 9999;
+}
+
 /* 晝讀圖鑑版（預設：石灰岩紙底 × 典藏淺紙 × 暖礦石展廳） */
 :root,
 [data-theme="light"] {
   color-scheme: light;
-  --font-noto-serif-tc: "Noto Serif TC";
   --app-bg: #F2EFE7;
   --app-bg-alt: #F8F7F3;
   --app-bg-warm: #E8E4DA;
@@ -85,15 +97,16 @@
 
 @layer utilities {
 
-  /* 全程維持正體書卷襯線體，嚴禁中文合成假斜體 */
+  /* 全程維持螢幕筆觸飽滿的權威襯線體（Source Serif 4 + Noto Serif TC），嚴禁中文合成假斜體與新細明體 */
   .font-editorial {
-    font-family: var(--font-newsreader), var(--font-noto-serif-tc), "Songti TC", "PMingLiU", Georgia, serif;
+    font-family: var(--font-source-serif), "Noto Serif TC", "PingFang TC", Georgia, serif;
     font-style: normal;
+    letter-spacing: 0.015em;
   }
 
   /* 僅供英文書目之期刊名稱使用正統拉丁斜體 */
   .font-journal-italic {
-    font-family: var(--font-newsreader), Georgia, serif;
+    font-family: var(--font-source-serif), Georgia, serif;
     font-style: italic;
   }
 
@@ -103,6 +116,18 @@
     background-color: var(--app-surface-card);
     box-shadow: var(--app-card-shadow);
   }
+}
+
+/* 中文大標字距與防句尾孤字（Widow）優化 */
+h1,
+h2,
+.font-heading-serif {
+  letter-spacing: 0.015em;
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
 }
 
 html {

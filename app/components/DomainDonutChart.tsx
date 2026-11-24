@@ -3,7 +3,7 @@
 import React, { memo, useMemo, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import type { Publication } from '@/lib/publications';
-import { computeDomainStats } from '@/lib/researchDomains';
+import { computeDonutDomainStats } from '@/lib/researchDomains';
 import { EDITORIAL_EASE } from './EditorialMotion';
 
 type DomainDonutChartProps = {
@@ -13,7 +13,7 @@ type DomainDonutChartProps = {
   onSelectDomain: (domainId: string) => void;
 };
 
-/** 純 SVG 礦物圖鑑五色互動環狀圖（圓潤段口、懸停展開、點擊連動篩選著作） */
+/** 純 SVG 礦物圖鑑互斥六區互動環狀圖（總和精準對齊全站總篇數，無截斷與算術誤差） */
 function DomainDonutChartComponent({
   publications,
   lang,
@@ -25,11 +25,11 @@ function DomainDonutChartComponent({
   const isZh = lang === 'zh';
 
   const { segments, totalTagged } = useMemo(() => {
-    const stats = computeDomainStats(publications);
+    const stats = computeDonutDomainStats(publications).filter((s) => s.count > 0);
     const total = stats.reduce((sum, s) => sum + s.count, 0) || 1;
     const radius = 64;
     const circumference = 2 * Math.PI * radius;
-    const gap = 4.5;
+    const gap = 4.2;
 
     let offset = 0;
     const built = stats.map((entry) => {
@@ -117,30 +117,32 @@ function DomainDonutChartComponent({
           </g>
         </svg>
 
-        {/* 中央動態焦點讀數 */}
-        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
+        {/* 中央動態焦點讀數（允許雙行自然換行，消除 2D... 截斷） */}
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-5 text-center">
           {focused ? (
             <>
               <span
-                className="font-mono text-xs font-semibold uppercase tracking-wider"
+                className="font-mono text-[11.5px] font-semibold uppercase tracking-wider"
                 style={{ color: focused.domain.color }}
               >
                 {focused.domain.roman} · {focused.sharePct}%
               </span>
-              <span className="font-editorial mt-0.5 text-3xl font-semibold text-[var(--app-ink)] [font-variant-numeric:tabular-nums]">
+              <span className="font-editorial text-2xl font-bold leading-tight text-[var(--app-ink)] [font-variant-numeric:tabular-nums] sm:text-[1.75rem]">
                 {focused.count}
               </span>
-              <span className="mt-0.5 line-clamp-1 max-w-[110px] text-xs font-medium text-[var(--app-muted)]">
-                {isZh ? focused.domain.labelZh : focused.domain.labelEn}
+              <span className="mt-0.5 max-w-[116px] text-[11.5px] font-medium leading-[1.2] text-[var(--app-muted)]">
+                {isZh
+                  ? focused.domain.labelZh
+                  : focused.domain.labelEn.replace(' Materials', '')}
               </span>
             </>
           ) : (
             <>
-              <span className="font-mono text-xs uppercase tracking-wider text-[var(--app-muted)]">
-                {isZh ? '五大領域' : '5 DOMAINS'}
+              <span className="font-mono text-[11.5px] uppercase tracking-wider text-[var(--app-muted)]">
+                {isZh ? '全站收錄' : 'ALL WORKS'}
               </span>
-              <span className="font-editorial mt-0.5 text-3xl font-semibold text-[var(--app-ink)] [font-variant-numeric:tabular-nums]">
-                {publications.length || totalTagged}
+              <span className="font-editorial mt-0.5 text-3xl font-bold text-[var(--app-ink)] [font-variant-numeric:tabular-nums]">
+                {totalTagged}
               </span>
               <span className="text-xs text-[var(--app-muted)]">
                 {isZh ? '篇著作' : 'works'}
@@ -150,8 +152,8 @@ function DomainDonutChartComponent({
         </div>
       </div>
 
-      {/* 圓角膠囊式礦物五色圖例（放大易讀字級） */}
-      <div className="mt-4 flex w-full flex-wrap justify-center gap-2">
+      {/* 圓角膠囊式互斥分類圖例（總和精準對齊圓心總篇數） */}
+      <div className="mt-4 flex w-full flex-wrap justify-center gap-1.5">
         {segments.map((seg) => {
           const isFocused = focusedId === seg.domain.id;
           return (
@@ -161,7 +163,7 @@ function DomainDonutChartComponent({
               onMouseEnter={() => setHoveredId(seg.domain.id)}
               onMouseLeave={() => setHoveredId(null)}
               onClick={() => onSelectDomain(seg.domain.id)}
-              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition-all duration-200 ${
+              className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 text-xs transition-all duration-200 ${
                 isFocused
                   ? 'border-[var(--app-ink)] bg-[var(--app-hover)] font-semibold text-[var(--app-ink)]'
                   : 'border-[var(--app-rule)] bg-[var(--app-bg)]/60 text-[var(--app-body)] hover:border-[var(--app-ink)]'
@@ -172,7 +174,7 @@ function DomainDonutChartComponent({
                 style={{ backgroundColor: seg.domain.color }}
                 aria-hidden
               />
-              <span className="truncate">
+              <span>
                 {isZh ? seg.domain.labelZh : seg.domain.labelEn.replace(' Materials', '')}
               </span>
               <span className="font-mono text-xs text-[var(--app-muted)] [font-variant-numeric:tabular-nums]">

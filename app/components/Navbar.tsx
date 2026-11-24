@@ -228,14 +228,14 @@ export function Navbar({ navText, lang, onOpenCommandPalette }: NavbarProps) {
                     ? '切換為夜讀典藏黑版'
                     : 'Switch to dark theme'
               }
-              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--app-rule)] bg-[var(--app-surface-card)]/80 px-3 py-1.5 text-sm text-[var(--app-ink)] transition-colors hover:border-[var(--app-ink)] hover:bg-[var(--app-hover)]"
+              className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-[var(--app-rule)] bg-[var(--app-surface-card)]/80 px-3 py-1.5 text-sm text-[var(--app-ink)] transition-colors hover:border-[var(--app-ink)] hover:bg-[var(--app-hover)]"
             >
               {isDark ? (
                 <Sun className="h-4 w-4 text-[var(--app-accent)]" aria-hidden />
               ) : (
                 <Moon className="h-4 w-4 text-[var(--app-accent)]" aria-hidden />
               )}
-              <span className="hidden font-editorial text-sm font-medium sm:inline">
+              <span className="hidden font-sans text-sm font-medium sm:inline">
                 {isDark ? (isZh ? '晝' : 'Day') : isZh ? '夜' : 'Night'}
               </span>
             </button>

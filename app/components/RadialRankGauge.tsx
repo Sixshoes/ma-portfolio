@@ -59,8 +59,8 @@ function RadialRankGaugeComponent({
               : { strokeDasharray: `0 ${C}` }
           }
           whileInView={{ strokeDasharray: `${arcMax * clamped} ${C}` }}
-          viewport={{ once: true, margin: '-40px' }}
-          transition={{ duration: reduceMotion ? 0 : 1.0, ease: EDITORIAL_EASE }}
+          viewport={{ once: true, amount: 0.05 }}
+          transition={{ duration: reduceMotion ? 0 : 0.85, ease: EDITORIAL_EASE }}
           transform="rotate(135 75 75)"
         />
         <text

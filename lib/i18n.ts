@@ -445,7 +445,7 @@ export const dict: Record<Lang, I18nDict> = {
       collapseAbstract: '收合',
       altmetricLink: 'Altmetric 關注度',
       allInFeaturedNote: '符合條件的項目皆已列於上方精選區，請切換篩選以瀏覽完整清單。',
-      searchPlaceholder: '搜尋論文標題、期刊或年份…',
+      searchPlaceholder: '搜尋論文標題、期刊或年份',
       searchAriaLabel: '搜尋發表著作',
       clearSearch: '清除搜尋',
       resultCount: '共 {count} 篇',

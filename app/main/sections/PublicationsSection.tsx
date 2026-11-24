@@ -180,7 +180,9 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
 }: PublicationRowProps) {
   const figureUrl = resolveGraphicalAbstractUrl(pub);
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const [loadedUrl, setLoadedUrl] = useState<string | null>(null);
   const showFigure = Boolean(figureUrl) && failedUrl !== figureUrl;
+  const isFigureLoaded = Boolean(figureUrl) && loadedUrl === figureUrl;
 
   const takeawayLines = parseTakeawayLines(pub.takeaway);
   const expanded = expandedKey === pubKey;
@@ -188,11 +190,16 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
   const isBibCopied = copiedState?.key === pubKey && copiedState.format === 'bibtex';
   const hasAbstractBody = !!pub.abstract_excerpt?.trim();
   const isInPress = pub.year > currentYear;
-  const eagerMain = index < (isMobile ? 1 : 3);
+  // 每頁僅渲染 6–10 篇，當頁縮圖一律提前預載以避免快速捲動時出現空白框
+  const eagerMain = index < (isMobile ? 9 : 15);
   const altmetricHref = pub.altmetric_id
     ? `https://www.altmetric.com/details.php?doi=${encodeURIComponent(pub.altmetric_id)}`
     : null;
   const isZh = lang === 'zh';
+
+  const handleLoaded = useCallback(() => {
+    setLoadedUrl(figureUrl);
+  }, [figureUrl]);
 
   const handleUnavailable = useCallback(() => {
     setFailedUrl(figureUrl);
@@ -213,11 +220,6 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
 
   return (
     <article
-      style={
-        featuredRank === undefined
-          ? { contentVisibility: 'auto', containIntrinsicSize: showFigure ? '210px' : '148px' }
-          : undefined
-      }
       className="group relative rounded-2xl border-b border-[var(--app-rule)]/70 px-3 py-6 transition-[opacity,background-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[var(--app-surface-card)] md:px-5 md:group-hover/list:opacity-65 md:hover:!opacity-100"
     >
       {/* 當前閱讀行左側柔圓書籤線 */}
@@ -254,9 +256,9 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
           )}
         </div>
 
-        {/* 中欄：書目主內容 */}
+        {/* 中欄：書目主內容（長英文論文標題改用俐落無襯線半粗 Plus Jakarta Sans，久讀不累） */}
         <div className="flex min-w-0 flex-1 flex-col">
-          <h3 className="font-editorial mb-2 text-xl font-semibold leading-[1.38] text-[var(--app-ink)] transition-colors group-hover:text-[var(--app-accent)] md:text-[1.28rem]">
+          <h3 className="mb-2 font-sans text-lg font-semibold leading-[1.42] text-[var(--app-ink)] transition-colors group-hover:text-[var(--app-accent)] md:text-[1.18rem]">
             {pub.title}
           </h3>
 
@@ -410,35 +412,44 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
           </AnimatePresence>
         </div>
 
-        {/* 右欄：溫潤圓角單篇摘要圖縮圖 */}
+        {/* 右欄：溫潤圓角單篇摘要圖縮圖（載入完成確認有效寬高後才顯現相紙外框，失敗立即收合零空白方框） */}
         {showFigure ? (
           <div className="w-full shrink-0 md:w-[230px] lg:w-[252px]">
             <motion.div
               layoutId={litePub ? undefined : figLayoutId}
               transition={{ duration: 0.36, ease: EDITORIAL_EASE }}
-              onClick={openFigure}
-              className="group/img relative flex aspect-[16/10] w-full cursor-zoom-in items-center justify-center overflow-hidden rounded-2xl border border-[var(--app-rule)] bg-[var(--app-figure-mat)] p-2.5 shadow-xs transition-all hover:border-[var(--app-ink)] hover:shadow-md"
+              onClick={isFigureLoaded ? openFigure : undefined}
+              className={`group/img relative flex aspect-[16/10] w-full items-center justify-center overflow-hidden rounded-2xl p-2.5 transition-all duration-300 ${
+                isFigureLoaded
+                  ? 'cursor-zoom-in border border-[var(--app-rule)] bg-[var(--app-figure-mat)] shadow-xs hover:border-[var(--app-ink)] hover:shadow-md'
+                  : 'border border-transparent bg-transparent'
+              }`}
             >
               <PublicationLazyImage
                 key={figureUrl}
                 src={figureUrl}
                 alt={pub.title}
                 eager={eagerMain}
+                onLoaded={handleLoaded}
                 onUnavailable={handleUnavailable}
-                className="editorial-figure-img h-full w-full object-contain transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/img:scale-[1.03]"
+                className={`editorial-figure-img h-full w-full object-contain transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                  isFigureLoaded ? 'opacity-100 group-hover/img:scale-[1.03]' : 'opacity-0'
+                }`}
               />
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openFigure();
-                }}
-                aria-label={pubsText.zoomFigure}
-                title={pubsText.zoomFigure}
-                className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-[var(--app-rule)] bg-[var(--app-bg)]/95 text-[var(--app-ink)] opacity-85 transition-colors hover:border-[var(--app-ink)] hover:bg-[var(--app-ink)] hover:text-[var(--app-bg)] group-hover/img:opacity-100 md:opacity-0"
-              >
-                <ZoomIn className="h-3.5 w-3.5" aria-hidden />
-              </button>
+              {isFigureLoaded ? (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openFigure();
+                  }}
+                  aria-label={pubsText.zoomFigure}
+                  title={pubsText.zoomFigure}
+                  className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-[var(--app-rule)] bg-[var(--app-bg)]/95 text-[var(--app-ink)] opacity-85 transition-colors hover:border-[var(--app-ink)] hover:bg-[var(--app-ink)] hover:text-[var(--app-bg)] group-hover/img:opacity-100 md:opacity-0"
+                >
+                  <ZoomIn className="h-3.5 w-3.5" aria-hidden />
+                </button>
+              ) : null}
             </motion.div>
           </div>
         ) : null}
@@ -524,7 +535,7 @@ const PublicationCompactRow = memo(function PublicationCompactRow({
       </div>
 
       <div className="min-w-0 flex-1">
-        <h3 className="font-editorial text-lg font-medium leading-snug text-[var(--app-ink)] transition-colors group-hover:text-[var(--app-accent)]">
+        <h3 className="font-sans text-base font-semibold leading-snug text-[var(--app-ink)] transition-colors group-hover:text-[var(--app-accent)] md:text-lg">
           {pub.title}
         </h3>
         <div className="mt-1 flex flex-wrap items-baseline gap-x-4 gap-y-0.5 text-sm text-[var(--app-muted)]">
@@ -790,7 +801,7 @@ function PublicationsSectionComponent({
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5">
-              <div className="relative basis-full sm:basis-auto sm:w-56">
+              <div className="relative basis-full sm:basis-auto sm:w-64">
                 <Search
                   className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--app-muted)]"
                   aria-hidden

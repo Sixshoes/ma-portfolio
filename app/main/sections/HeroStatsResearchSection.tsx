@@ -187,7 +187,7 @@ function HeroStatsResearchSectionComponent({
                 initial={reduceMotion ? false : { opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: reduceMotion ? 0 : 0.5, delay: 0.16, ease: EDITORIAL_EASE }}
-                className="mt-3.5 max-w-2xl text-base leading-[1.85] text-[var(--app-body)] md:text-[1.05rem]"
+                className="mt-3.5 max-w-[35rem] text-pretty text-base leading-[1.85] text-[var(--app-body)] md:text-[1.05rem]"
               >
                 {heroText.desc}
               </motion.p>
@@ -406,19 +406,15 @@ function HeroStatsResearchSectionComponent({
                   <>
                     <div>
                       <div className="flex items-baseline gap-2">
-                        <span className="font-editorial text-4xl font-semibold tracking-tight text-[var(--app-ink)] [font-variant-numeric:tabular-nums]">
-                          <RollingNumber
-                            value={landmarkPaper.citations}
-                            delay={0.28}
-                            duration={0.85}
-                          />
+                        <span className="font-editorial text-4xl font-bold tracking-tight text-[var(--app-ink)] [font-variant-numeric:tabular-nums]">
+                          {landmarkPaper.citations.toLocaleString('en-US')}
                         </span>
                         <span className="font-mono text-sm font-semibold uppercase tracking-wider text-[#A46B15] dark:text-[#F3DF87]">
                           {isZh ? '次引用' : 'CITATIONS'}
                         </span>
                       </div>
 
-                      <h3 className="font-editorial mt-3.5 text-base font-semibold leading-[1.45] text-[var(--app-ink)]">
+                      <h3 className="mt-3.5 font-sans text-base font-semibold leading-[1.48] text-[var(--app-ink)]">
                         {landmarkPaper.title}
                       </h3>
 
@@ -540,11 +536,11 @@ function HeroStatsResearchSectionComponent({
                         </span>
                       </div>
 
-                      {/* 統一高度 188px 粉筆藍圖框，確保五張卡片標題完全水平對齊 */}
+                      {/* 彈性高度透明粉筆藍圖框（h-auto 避免第 IV/V 張雙行公式壓線溢位，無底色接縫補丁） */}
                       <button
                         type="button"
                         onClick={() => onFilterByDomain(domain.id)}
-                        className="my-3 flex h-[188px] w-full cursor-pointer flex-col items-center justify-between rounded-xl border border-dashed border-[#34594A] bg-[#12221B]/75 px-2 py-2.5 transition-colors group-hover:border-[#F3DF87]/45"
+                        className="my-3 flex h-auto min-h-[192px] w-full cursor-pointer flex-col items-center justify-between gap-2.5 rounded-xl border border-dashed border-[#34594A] bg-transparent px-3 py-3.5 transition-colors group-hover:border-[#F3DF87]/55"
                       >
                         <ResearchPhysicsGlyph
                           index={i}
@@ -553,7 +549,7 @@ function HeroStatsResearchSectionComponent({
                           chalkAccent={domain.chalkColor}
                         />
                         <span
-                          className="flex min-h-[2.25rem] items-center justify-center text-center font-mono text-[11.5px] leading-tight tracking-tight"
+                          className="flex min-h-[2.5rem] items-center justify-center text-center font-mono text-[11.5px] leading-snug tracking-tight"
                           style={{ color: domain.chalkColor }}
                         >
                           {domain.formulaTag}

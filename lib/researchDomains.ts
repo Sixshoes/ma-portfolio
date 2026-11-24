@@ -3,8 +3,8 @@ import type { Publication } from './publications';
 export type ResearchDomainConfig = {
   id: string;
   index: number;
-  roman: 'I' | 'II' | 'III' | 'IV' | 'V';
-  /** 礦物圖鑑五色譜（用於環狀圖扇區、六角徽章與期刊視覺識別） */
+  roman: 'I' | 'II' | 'III' | 'IV' | 'V' | 'VI';
+  /** 礦物圖鑑色譜（用於環狀圖扇區、六角徽章與期刊視覺識別） */
   color: string;
   /** 黑板藍圖展櫃粉筆點綴色（鵝黃 #F3DF87 / 珊瑚粉紅 #E88D84） */
   chalkColor: string;
@@ -14,7 +14,7 @@ export type ResearchDomainConfig = {
   formulaTag: string;
   /** 展開抽屜與藍圖展櫃顯示的可點擊核心材料／物理關鍵字標籤 */
   keywords: Array<{ label: string; query: string }>;
-  /** 點擊「篩選此領域相關論文」時比對標題／期刊／亮點／摘要的關鍵詞清單（任一命中即納入） */
+  /** 主要歸類比對關鍵詞清單（互斥歸類確保各領域篇數加總精準等於全站總篇數） */
   matchTerms: string[];
 };
 
@@ -46,6 +46,15 @@ export const RESEARCH_DOMAINS: ResearchDomainConfig[] = [
       'nanoneedle',
       'nanofiber',
       'nanocolumn',
+      'nanostructur',
+      'nanoparticle',
+      'nanoflower',
+      'wo3',
+      'moo3',
+      'zno',
+      'nio',
+      'tio2',
+      'tungsten oxide',
     ],
   },
   {
@@ -75,6 +84,11 @@ export const RESEARCH_DOMAINS: ResearchDomainConfig[] = [
       '2d ',
       '2d-',
       'van der waals',
+      'graphene',
+      'mos2',
+      'mxene',
+      'layered',
+      'ws2',
     ],
   },
   {
@@ -96,10 +110,9 @@ export const RESEARCH_DOMAINS: ResearchDomainConfig[] = [
     matchTerms: [
       'electrochrom',
       'smart window',
-      'wo3',
-      'tungsten oxide',
-      'moo3',
       'optical modulation',
+      'coloration',
+      'bleaching',
     ],
   },
   {
@@ -125,7 +138,11 @@ export const RESEARCH_DOMAINS: ResearchDomainConfig[] = [
       'energy storage',
       'capacitance',
       'battery',
-      'electrochemical',
+      'batteries',
+      'lithium-ion',
+      'sodium-ion',
+      'electrochemical performance',
+      'charge storage',
       'electrode',
     ],
   },
@@ -150,42 +167,102 @@ export const RESEARCH_DOMAINS: ResearchDomainConfig[] = [
       'qubit',
       'exciton',
       'photodetector',
-      'band gap',
       'topological',
+      'band gap',
+      'bandgap',
+      'photoluminescence',
+      'luminescence',
       'ultraviolet',
       'laser',
-      'luminescence',
+      'raman',
+      'optical propert',
+      'plasmonic',
+      'dielectric',
     ],
   },
 ];
 
+/** 第六扇區：涵蓋能源電催化、光催化、氣體感測與表面薄膜，使環狀圖各類加總精準等於全站總篇數 */
+export const OTHER_MATERIALS_DOMAIN: ResearchDomainConfig = {
+  id: 'catalysis-thin-films',
+  index: 5,
+  roman: 'VI',
+  color: '#6E7F74',
+  chalkColor: '#BFD3C8',
+  labelZh: '光電催化與薄膜',
+  labelEn: 'Catalysis & Thin Films',
+  formulaTag: 'HER · OER · Surface Science',
+  keywords: [
+    { label: 'Electrocatalyst', query: 'electrocatal' },
+    { label: 'Photocatalytic', query: 'photocatal' },
+    { label: 'Gas Sensor', query: 'sensor' },
+  ],
+  matchTerms: [],
+};
+
+export const ALL_DONUT_DOMAINS: ResearchDomainConfig[] = [
+  ...RESEARCH_DOMAINS,
+  OTHER_MATERIALS_DOMAIN,
+];
+
+/** 依應用專一性決定互斥主領域順序（電致變色 → 超級電容 → 量子光電 → 二維鐵磁 → 一維奈米 → 光電催化與薄膜） */
+const PRIMARY_CLASSIFICATION_ORDER = [
+  'electrochromism',
+  'supercapacitors',
+  'quantum-computer',
+  '2d-ferromagnetic',
+  '1d-nanomaterials',
+] as const;
+
 export function getResearchDomainById(id: string | null): ResearchDomainConfig | null {
   if (!id) return null;
-  return RESEARCH_DOMAINS.find((d) => d.id === id) ?? null;
+  return ALL_DONUT_DOMAINS.find((d) => d.id === id) ?? null;
+}
+
+/** 將每篇論文唯一歸入單一主領域，確保環狀圖扇區加總與全站總篇數 100% 精準一致 */
+export function classifyPublicationPrimaryDomain(pub: Publication): string {
+  const haystack = `${pub.title} ${pub.journal} ${pub.takeaway ?? ''} ${pub.abstract_excerpt ?? ''}`.toLowerCase();
+  for (const domainId of PRIMARY_CLASSIFICATION_ORDER) {
+    const domain = RESEARCH_DOMAINS.find((d) => d.id === domainId);
+    if (domain && domain.matchTerms.some((term) => haystack.includes(term))) {
+      return domain.id;
+    }
+  }
+  return OTHER_MATERIALS_DOMAIN.id;
 }
 
 export function publicationMatchesDomain(
   pub: Publication,
   domain: ResearchDomainConfig,
 ): boolean {
-  const haystack = `${pub.title} ${pub.journal} ${pub.takeaway ?? ''} ${pub.abstract_excerpt ?? ''}`.toLowerCase();
-  return domain.matchTerms.some((term) => haystack.includes(term));
+  return classifyPublicationPrimaryDomain(pub) === domain.id;
 }
 
-export function computeDomainStats(publications: Publication[]) {
-  return RESEARCH_DOMAINS.map((domain) => {
-    let count = 0;
-    let citations = 0;
-    for (const pub of publications) {
-      if (publicationMatchesDomain(pub, domain)) {
-        count += 1;
-        citations += pub.citations;
-      }
+/** 計算全站 6 扇區互斥分佈（供首頁環狀圖使用，總和精準等於 publications.length） */
+export function computeDonutDomainStats(publications: Publication[]) {
+  const counts = new Map<string, { count: number; citations: number }>();
+  for (const d of ALL_DONUT_DOMAINS) {
+    counts.set(d.id, { count: 0, citations: 0 });
+  }
+  for (const pub of publications) {
+    const domainId = classifyPublicationPrimaryDomain(pub);
+    const bucket = counts.get(domainId);
+    if (bucket) {
+      bucket.count += 1;
+      bucket.citations += pub.citations;
     }
+  }
+  return ALL_DONUT_DOMAINS.map((domain) => {
+    const bucket = counts.get(domain.id) ?? { count: 0, citations: 0 };
     return {
       domain,
-      count,
-      citations,
+      count: bucket.count,
+      citations: bucket.citations,
     };
   });
+}
+
+/** 計算五大代表性藍圖展櫃統計（與環狀圖前五大扇區採完全一致之主領域歸類） */
+export function computeDomainStats(publications: Publication[]) {
+  return computeDonutDomainStats(publications).slice(0, RESEARCH_DOMAINS.length);
 }

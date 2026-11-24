@@ -147,8 +147,8 @@ function PublicationTimelineChartComponent({
   return (
     <div ref={chartRef} className="atlas-card flex h-full flex-col justify-between p-5 sm:p-6">
       <div>
-        {/* 頂部標題與圓角膠囊切換 */}
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        {/* 頂部標題與單行圓角膠囊切換（鎖定按鈕不換行，寬度不足時整組自然折行） */}
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="font-editorial text-xl font-semibold text-[var(--app-ink)]">
               {isZh
@@ -156,18 +156,18 @@ function PublicationTimelineChartComponent({
                 : `Publication & Citation Trajectory (${minYear}–${maxYear})`}
             </h3>
             {hasInPress ? (
-              <span className="rounded-full border border-[var(--app-accent)]/50 bg-[var(--app-accent)]/10 px-2.5 py-0.5 text-xs font-medium text-[var(--app-accent)]">
+              <span className="shrink-0 whitespace-nowrap rounded-full border border-[var(--app-accent)]/50 bg-[var(--app-accent)]/10 px-2.5 py-0.5 text-xs font-medium text-[var(--app-accent)]">
                 {isZh ? `含 ${maxYear} 預刊` : `incl. ${maxYear} In Press`}
               </span>
             ) : null}
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
             {activeYearNum ? (
               <button
                 type="button"
                 onClick={() => onSelectYear('All')}
-                className="inline-flex items-center gap-1 rounded-full bg-[var(--app-ink)] px-3.5 py-1 text-sm text-[var(--app-bg)] transition-colors hover:bg-[var(--app-accent)]"
+                className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-[var(--app-ink)] px-3.5 py-1.5 text-[13.5px] text-[var(--app-bg)] transition-colors hover:bg-[var(--app-accent)]"
               >
                 {isZh
                   ? `${activeYearNum} 年${activeYearNum > currentYear ? '（預刊）' : ''}`
@@ -179,7 +179,7 @@ function PublicationTimelineChartComponent({
             <div
               role="group"
               aria-label={isZh ? '圖表指標切換' : 'Timeline metric toggle'}
-              className="inline-flex rounded-full border border-[var(--app-rule)] bg-[var(--app-bg)] p-0.5 text-sm"
+              className="inline-flex shrink-0 rounded-full border border-[var(--app-rule)] bg-[var(--app-bg)] p-0.5 text-[13.5px]"
             >
               {(['papers', 'citations'] as const).map((mode) => {
                 const active = metric === mode;
@@ -200,7 +200,7 @@ function PublicationTimelineChartComponent({
                       setMetric(mode);
                     }}
                     aria-pressed={active}
-                    className={`relative rounded-full px-3.5 py-1 transition-colors ${
+                    className={`relative shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 transition-colors ${
                       active
                         ? 'font-semibold text-[var(--app-bg)]'
                         : 'text-[var(--app-muted)] hover:text-[var(--app-ink)]'
@@ -295,18 +295,17 @@ function PublicationTimelineChartComponent({
         </div>
       </div>
 
-      {/* 長條圖本體（固定左側 Y 軸不隨手機滑動跑掉；桌機自動拉滿卡片高度消除空白；右側留白防止 2027 被裁切） */}
-      <div className="flex flex-1 items-stretch gap-2 pt-1">
-        {/* 固定左側 Y 軸刻度 */}
-        <div
-          aria-hidden="true"
-          className="flex w-10 shrink-0 flex-col justify-between pb-7 pt-8 text-right font-mono text-[11.5px] text-[var(--app-muted)] [font-variant-numeric:tabular-nums]"
-        >
-          {[1, 0.5, 0].map((ratio, idx) => (
-            <span key={idx} className="leading-none">
-              {Math.round(maxMetricValue * ratio).toLocaleString('en-US')}
-            </span>
-          ))}
+      {/* 長條圖本體（左側 Y 軸與長條畫布鎖定相同固定高度 h-52 / lg:h-[310px]，確保 0 刻度精準貼齊底線、絕不掉到年份下方） */}
+      <div className="mt-1 flex items-start gap-2 pt-1">
+        {/* 固定左側 Y 軸刻度：與右側長條區共用完全相同的 pt-8 與繪圖區高度 */}
+        <div aria-hidden="true" className="w-10 shrink-0 pt-8">
+          <div className="flex h-52 flex-col justify-between text-right font-mono text-[11.5px] text-[var(--app-muted)] [font-variant-numeric:tabular-nums] lg:h-[310px]">
+            {[1, 0.5, 0].map((ratio, idx) => (
+              <span key={idx} className="leading-none">
+                {Math.round(maxMetricValue * ratio).toLocaleString('en-US')}
+              </span>
+            ))}
+          </div>
         </div>
 
         {/* 右側可捲動柱狀繪圖區 */}
@@ -340,113 +339,127 @@ function PublicationTimelineChartComponent({
               </AnimatePresence>
             </div>
 
-            <div className="pointer-events-none absolute inset-x-0 bottom-7 top-8 flex flex-col justify-between pr-3">
-              {[1, 0.5, 0].map((_, idx) => (
-                <div key={idx} className="h-px w-full border-b border-dashed border-[var(--app-rule)]" />
-              ))}
-            </div>
+            {/* 柱狀畫布區（虛線格線與長條共享 100% 相同起點與 0 基準底線） */}
+            <div className="relative h-52 lg:h-[310px]">
+              <div className="pointer-events-none absolute inset-0 flex flex-col justify-between">
+                {[1, 0.5, 0].map((_, idx) => (
+                  <div key={idx} className="h-px w-full border-b border-dashed border-[var(--app-rule)]" />
+                ))}
+              </div>
 
-            <div
-              className="relative z-10 flex h-52 items-end gap-[2.5px] sm:gap-[3px] lg:h-[310px]"
-              onMouseLeave={() => setHoveredYear(null)}
-            >
-            {buckets.map((b, idx) => {
-              const value = metric === 'papers' ? b.count : b.citations;
-              const heightPct = value > 0 ? Math.max(6, (value / maxMetricValue) * 100) : 0;
-              const starredRatio = b.count > 0 ? (b.starredCount / b.count) * 100 : 0;
-              const isSelected = activeYearNum === b.year;
-              const isHovered = hoveredYear === b.year;
-              const isEmpty = b.count === 0;
-              const isFutureYear = b.year > currentYear;
-              const showLabel =
-                idx === 0 || idx === buckets.length - 1 || b.year % 5 === 0 || isSelected;
+              <div
+                className="relative z-10 flex h-full items-end gap-[2.5px] sm:gap-[3px]"
+                onMouseLeave={() => setHoveredYear(null)}
+              >
+                {buckets.map((b, idx) => {
+                  const value = metric === 'papers' ? b.count : b.citations;
+                  const heightPct = value > 0 ? Math.max(6, (value / maxMetricValue) * 100) : 0;
+                  const starredRatio = b.count > 0 ? (b.starredCount / b.count) * 100 : 0;
+                  const isSelected = activeYearNum === b.year;
+                  const isHovered = hoveredYear === b.year;
+                  const isEmpty = b.count === 0;
+                  const isFutureYear = b.year > currentYear;
 
-              const targetHeight = isInView || reduceMotion ? `${heightPct}%` : '0%';
-              const barTransition = reduceMotion
-                ? { duration: 0 }
-                : waveFinished
-                  ? { duration: 0.46, delay: 0, ease: EDITORIAL_EASE }
-                  : { duration: 0.52, delay: idx * 0.018, ease: EDITORIAL_EASE };
+                  const targetHeight = isInView || reduceMotion ? `${heightPct}%` : '0%';
+                  const barTransition = reduceMotion
+                    ? { duration: 0 }
+                    : waveFinished
+                      ? { duration: 0.46, delay: 0, ease: EDITORIAL_EASE }
+                      : { duration: 0.52, delay: idx * 0.018, ease: EDITORIAL_EASE };
 
-              return (
-                <div key={b.year} className="flex h-full min-w-0 flex-1 flex-col items-center">
-                  <button
-                    type="button"
-                    disabled={isEmpty}
-                    onMouseEnter={() => setHoveredYear(b.year)}
-                    onFocus={() => setHoveredYear(b.year)}
-                    onBlur={() => setHoveredYear(null)}
-                    onClick={() => onSelectYear(isSelected ? 'All' : String(b.year))}
-                    aria-label={
-                      isZh
-                        ? `${b.year} 年${isFutureYear ? '（預刊）' : ''}：${b.count} 篇論文，${b.citations} 次引用`
-                        : `${b.year}${isFutureYear ? ' (In Press)' : ''}: ${b.count} papers, ${b.citations} citations`
-                    }
-                    aria-pressed={isSelected}
-                    className={`group flex h-full w-full items-end justify-center pt-1 focus:outline-none ${
-                      isEmpty ? 'cursor-default' : 'cursor-pointer'
-                    }`}
-                  >
-                    {isEmpty ? (
-                      <span className="h-px w-full bg-[var(--app-rule)]" />
-                    ) : isFutureYear ? (
-                      <motion.span
-                        initial={reduceMotion ? false : { height: '0%' }}
-                        animate={{ height: targetHeight }}
-                        transition={barTransition}
-                        className={`block w-full rounded-t-[4px] border border-dashed border-[var(--app-accent)] transition-colors duration-150 ${
-                          isSelected
-                            ? 'bg-[var(--app-accent)]/35'
-                            : isHovered
-                              ? 'bg-[var(--app-accent)]/20'
-                              : 'bg-[var(--app-hover)]'
-                        }`}
-                      />
-                    ) : metric === 'papers' ? (
-                      <motion.span
-                        initial={reduceMotion ? false : { height: '0%' }}
-                        animate={{ height: targetHeight }}
-                        transition={barTransition}
-                        className={`relative flex w-full flex-col justify-end overflow-hidden rounded-t-[4px] transition-colors duration-150 ${
-                          isSelected
-                            ? 'bg-[var(--app-bar-coauthor-hover)] ring-1 ring-[var(--app-ink)]'
-                            : isHovered
-                              ? 'bg-[var(--app-bar-coauthor-hover)]'
-                              : 'bg-[var(--app-bar-coauthor)]'
+                  return (
+                    <div key={b.year} className="flex h-full min-w-0 flex-1 items-end">
+                      <button
+                        type="button"
+                        disabled={isEmpty}
+                        onMouseEnter={() => setHoveredYear(b.year)}
+                        onFocus={() => setHoveredYear(b.year)}
+                        onBlur={() => setHoveredYear(null)}
+                        onClick={() => onSelectYear(isSelected ? 'All' : String(b.year))}
+                        aria-label={
+                          isZh
+                            ? `${b.year} 年${isFutureYear ? '（預刊）' : ''}：${b.count} 篇論文，${b.citations} 次引用`
+                            : `${b.year}${isFutureYear ? ' (In Press)' : ''}: ${b.count} papers, ${b.citations} citations`
+                        }
+                        aria-pressed={isSelected}
+                        className={`group flex h-full w-full items-end justify-center pt-1 focus:outline-none ${
+                          isEmpty ? 'cursor-default' : 'cursor-pointer'
                         }`}
                       >
-                        {b.starredCount > 0 ? (
+                        {isEmpty ? (
+                          <span className="h-px w-full bg-[var(--app-rule)]" />
+                        ) : isFutureYear ? (
                           <motion.span
-                            animate={{ height: `${starredRatio}%` }}
-                            transition={
-                              reduceMotion
-                                ? { duration: 0 }
-                                : { duration: 0.42, ease: EDITORIAL_EASE }
-                            }
-                            className={`block w-full transition-colors duration-150 ${
+                            initial={reduceMotion ? false : { height: '0%' }}
+                            animate={{ height: targetHeight }}
+                            transition={barTransition}
+                            className={`block w-full rounded-t-[4px] border border-dashed border-[var(--app-accent)] transition-colors duration-150 ${
                               isSelected
-                                ? 'bg-[var(--app-ink)]'
-                                : 'bg-[var(--app-accent)] group-hover:bg-[var(--app-ink)]'
+                                ? 'bg-[var(--app-accent)]/35'
+                                : isHovered
+                                  ? 'bg-[var(--app-accent)]/20'
+                                  : 'bg-[var(--app-hover)]'
                             }`}
                           />
-                        ) : null}
-                      </motion.span>
-                    ) : (
-                      <motion.span
-                        initial={reduceMotion ? false : { height: '0%' }}
-                        animate={{ height: targetHeight }}
-                        transition={barTransition}
-                        className={`block w-full rounded-t-[4px] transition-colors duration-150 ${
-                          isSelected || isHovered
-                            ? 'bg-[var(--app-ink)]'
-                            : 'bg-[var(--app-accent)]'
-                        }`}
-                      />
-                    )}
-                  </button>
+                        ) : metric === 'papers' ? (
+                          <motion.span
+                            initial={reduceMotion ? false : { height: '0%' }}
+                            animate={{ height: targetHeight }}
+                            transition={barTransition}
+                            className={`relative flex w-full flex-col justify-end overflow-hidden rounded-t-[4px] transition-colors duration-150 ${
+                              isSelected
+                                ? 'bg-[var(--app-bar-coauthor-hover)] ring-1 ring-[var(--app-ink)]'
+                                : isHovered
+                                  ? 'bg-[var(--app-bar-coauthor-hover)]'
+                                  : 'bg-[var(--app-bar-coauthor)]'
+                            }`}
+                          >
+                            {b.starredCount > 0 ? (
+                              <motion.span
+                                animate={{ height: `${starredRatio}%` }}
+                                transition={
+                                  reduceMotion
+                                    ? { duration: 0 }
+                                    : { duration: 0.42, ease: EDITORIAL_EASE }
+                                }
+                                className={`block w-full transition-colors duration-150 ${
+                                  isSelected
+                                    ? 'bg-[var(--app-ink)]'
+                                    : 'bg-[var(--app-accent)] group-hover:bg-[var(--app-ink)]'
+                                }`}
+                              />
+                            ) : null}
+                          </motion.span>
+                        ) : (
+                          <motion.span
+                            initial={reduceMotion ? false : { height: '0%' }}
+                            animate={{ height: targetHeight }}
+                            transition={barTransition}
+                            className={`block w-full rounded-t-[4px] transition-colors duration-150 ${
+                              isSelected || isHovered
+                                ? 'bg-[var(--app-ink)]'
+                                : 'bg-[var(--app-accent)]'
+                            }`}
+                          />
+                        )}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
 
+            {/* 獨立於 0 基線下方的 X 軸年份標籤列 */}
+            <div className="mt-2 flex h-5 items-center gap-[2.5px] sm:gap-[3px]">
+              {buckets.map((b, idx) => {
+                const isSelected = activeYearNum === b.year;
+                const isFutureYear = b.year > currentYear;
+                const showLabel =
+                  idx === 0 || idx === buckets.length - 1 || b.year % 5 === 0 || isSelected;
+                return (
                   <span
-                    className={`mt-2 h-5 font-mono text-[11px] leading-none [font-variant-numeric:tabular-nums] ${
+                    key={b.year}
+                    className={`min-w-0 flex-1 text-center font-mono text-[11px] leading-none [font-variant-numeric:tabular-nums] ${
                       isSelected
                         ? 'font-bold text-[var(--app-ink)]'
                         : showLabel
@@ -458,9 +471,8 @@ function PublicationTimelineChartComponent({
                   >
                     {showLabel ? b.year : '·'}
                   </span>
-                </div>
-              );
-            })}
+                );
+              })}
             </div>
           </div>
         </div>

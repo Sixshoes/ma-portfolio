@@ -1,7 +1,7 @@
 'use client';
 
-import React, { memo, useCallback, useEffect, useState } from 'react';
-import { motion, useReducedMotion } from 'motion/react';
+import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { motion, useInView, useReducedMotion } from 'motion/react';
 import { Check, Copy, Download, Mail } from 'lucide-react';
 import { EDITORIAL_EASE, InkRule } from '@/app/components/EditorialMotion';
 import { RadialRankGauge } from '@/app/components/RadialRankGauge';
@@ -62,6 +62,9 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
   useRenderProfiler('BottomSections');
   const reduceMotion = useReducedMotion();
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const impactGridRef = useRef<HTMLDivElement>(null);
+  // 監測外層卡片網格而非 scaleX(0) 進度條，徹底杜絕東華 #1 黃條停留於 0% 空白
+  const isImpactInView = useInView(impactGridRef, { once: true, amount: 0.05 });
   const isZh = lang === 'zh';
 
   const handleCopy = useCallback((key: string, text: string) => {
@@ -154,19 +157,23 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
                 {t.impact.source}
               </p>
             </div>
+            <p className="mt-2.5 text-sm text-[var(--app-muted)]">
+              {isZh
+                ? '註：本區採 AD Scientific Index（Google Scholar 基準），與首頁總覽之 Scopus 資料庫統計口徑（H-Index 52）不同。'
+                : 'Note: Metrics below follow AD Scientific Index (Google Scholar), whereas the overview stats above are sourced from Scopus (H-Index 52).'}
+            </p>
           </div>
           <InkRule thick className="mb-8" />
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div ref={impactGridRef} className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {institutions.map((inst, idx) => (
               <motion.div
                 key={inst.key}
-                initial={reduceMotion ? false : { opacity: 0, y: 14 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-50px' }}
+                initial={reduceMotion ? false : { opacity: 0.92, y: 6 }}
+                animate={isImpactInView || reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0.92, y: 6 }}
                 transition={{
-                  duration: reduceMotion ? 0 : 0.55,
-                  delay: reduceMotion ? 0 : idx * 0.1,
+                  duration: reduceMotion ? 0 : 0.3,
+                  delay: reduceMotion ? 0 : idx * 0.04,
                   ease: EDITORIAL_EASE,
                 }}
                 className="overflow-hidden rounded-[26px] border border-[#2C473C] bg-[#16231E] p-6 text-[#F4F1EA] shadow-[0_20px_48px_-24px_rgba(16,28,23,0.55)] sm:p-7"
@@ -232,11 +239,10 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
                       <div className="h-2 w-full overflow-hidden rounded-full bg-[#2B4339]">
                         <motion.div
                           initial={reduceMotion ? { scaleX: 1 } : { scaleX: 0 }}
-                          whileInView={{ scaleX: 1 }}
-                          viewport={{ once: true, margin: '-40px' }}
+                          animate={{ scaleX: isImpactInView || reduceMotion ? 1 : 0 }}
                           transition={{
-                            duration: reduceMotion ? 0 : 0.85,
-                            delay: reduceMotion ? 0 : 0.16 + idx * 0.1,
+                            duration: reduceMotion ? 0 : 0.72,
+                            delay: reduceMotion ? 0 : 0.08 + idx * 0.06,
                             ease: EDITORIAL_EASE,
                           }}
                           style={{

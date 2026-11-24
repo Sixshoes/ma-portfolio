@@ -52,10 +52,9 @@ export function toggleThemeWithRipple(
 
   const x = origin?.clientX ?? window.innerWidth - 64;
   const y = origin?.clientY ?? 32;
-  const maxRadius = Math.hypot(
-    Math.max(x, window.innerWidth - x),
-    Math.max(y, window.innerHeight - y),
-  );
+  // 放大 6% 確保圓形光圈完全覆蓋最遠左下角，杜絕收尾前露出白色三角殘影
+  const maxRadius =
+    Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y)) * 1.06;
 
   const transition = doc.startViewTransition(() => {
     document.documentElement.dataset.theme = nextTheme;
@@ -74,8 +73,9 @@ export function toggleThemeWithRipple(
           ],
         },
         {
-          duration: 550,
-          easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+          duration: 420,
+          easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+          fill: 'both',
           pseudoElement: '::view-transition-new(root)',
         },
       );

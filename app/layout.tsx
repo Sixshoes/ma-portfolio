@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter, JetBrains_Mono, Newsreader } from 'next/font/google';
+import { JetBrains_Mono, Plus_Jakarta_Sans, Source_Serif_4 } from 'next/font/google';
 import './globals.css';
 import { LanguageProvider } from './LanguageContext';
 import { ThemeProvider } from './ThemeContext';
@@ -7,21 +7,23 @@ import { getSiteUrl } from '@/lib/site-url';
 
 const siteUrl = getSiteUrl();
 
-const newsreader = Newsreader({
-  weight: ['400', '500', '600'],
+const sourceSerif = Source_Serif_4({
+  weight: ['400', '600', '700'],
   style: ['normal', 'italic'],
   subsets: ['latin'],
-  variable: '--font-newsreader',
+  variable: '--font-source-serif',
   display: 'swap',
 });
 
-const inter = Inter({
+const jakarta = Plus_Jakarta_Sans({
+  weight: ['400', '500', '600', '700'],
   subsets: ['latin'],
-  variable: '--font-inter',
+  variable: '--font-jakarta',
   display: 'swap',
 });
 
 const mono = JetBrains_Mono({
+  weight: ['400', '500', '600'],
   subsets: ['latin'],
   variable: '--font-jetbrains-mono',
   display: 'swap',
@@ -94,17 +96,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="en"
       data-theme="light"
       suppressHydrationWarning
-      className={`${newsreader.variable} ${inter.variable} ${mono.variable}`}
+      className={`${sourceSerif.variable} ${jakarta.variable} ${mono.variable}`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
-        {/* 以原生 Google Fonts 串流載入繁體中文 Noto Serif TC，避免 Next.js 15 CJK 分塊抓檔偶發錯誤 */}
+        {/* 以原生 Google Fonts 串流載入繁體中文 Noto Sans TC + Noto Serif TC 全字重，徹底防止 Windows 退化為新細明體 */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@500;600;700&display=swap"
         />
         <script
           type="application/ld+json"

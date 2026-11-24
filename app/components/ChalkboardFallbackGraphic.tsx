@@ -45,7 +45,7 @@ function ChalkboardFallbackGraphicComponent({
 
         {/* 左上粉筆推導算式：雙曲函數展開 sinh(κL), cosh(κL) */}
         <g
-          fontFamily="var(--font-newsreader), Georgia, serif"
+          fontFamily="var(--font-source-serif), Georgia, serif"
           fontStyle="italic"
           fill="#F3DF87"
           fillOpacity="0.92"

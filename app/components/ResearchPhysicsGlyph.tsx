@@ -400,7 +400,7 @@ function ResearchPhysicsGlyphComponent({
     ? {
         ink: '#E6ECE8',
         accent: chalkAccent,
-        sizeClass: 'h-32 w-32',
+        sizeClass: 'h-24 w-24',
       }
     : {
         ink: 'var(--app-ink)',
@@ -427,14 +427,14 @@ function ResearchPhysicsGlyphComponent({
     <motion.div
       aria-hidden="true"
       animate={{
-        opacity: isBlueprint ? (isActive ? 1 : 0.84) : isActive ? 1 : 0.15,
+        opacity: isBlueprint ? (isActive ? 1 : 0.86) : isActive ? 1 : 0.15,
         scale: isActive && !reduce ? 1.05 : 1,
       }}
       transition={{ duration: 0.35, ease: EDITORIAL_EASE }}
       className={
         isBlueprint
-          ? 'flex h-36 w-36 shrink-0 items-center justify-center'
-          : 'flex h-14 w-14 shrink-0 items-center justify-center'
+          ? 'flex h-28 w-28 shrink-0 items-center justify-center bg-transparent'
+          : 'flex h-14 w-14 shrink-0 items-center justify-center bg-transparent'
       }
     >
       {renderGlyph()}

@@ -371,7 +371,7 @@ export function CommandPalette({
                             <div
                               className={`truncate text-base ${
                                 item.group === 'publications'
-                                  ? 'font-editorial font-medium text-[var(--app-ink)]'
+                                  ? 'font-sans font-semibold text-[var(--app-ink)]'
                                   : 'font-medium text-[var(--app-ink)]'
                               }`}
                             >

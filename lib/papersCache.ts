@@ -11,9 +11,13 @@ export const LEGACY_PORTAL_PAPERS_URL =
   'https://sixshoes.github.io/Ma-Research-Portal/papers.json';
 export const PAPERS_JSON_URL = LEGACY_PORTAL_PAPERS_URL;
 
-const CACHE_SCHEMA_VERSION = 3;
+const CACHE_SCHEMA_VERSION = 4;
 const STORAGE_KEY = `yrma_papers_cache_v${CACHE_SCHEMA_VERSION}`;
-const LEGACY_STORAGE_KEYS = ['yrma_papers_json_2026-04-14', 'yrma_papers_cache_v2'];
+const LEGACY_STORAGE_KEYS = [
+  'yrma_papers_json_2026-04-14',
+  'yrma_papers_cache_v2',
+  'yrma_papers_cache_v3',
+];
 const PAPERS_CACHE_TTL_MS = 1000 * 60 * 60 * 24;
 
 type CachedPapersPayload = {

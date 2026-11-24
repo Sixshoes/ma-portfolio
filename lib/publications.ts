@@ -23,6 +23,35 @@ export interface Publication {
 const YEAR_REGEX = /\b((?:19|20)\d{2})\b/;
 const DOI_PREFIX_REGEX = /^https?:\/\/(?:dx\.)?doi\.org\/(.+)$/i;
 
+/** 常見國際期刊大小寫正規化映射表（修正 Scopus/Notion 匯入時的駝峰或縮寫小寫錯誤） */
+const JOURNAL_CASE_MAP: Record<string, string> = {
+  chemistryselect: 'ChemistrySelect',
+  'rsc advances': 'RSC Advances',
+  chemnanomat: 'ChemNanoMat',
+  crystengcomm: 'CrystEngComm',
+  'acs omega': 'ACS Omega',
+  'acs applied materials and interfaces': 'ACS Applied Materials and Interfaces',
+  'acs applied nano materials': 'ACS Applied Nano Materials',
+  'acs applied energy materials': 'ACS Applied Energy Materials',
+  'acs sustainable chemistry and engineering': 'ACS Sustainable Chemistry and Engineering',
+};
+
+export function normalizeJournalName(raw: unknown): string {
+  const trimmed = String(raw ?? '').trim();
+  if (!trimmed) return 'Unknown';
+  return JOURNAL_CASE_MAP[trimmed.toLowerCase()] ?? trimmed;
+}
+
+/** 將作者字串中的 Unicode 連字號（U+2010–U+2015 / U+2212）統一轉為標準 ASCII `-`，防止中文語系下變形為全形寬距 */
+export function normalizeAuthorsString(raw: unknown): string | undefined {
+  if (typeof raw !== 'string') return undefined;
+  const cleaned = raw
+    .replace(/\s*[\u2010-\u2015\u2212]\s*/g, '-')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return cleaned || undefined;
+}
+
 function sanitizeHttpUrl(value: unknown): string {
   if (typeof value !== 'string') return '';
   const trimmed = value.trim();
@@ -94,7 +123,7 @@ export function normalizePublicationsFromJson(data: unknown): Publication[] {
     .map((pub) => {
       const id = typeof pub.id === 'string' && pub.id.trim() ? pub.id.trim() : undefined;
       const doi = sanitizeHttpUrl(pub.doi);
-      const authors = typeof pub.authors === 'string' && pub.authors.trim() ? pub.authors.trim() : undefined;
+      const authors = normalizeAuthorsString(pub.authors);
       const takeaway = typeof pub.takeaway === 'string' && pub.takeaway.trim() ? pub.takeaway.trim() : undefined;
       const rawAbstract = pub.abstract_excerpt ?? pub.abstractExcerpt;
       const abstract_excerpt =
@@ -109,7 +138,7 @@ export function normalizePublicationsFromJson(data: unknown): Publication[] {
         ...(id ? { id } : {}),
         title: String(pub.title ?? '').trim() || 'Untitled',
         year: parseSafeYear(pub.year),
-        journal: String(pub.journal ?? '').trim() || 'Unknown',
+        journal: normalizeJournalName(pub.journal),
         doi,
         citations: parseSafeCitations(pub.citations),
         is_star: String(pub.is_star ?? '否').trim(),

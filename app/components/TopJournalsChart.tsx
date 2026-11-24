@@ -107,9 +107,9 @@ function TopJournalsChartComponent({
                     : 'hover:bg-[var(--app-hover)]/75'
                 }`}
               >
-                <div className="mb-1 flex items-baseline justify-between gap-2 text-sm">
+                <div className="mb-1.5 flex items-start justify-between gap-2 text-[13.5px]">
                   <span
-                    className={`truncate ${
+                    className={`line-clamp-2 min-w-0 leading-snug ${
                       isSelected
                         ? 'font-semibold text-[var(--app-accent)]'
                         : 'font-medium text-[var(--app-ink)] group-hover:text-[var(--app-accent)]'
@@ -121,7 +121,7 @@ function TopJournalsChartComponent({
                     </span>
                     <span className="font-journal-italic">{row.journal}</span>
                   </span>
-                  <span className="shrink-0 font-mono text-xs text-[var(--app-muted)] [font-variant-numeric:tabular-nums]">
+                  <span className="mt-0.5 shrink-0 whitespace-nowrap font-mono text-xs text-[var(--app-muted)] [font-variant-numeric:tabular-nums]">
                     <strong className="text-[var(--app-ink)]">{row.count}</strong>
                     {isZh ? ' 篇 · ' : ' · '}
                     {row.citations.toLocaleString('en-US')} {isZh ? '引' : 'cit.'}
