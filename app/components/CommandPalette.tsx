@@ -288,7 +288,7 @@ export function CommandPalette({
                     : `Search ${publications.length} papers, journals, years, or commands…`
                 }
                 aria-label={isZh ? '快速檢索關鍵字' : 'Quick search query'}
-                className="w-full bg-transparent text-sm text-[var(--app-ink)] placeholder:text-[var(--app-muted)] focus:outline-none focus-visible:outline-none"
+                className="w-full bg-transparent text-base text-[var(--app-ink)] placeholder:text-[var(--app-muted)] focus:outline-none focus-visible:outline-none"
               />
               {query ? (
                 <button
@@ -297,13 +297,13 @@ export function CommandPalette({
                   aria-label={isZh ? '清除關鍵字' : 'Clear query'}
                   className="rounded-full p-1 text-[var(--app-muted)] transition-colors hover:text-[var(--app-ink)]"
                 >
-                  <X className="h-3.5 w-3.5" aria-hidden />
+                  <X className="h-4 w-4" aria-hidden />
                 </button>
               ) : null}
               <button
                 type="button"
                 onClick={onClose}
-                className="shrink-0 rounded-full border border-[var(--app-rule)] px-2.5 py-0.5 font-mono text-[10px] text-[var(--app-muted)] transition-colors hover:border-[var(--app-ink)] hover:text-[var(--app-ink)]"
+                className="shrink-0 rounded-full border border-[var(--app-rule)] px-3 py-1 font-mono text-xs text-[var(--app-muted)] transition-colors hover:border-[var(--app-ink)] hover:text-[var(--app-ink)]"
               >
                 ESC
               </button>
@@ -312,7 +312,7 @@ export function CommandPalette({
             {/* 檢索結果目錄 */}
             <div ref={listRef} className="min-h-0 flex-1 overflow-y-auto py-2">
               {items.length === 0 ? (
-                <div className="px-6 py-12 text-center text-sm text-[var(--app-muted)]">
+                <div className="px-6 py-12 text-center text-base text-[var(--app-muted)]">
                   {isZh
                     ? '找不到相符的論文或指令，請嘗試其他材料或期刊關鍵字。'
                     : 'No matching publications or commands found.'}
@@ -339,7 +339,7 @@ export function CommandPalette({
                   return (
                     <React.Fragment key={item.id}>
                       {showHeader ? (
-                        <div className="mt-2 border-t border-[var(--app-rule)] px-5 pb-1.5 pt-3 text-[11px] font-medium tracking-wide text-[var(--app-muted)] first:mt-0 first:border-t-0 first:pt-1.5">
+                        <div className="mt-2 border-t border-[var(--app-rule)] px-5 pb-1.5 pt-3 text-xs font-medium tracking-wide text-[var(--app-muted)] first:mt-0 first:border-t-0 first:pt-1.5">
                           {groupLabels[item.group]}
                         </div>
                       ) : null}
@@ -348,7 +348,7 @@ export function CommandPalette({
                         data-active={isActive ? 'true' : undefined}
                         onMouseEnter={() => setActiveIndex(idx)}
                         onClick={(e) => item.onSelect(e)}
-                        className={`relative flex w-full items-start justify-between gap-4 px-5 py-2.5 text-left transition-colors ${
+                        className={`relative flex w-full items-start justify-between gap-4 px-5 py-3 text-left transition-colors ${
                           isActive
                             ? 'bg-[var(--app-hover)] text-[var(--app-ink)]'
                             : 'text-[var(--app-body)] hover:bg-[var(--app-hover)]'
@@ -362,14 +362,14 @@ export function CommandPalette({
                         ) : null}
                         <div className="flex min-w-0 flex-1 items-start gap-3">
                           <Icon
-                            className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${
+                            className={`mt-1 h-4 w-4 shrink-0 ${
                               isActive ? 'text-[var(--app-accent)]' : 'text-[var(--app-muted)]'
                             }`}
                             aria-hidden
                           />
                           <div className="min-w-0 flex-1">
                             <div
-                              className={`truncate text-sm ${
+                              className={`truncate text-base ${
                                 item.group === 'publications'
                                   ? 'font-editorial font-medium text-[var(--app-ink)]'
                                   : 'font-medium text-[var(--app-ink)]'
@@ -379,7 +379,7 @@ export function CommandPalette({
                             </div>
                             {item.subtitle ? (
                               <div
-                                className={`mt-0.5 truncate text-xs text-[var(--app-muted)] ${
+                                className={`mt-0.5 truncate text-sm text-[var(--app-muted)] ${
                                   item.group === 'publications' ? 'font-journal-italic' : ''
                                 }`}
                               >
@@ -389,7 +389,7 @@ export function CommandPalette({
                           </div>
                         </div>
                         {item.meta ? (
-                          <span className="shrink-0 font-mono text-[11px] text-[var(--app-muted)] [font-variant-numeric:tabular-nums]">
+                          <span className="shrink-0 font-mono text-xs text-[var(--app-muted)] [font-variant-numeric:tabular-nums]">
                             {item.meta}
                           </span>
                         ) : null}
@@ -401,7 +401,7 @@ export function CommandPalette({
             </div>
 
             {/* 底部鍵盤操作提示尺規 */}
-            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--app-rule)] bg-[var(--app-hover)]/50 px-5 py-2.5 font-mono text-[11px] text-[var(--app-muted)]">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--app-rule)] bg-[var(--app-hover)]/50 px-5 py-2.5 font-mono text-xs text-[var(--app-muted)]">
               <div className="flex items-center gap-4">
                 <span>↑↓ {isZh ? '移動' : 'Navigate'}</span>
                 <span className="inline-flex items-center gap-1">

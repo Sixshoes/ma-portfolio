@@ -43,18 +43,18 @@ function renderChronoRow(text: string) {
   const { main, period } = splitTitleAndDate(text);
   if (period) {
     return (
-      <div className="flex flex-col gap-1 border-b border-[var(--app-rule)]/70 px-3 py-3.5 transition-colors duration-150 last:border-b-0 hover:bg-[var(--app-hover)]/60 sm:flex-row sm:items-baseline sm:gap-5">
-        <span className="font-mono text-xs leading-snug text-[var(--app-muted)] [font-variant-numeric:tabular-nums] sm:w-44 sm:shrink-0">
+      <div className="flex flex-col gap-1 border-b border-[var(--app-rule)]/70 px-3 py-4 transition-colors duration-150 last:border-b-0 hover:bg-[var(--app-hover)]/60 sm:flex-row sm:items-baseline sm:gap-5">
+        <span className="font-mono text-sm leading-snug text-[var(--app-muted)] [font-variant-numeric:tabular-nums] sm:w-48 sm:shrink-0">
           {period}
         </span>
-        <span className="flex-1 text-[14.5px] leading-relaxed text-[var(--app-ink)]">
+        <span className="flex-1 text-base leading-relaxed text-[var(--app-ink)]">
           {main}
         </span>
       </div>
     );
   }
   return (
-    <div className="border-b border-[var(--app-rule)]/70 px-3 py-3.5 text-[14.5px] leading-relaxed text-[var(--app-ink)] last:border-b-0 hover:bg-[var(--app-hover)]/60">
+    <div className="border-b border-[var(--app-rule)]/70 px-3 py-4 text-base leading-relaxed text-[var(--app-ink)] last:border-b-0 hover:bg-[var(--app-hover)]/60">
       {main}
     </div>
   );
@@ -124,14 +124,14 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
         {highlightedHonors.length > 0 ? (
           <div className="mb-10">
             <div className="mb-4 flex items-center justify-between gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#C88A2B]/15 px-3 py-1 font-mono text-[11px] font-semibold text-[#A46B15] dark:text-[#F3DF87]">
-                <Award className="h-3.5 w-3.5" aria-hidden />
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#C88A2B]/15 px-3.5 py-1 font-mono text-xs font-semibold text-[#A46B15] dark:text-[#F3DF87]">
+                <Award className="h-4 w-4" aria-hidden />
                 {isZh ? '重點國際榮譽與院士頭銜' : 'FEATURED HONORS & FELLOWSHIPS'}
               </span>
               <button
                 type="button"
                 onClick={() => setTab('awards')}
-                className="text-xs font-medium text-[var(--app-accent)] hover:underline"
+                className="text-sm font-medium text-[var(--app-accent)] hover:underline"
               >
                 {isZh ? `查看全部 ${aboutText.awards.length} 項 →` : `View all ${aboutText.awards.length} →`}
               </button>
@@ -153,15 +153,15 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                     }}
                     className="flex items-start gap-3 rounded-2xl border border-[var(--app-rule)] bg-[var(--app-surface-card)] p-4 shadow-xs transition-colors hover:border-[#C88A2B]/60"
                   >
-                    <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#C88A2B]/15 text-[#B4771D] dark:text-[#F3DF87]">
+                    <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#C88A2B]/15 text-[#B4771D] dark:text-[#F3DF87]">
                       <Award className="h-4 w-4" aria-hidden />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium leading-snug text-[var(--app-ink)]">
+                      <p className="text-base font-medium leading-snug text-[var(--app-ink)]">
                         {main}
                       </p>
                       {period ? (
-                        <span className="mt-1 inline-block rounded-full bg-[var(--app-hover)] px-2 py-0.5 font-mono text-[10.5px] text-[var(--app-muted)]">
+                        <span className="mt-1.5 inline-block rounded-full bg-[var(--app-hover)] px-2.5 py-0.5 font-mono text-xs text-[var(--app-muted)]">
                           {period}
                         </span>
                       ) : null}
@@ -197,19 +197,19 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                   )}
                 </div>
                 <div className="min-w-0">
-                  <h3 className="font-editorial text-lg font-semibold text-[var(--app-ink)]">
+                  <h3 className="font-editorial text-xl font-semibold text-[var(--app-ink)]">
                     {isZh ? '馬遠榮 副校長' : 'Prof. Yuan-Ron Ma'}
                   </h3>
-                  <p className="mt-0.5 text-xs text-[var(--app-muted)]">
+                  <p className="mt-0.5 text-sm text-[var(--app-muted)]">
                     {isZh ? '佛光大學 · 國立東華大學' : 'Fo Guang University · NDHU'}
                   </p>
-                  <span className="mt-1.5 inline-block rounded-full bg-[var(--app-hover)] px-2.5 py-0.5 font-mono text-[10px] text-[var(--app-accent)]">
+                  <span className="mt-1.5 inline-block rounded-full bg-[var(--app-hover)] px-2.5 py-0.5 font-mono text-xs text-[var(--app-accent)]">
                     {aboutText.leadership}
                   </span>
                 </div>
               </div>
 
-              <p className="mb-6 text-sm leading-[1.75] text-[var(--app-body)]">
+              <p className="mb-6 text-base leading-[1.8] text-[var(--app-body)]">
                 {aboutText.leadershipDesc}
               </p>
 
@@ -235,7 +235,7 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                         aria-controls={`about-panel-${id}`}
                         onClick={() => setTab(id)}
                         onKeyDown={(e) => handleTabKeyDown(e, id)}
-                        className={`relative flex w-full items-center justify-between rounded-xl py-2.5 pl-4 pr-3 text-left transition-colors ${
+                        className={`relative flex w-full items-center justify-between rounded-xl py-3 pl-4 pr-3 text-left transition-colors ${
                           selected
                             ? 'bg-[var(--app-hover)] font-semibold text-[var(--app-ink)]'
                             : 'text-[var(--app-muted)] hover:bg-[var(--app-hover)]/55 hover:text-[var(--app-ink)]'
@@ -249,8 +249,8 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                             className="absolute bottom-2 left-1 top-2 w-[3px] rounded-full bg-[var(--app-accent)]"
                           />
                         ) : null}
-                        <span className="text-sm">{label}</span>
-                        <span className="rounded-full bg-[var(--app-bg)] px-2 py-0.5 font-mono text-[11px] text-[var(--app-muted)] [font-variant-numeric:tabular-nums]">
+                        <span className="text-base">{label}</span>
+                        <span className="rounded-full bg-[var(--app-bg)] px-2.5 py-0.5 font-mono text-xs text-[var(--app-muted)] [font-variant-numeric:tabular-nums]">
                           {String(count).padStart(2, '0')}
                         </span>
                       </button>
@@ -277,7 +277,7 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                   className="space-y-6"
                 >
                   <div className="atlas-card p-5 sm:p-6">
-                    <h4 className="font-editorial mb-3 text-base font-semibold text-[var(--app-ink)]">
+                    <h4 className="font-editorial mb-3 text-lg font-semibold text-[var(--app-ink)]">
                       {aboutText.roleLabel}
                     </h4>
                     <div>
@@ -287,7 +287,7 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                     </div>
                   </div>
                   <div className="atlas-card p-5 sm:p-6">
-                    <h4 className="font-editorial mb-3 text-base font-semibold text-[var(--app-ink)]">
+                    <h4 className="font-editorial mb-3 text-lg font-semibold text-[var(--app-ink)]">
                       {aboutText.eduLabel}
                     </h4>
                     <div>
@@ -311,7 +311,7 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                   transition={{ duration: reduceMotion ? 0 : 0.18, ease: EDITORIAL_EASE }}
                   className="atlas-card p-5 sm:p-6"
                 >
-                  <h4 className="font-editorial mb-3 text-base font-semibold text-[var(--app-ink)]">
+                  <h4 className="font-editorial mb-3 text-lg font-semibold text-[var(--app-ink)]">
                     {aboutText.adminLabel}
                   </h4>
                   <div>
@@ -325,7 +325,7 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                     <button
                       type="button"
                       onClick={() => setIsExpandedAdmin(!isExpandedAdmin)}
-                      className={`${uiTokens.buttonOutline} mt-5 px-5 py-2 text-xs`}
+                      className={`${uiTokens.buttonOutline} mt-5 px-6 py-2.5 text-sm`}
                     >
                       {isExpandedAdmin
                         ? isZh
@@ -351,7 +351,7 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                   transition={{ duration: reduceMotion ? 0 : 0.18, ease: EDITORIAL_EASE }}
                   className="atlas-card p-5 sm:p-6"
                 >
-                  <h4 className="font-editorial mb-3 text-base font-semibold text-[var(--app-ink)]">
+                  <h4 className="font-editorial mb-3 text-lg font-semibold text-[var(--app-ink)]">
                     {aboutText.serviceLabel}
                   </h4>
                   <div>
@@ -365,7 +365,7 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                     <button
                       type="button"
                       onClick={() => setIsExpandedService(!isExpandedService)}
-                      className={`${uiTokens.buttonOutline} mt-5 px-5 py-2 text-xs`}
+                      className={`${uiTokens.buttonOutline} mt-5 px-6 py-2.5 text-sm`}
                     >
                       {isExpandedService
                         ? isZh
@@ -391,7 +391,7 @@ function AboutSectionComponent({ aboutText, lang }: AboutSectionProps) {
                   transition={{ duration: reduceMotion ? 0 : 0.18, ease: EDITORIAL_EASE }}
                   className="atlas-card p-5 sm:p-6"
                 >
-                  <h4 className="font-editorial mb-3 text-base font-semibold text-[var(--app-ink)]">
+                  <h4 className="font-editorial mb-3 text-lg font-semibold text-[var(--app-ink)]">
                     {aboutText.awardsLabel}
                   </h4>
                   <div>

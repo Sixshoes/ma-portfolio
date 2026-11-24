@@ -150,13 +150,13 @@ function PublicationTimelineChartComponent({
         {/* 頂部標題與圓角膠囊切換 */}
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-editorial text-lg font-semibold text-[var(--app-ink)]">
+            <h3 className="font-editorial text-xl font-semibold text-[var(--app-ink)]">
               {isZh
                 ? `歷年發表與引用軌跡（${minYear}–${maxYear}）`
                 : `Publication & Citation Trajectory (${minYear}–${maxYear})`}
             </h3>
             {hasInPress ? (
-              <span className="rounded-full border border-[var(--app-accent)]/50 bg-[var(--app-accent)]/10 px-2 py-0.5 text-[10.5px] font-medium text-[var(--app-accent)]">
+              <span className="rounded-full border border-[var(--app-accent)]/50 bg-[var(--app-accent)]/10 px-2.5 py-0.5 text-xs font-medium text-[var(--app-accent)]">
                 {isZh ? `含 ${maxYear} 預刊` : `incl. ${maxYear} In Press`}
               </span>
             ) : null}
@@ -167,19 +167,19 @@ function PublicationTimelineChartComponent({
               <button
                 type="button"
                 onClick={() => onSelectYear('All')}
-                className="inline-flex items-center gap-1 rounded-full bg-[var(--app-ink)] px-3 py-1 text-xs text-[var(--app-bg)] transition-colors hover:bg-[var(--app-accent)]"
+                className="inline-flex items-center gap-1 rounded-full bg-[var(--app-ink)] px-3.5 py-1 text-sm text-[var(--app-bg)] transition-colors hover:bg-[var(--app-accent)]"
               >
                 {isZh
                   ? `${activeYearNum} 年${activeYearNum > currentYear ? '（預刊）' : ''}`
                   : `${activeYearNum}${activeYearNum > currentYear ? ' (In Press)' : ''}`}
-                <X className="h-3 w-3" aria-hidden />
+                <X className="h-3.5 w-3.5" aria-hidden />
               </button>
             ) : null}
 
             <div
               role="group"
               aria-label={isZh ? '圖表指標切換' : 'Timeline metric toggle'}
-              className="inline-flex rounded-full border border-[var(--app-rule)] bg-[var(--app-bg)] p-0.5 text-xs"
+              className="inline-flex rounded-full border border-[var(--app-rule)] bg-[var(--app-bg)] p-0.5 text-sm"
             >
               {(['papers', 'citations'] as const).map((mode) => {
                 const active = metric === mode;
@@ -200,7 +200,7 @@ function PublicationTimelineChartComponent({
                       setMetric(mode);
                     }}
                     aria-pressed={active}
-                    className={`relative rounded-full px-3 py-1 transition-colors ${
+                    className={`relative rounded-full px-3.5 py-1 transition-colors ${
                       active
                         ? 'font-semibold text-[var(--app-bg)]'
                         : 'text-[var(--app-muted)] hover:text-[var(--app-ink)]'
@@ -223,15 +223,15 @@ function PublicationTimelineChartComponent({
 
         {/* 柔和數據讀數條 */}
         <div
-          className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-[var(--app-bg)]/70 px-3.5 py-2.5 text-xs"
+          className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-[var(--app-bg)]/70 px-4 py-3 text-sm"
           aria-live="polite"
         >
           {inspectedBucket ? (
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[var(--app-body)]">
-              <span className="inline-flex items-center gap-1.5 font-mono text-sm font-semibold text-[var(--app-ink)]">
+              <span className="inline-flex items-center gap-1.5 font-mono text-base font-semibold text-[var(--app-ink)]">
                 {inspectedBucket.year}
                 {inspectedBucket.year > currentYear ? (
-                  <span className="rounded-full bg-[var(--app-accent)]/15 px-1.5 py-0.5 font-sans text-[10px] font-medium text-[var(--app-accent)]">
+                  <span className="rounded-full bg-[var(--app-accent)]/15 px-2 py-0.5 font-sans text-xs font-medium text-[var(--app-accent)]">
                     {inPressLabel}
                   </span>
                 ) : null}
@@ -270,7 +270,7 @@ function PublicationTimelineChartComponent({
             </div>
           )}
 
-          <div className="flex flex-wrap items-center gap-3 text-[11px] text-[var(--app-muted)]">
+          <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--app-muted)]">
             {metric === 'papers' ? (
               <>
                 <span className="inline-flex items-center gap-1.5">
@@ -300,7 +300,7 @@ function PublicationTimelineChartComponent({
         {/* 固定左側 Y 軸刻度 */}
         <div
           aria-hidden="true"
-          className="flex w-8 shrink-0 flex-col justify-between pb-7 pt-8 text-right font-mono text-[10px] text-[var(--app-muted)] [font-variant-numeric:tabular-nums]"
+          className="flex w-10 shrink-0 flex-col justify-between pb-7 pt-8 text-right font-mono text-[11.5px] text-[var(--app-muted)] [font-variant-numeric:tabular-nums]"
         >
           {[1, 0.5, 0].map((ratio, idx) => (
             <span key={idx} className="leading-none">
@@ -311,8 +311,8 @@ function PublicationTimelineChartComponent({
 
         {/* 右側可捲動柱狀繪圖區 */}
         <div ref={scrollContainerRef} className="min-w-0 flex-1 overflow-x-auto pb-1">
-          <div className="relative min-w-[510px] pr-3 pt-8 lg:min-w-0">
-            <div className="pointer-events-none absolute left-0 right-3 top-0 h-7">
+          <div className="relative min-w-[520px] pr-4 pt-8 lg:min-w-0">
+            <div className="pointer-events-none absolute left-0 right-4 top-0 h-7">
               <AnimatePresence>
                 {hoveredBucket && hoveredBucket.count > 0 ? (
                   <motion.div
@@ -326,7 +326,7 @@ function PublicationTimelineChartComponent({
                     exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 3 }}
                     transition={{ duration: reduceMotion ? 0 : 0.18, ease: EDITORIAL_EASE }}
                     style={{ transform: 'translateX(-50%)' }}
-                    className="absolute top-0 whitespace-nowrap rounded-full border border-[var(--app-ink)] bg-[var(--app-surface-card)] px-2.5 py-0.5 font-mono text-[11px] text-[var(--app-ink)] shadow-sm [font-variant-numeric:tabular-nums]"
+                    className="absolute top-0 whitespace-nowrap rounded-full border border-[var(--app-ink)] bg-[var(--app-surface-card)] px-3 py-0.5 font-mono text-xs text-[var(--app-ink)] shadow-sm [font-variant-numeric:tabular-nums]"
                   >
                     <span className="font-semibold">{hoveredBucket.year}</span>
                     <span className="mx-1.5 text-[var(--app-muted)]">·</span>
@@ -446,7 +446,7 @@ function PublicationTimelineChartComponent({
                   </button>
 
                   <span
-                    className={`mt-2 h-5 font-mono text-[10px] leading-none [font-variant-numeric:tabular-nums] ${
+                    className={`mt-2 h-5 font-mono text-[11px] leading-none [font-variant-numeric:tabular-nums] ${
                       isSelected
                         ? 'font-bold text-[var(--app-ink)]'
                         : showLabel

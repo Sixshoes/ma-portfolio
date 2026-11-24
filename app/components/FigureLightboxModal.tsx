@@ -67,15 +67,15 @@ export function FigureLightboxModal({
           >
             <div className="flex items-start justify-between gap-4 border-b border-[var(--app-rule)] px-6 py-4">
               <div className="min-w-0">
-                <div className="flex flex-wrap items-baseline gap-2 text-sm text-[var(--app-muted)]">
+                <div className="flex flex-wrap items-baseline gap-2 text-base text-[var(--app-muted)]">
                   {lightbox.year && lightbox.year > 0 ? (
-                    <span className="rounded-full bg-[var(--app-hover)] px-2 py-0.5 font-mono text-xs text-[var(--app-ink)] [font-variant-numeric:tabular-nums]">
+                    <span className="rounded-full bg-[var(--app-hover)] px-2.5 py-0.5 font-mono text-sm text-[var(--app-ink)] [font-variant-numeric:tabular-nums]">
                       {lightbox.year}
                     </span>
                   ) : null}
                   <span className="font-journal-italic">{lightbox.journal}</span>
                 </div>
-                <h4 className="font-editorial mt-1 line-clamp-2 text-base font-semibold text-[var(--app-ink)]">
+                <h4 className="font-editorial mt-1.5 line-clamp-2 text-lg font-semibold text-[var(--app-ink)]">
                   {lightbox.title}
                 </h4>
               </div>

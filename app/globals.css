@@ -50,9 +50,11 @@
   --app-muted: #8E939B;
   --app-rule: #2A2F36;
   --app-accent: #7FA2C7;
-  --portrait-mat: #DDD9CE; /* 保護 #about 的 mix-blend-multiply 肖像在夜間模式依然清晰立體 */
+  --portrait-mat: #DDD9CE;
+  /* 保護 #about 的 mix-blend-multiply 肖像在夜間模式依然清晰立體 */
   --app-surface-card: #1A1E23;
-  --app-figure-mat: #E6E2D8; /* 柔和相紙底襯，消除白底論文摘要圖刺眼感 */
+  --app-figure-mat: #E6E2D8;
+  /* 柔和相紙底襯，消除白底論文摘要圖刺眼感 */
   --app-bar-coauthor: #3A414A;
   --app-bar-coauthor-hover: #4E5763;
   --app-card-shadow: 0 18px 42px -24px rgba(0, 0, 0, 0.55);
@@ -82,6 +84,7 @@
 }
 
 @layer utilities {
+
   /* 全程維持正體書卷襯線體，嚴禁中文合成假斜體 */
   .font-editorial {
     font-family: var(--font-newsreader), var(--font-noto-serif-tc), "Songti TC", "PMingLiU", Georgia, serif;
@@ -103,7 +106,14 @@
 }
 
 html {
+  font-size: 16.5px;
   scroll-behavior: smooth;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 17.5px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

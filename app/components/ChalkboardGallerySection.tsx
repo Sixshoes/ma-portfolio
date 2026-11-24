@@ -31,8 +31,8 @@ function ChalkboardGallerySectionComponent({
   return (
     <div className="mb-14">
       <div className="mb-7">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-[#F3DF87]/35 bg-[#152820] px-3 py-1 font-mono text-[11px] font-medium tracking-wider text-[#F3DF87]">
-          <Sparkles className="h-3 w-3" aria-hidden />
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-[#F3DF87]/35 bg-[#152820] px-3.5 py-1 font-mono text-xs font-medium tracking-wider text-[#F3DF87]">
+          <Sparkles className="h-3.5 w-3.5" aria-hidden />
           {isZh ? '講堂親筆手稿典藏' : 'LECTURE CHALKBOARD ARCHIVE'}
         </span>
         <h2 className="font-editorial mt-3 text-3xl font-semibold tracking-tight text-[#F4F1EA] sm:text-4xl">
@@ -105,7 +105,7 @@ function ChalkboardGallerySectionComponent({
                       </motion.div>
                     )}
 
-                    <span className="absolute left-4 top-4 rounded-full border border-[#F3DF87]/45 bg-[#152820]/85 px-3 py-1 font-mono text-[11px] font-semibold text-[#F3DF87] backdrop-blur-sm">
+                    <span className="absolute left-4 top-4 rounded-full border border-[#F3DF87]/45 bg-[#152820]/85 px-3 py-1 font-mono text-xs font-semibold text-[#F3DF87] backdrop-blur-sm">
                       {plateNum}
                     </span>
 
@@ -117,9 +117,9 @@ function ChalkboardGallerySectionComponent({
                           handleZoom();
                         }}
                         aria-label={isZh ? '全螢幕放大檢視黑板手稿' : 'Inspect chalkboard in full screen'}
-                        className="absolute bottom-4 right-4 inline-flex items-center gap-1.5 rounded-full border border-[#F3DF87]/45 bg-[#152820]/90 px-3.5 py-1.5 text-xs font-medium text-[#F4F1EA] backdrop-blur-sm transition-colors hover:bg-[#F3DF87] hover:text-[#152820]"
+                        className="absolute bottom-4 right-4 inline-flex items-center gap-1.5 rounded-full border border-[#F3DF87]/45 bg-[#152820]/90 px-4 py-2 text-sm font-medium text-[#F4F1EA] backdrop-blur-sm transition-colors hover:bg-[#F3DF87] hover:text-[#152820]"
                       >
-                        <ZoomIn className="h-3.5 w-3.5" aria-hidden />
+                        <ZoomIn className="h-4 w-4" aria-hidden />
                         {isZh ? '放大賞析筆跡' : 'Inspect Chalk'}
                       </button>
                     ) : null}
@@ -128,32 +128,32 @@ function ChalkboardGallerySectionComponent({
                   {/* 右 5 欄：策展說明與關鍵公式籤（垂直置中消除留白、公式不於括號內斷行） */}
                   <div className="flex flex-col justify-center gap-5 p-6 sm:p-8 lg:col-span-5">
                     <div>
-                      <div className="flex flex-wrap items-center gap-2 text-xs">
+                      <div className="flex flex-wrap items-center gap-2 text-sm">
                         {item.courseOrTopic ? (
-                          <span className="rounded-full bg-[#213F33] px-3 py-1 font-mono text-[11px] text-[#BFD3C8]">
+                          <span className="rounded-full bg-[#213F33] px-3 py-1 font-mono text-xs text-[#BFD3C8]">
                             {item.courseOrTopic}
                           </span>
                         ) : null}
                         {item.year ? (
-                          <span className="font-mono text-[11px] text-[#E88D84]">
+                          <span className="font-mono text-xs text-[#E88D84]">
                             {item.year}
                           </span>
                         ) : null}
                       </div>
 
-                      <h3 className="font-editorial mt-4 text-2xl font-semibold leading-snug text-[#F4F1EA]">
+                      <h3 className="font-editorial mt-4 text-2xl font-semibold leading-snug text-[#F4F1EA] sm:text-[1.7rem]">
                         {title}
                       </h3>
                       {secondaryTitle && secondaryTitle !== title ? (
-                        <p className="mt-1.5 text-sm text-[#9FB8AC]">{secondaryTitle}</p>
+                        <p className="mt-2 text-base text-[#9FB8AC]">{secondaryTitle}</p>
                       ) : null}
 
                       {item.formulaNote ? (
                         <div className="mt-5 rounded-2xl border border-[#F3DF87]/30 bg-[#1B3329] p-4">
-                          <div className="font-mono text-[10px] uppercase tracking-wider text-[#E88D84]">
+                          <div className="font-mono text-xs uppercase tracking-wider text-[#E88D84]">
                             {isZh ? '推導核心方程' : 'KEY DERIVATION'}
                           </div>
-                          <div className="mt-1.5 font-mono text-[13px] leading-relaxed text-[#F3DF87] [text-wrap:balance]">
+                          <div className="mt-1.5 font-mono text-sm leading-relaxed text-[#F3DF87] sm:text-[15px] [text-wrap:balance]">
                             {item.formulaNote}
                           </div>
                         </div>
@@ -204,7 +204,7 @@ function ChalkboardGallerySectionComponent({
                   </motion.div>
                 )}
 
-                <span className="absolute left-3 top-3 rounded-full border border-[#F3DF87]/40 bg-[#152820]/85 px-2.5 py-0.5 font-mono text-[10px] font-semibold text-[#F3DF87] backdrop-blur-sm">
+                <span className="absolute left-3 top-3 rounded-full border border-[#F3DF87]/40 bg-[#152820]/85 px-3 py-1 font-mono text-xs font-semibold text-[#F3DF87] backdrop-blur-sm">
                   {plateNum}
                 </span>
 
@@ -216,28 +216,28 @@ function ChalkboardGallerySectionComponent({
                       handleZoom();
                     }}
                     aria-label={isZh ? '放大檢視黑板手稿' : 'Zoom chalkboard'}
-                    className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full border border-[#F3DF87]/40 bg-[#152820]/85 text-[#F4F1EA] opacity-90 transition-colors hover:bg-[#F3DF87] hover:text-[#152820]"
+                    className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full border border-[#F3DF87]/40 bg-[#152820]/85 text-[#F4F1EA] opacity-90 transition-colors hover:bg-[#F3DF87] hover:text-[#152820]"
                   >
-                    <ZoomIn className="h-3.5 w-3.5" aria-hidden />
+                    <ZoomIn className="h-4 w-4" aria-hidden />
                   </button>
                 ) : null}
               </div>
 
               <div className="flex flex-1 flex-col justify-between p-5">
                 <div>
-                  <div className="flex items-center justify-between gap-2 text-[11px] text-[#9FB8AC]">
+                  <div className="flex items-center justify-between gap-2 text-xs text-[#9FB8AC]">
                     <span className="truncate font-mono">{item.courseOrTopic || 'Physics Lecture'}</span>
                     {item.year ? (
                       <span className="shrink-0 font-mono text-[#E88D84]">{item.year}</span>
                     ) : null}
                   </div>
-                  <h3 className="font-editorial mt-2 line-clamp-2 text-lg font-semibold leading-snug text-[#F4F1EA] group-hover:text-[#F3DF87]">
+                  <h3 className="font-editorial mt-2 line-clamp-2 text-xl font-semibold leading-snug text-[#F4F1EA] group-hover:text-[#F3DF87]">
                     {title}
                   </h3>
                 </div>
 
                 {item.formulaNote ? (
-                  <p className="mt-3 line-clamp-2 rounded-xl border border-[#2F5243] bg-[#1B3329] px-3 py-2 font-mono text-[11px] text-[#F3DF87]">
+                  <p className="mt-3 line-clamp-2 rounded-xl border border-[#2F5243] bg-[#1B3329] px-3 py-2 font-mono text-xs text-[#F3DF87]">
                     {item.formulaNote}
                   </p>
                 ) : null}

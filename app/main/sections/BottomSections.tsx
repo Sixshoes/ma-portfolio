@@ -150,7 +150,7 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
                   ? `${t.impact.title} ${t.impact.subtitle}`
                   : `${t.impact.title}${t.impact.subtitle}`}
               </h2>
-              <p className="rounded-full bg-[var(--app-hover)] px-3 py-1 text-xs text-[var(--app-muted)]">
+              <p className="rounded-full bg-[var(--app-hover)] px-3.5 py-1 text-sm text-[var(--app-muted)]">
                 {t.impact.source}
               </p>
             </div>
@@ -173,7 +173,7 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
               >
                 <div className="mb-6 flex flex-col items-start gap-2.5 border-b border-[#2B4339] pb-4 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                   <div>
-                    <span className="font-mono text-[11px] uppercase tracking-wider text-[#A7C4B8]">
+                    <span className="font-mono text-xs uppercase tracking-wider text-[#A7C4B8]">
                       {inst.index} {inst.location}
                     </span>
                     <h3 className="font-editorial mt-1 text-xl font-semibold text-[#F4F1EA] sm:text-2xl">
@@ -181,7 +181,7 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
                     </h3>
                   </div>
                   <span
-                    className="shrink-0 rounded-full border px-3 py-1 font-mono text-xs font-semibold"
+                    className="shrink-0 rounded-full border px-3.5 py-1 font-mono text-sm font-semibold"
                     style={{
                       borderColor: `${inst.gaugeColor}55`,
                       color: inst.gaugeColor,
@@ -204,23 +204,23 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
                   <div className="w-full flex-1 space-y-4">
                     <div className="grid grid-cols-2 gap-3">
                       <div className="rounded-2xl bg-[#1D2F28] p-3.5">
-                        <div className="text-[11px] text-[#A7C4B8]">{t.impact.worldRank}</div>
-                        <div className="font-editorial mt-1 text-2xl font-semibold text-[#F4F1EA] [font-variant-numeric:tabular-nums]">
+                        <div className="text-xs text-[#A7C4B8]">{t.impact.worldRank}</div>
+                        <div className="font-editorial mt-1 text-[1.65rem] font-semibold text-[#F4F1EA] [font-variant-numeric:tabular-nums]">
                           {inst.metrics.worldRank}
                         </div>
                       </div>
                       <div className="rounded-2xl bg-[#1D2F28] p-3.5">
-                        <div className="text-[11px] text-[#A7C4B8]">{t.impact.countryRank}</div>
-                        <div className="font-editorial mt-1 text-2xl font-semibold text-[#F4F1EA] [font-variant-numeric:tabular-nums]">
+                        <div className="text-xs text-[#A7C4B8]">{t.impact.countryRank}</div>
+                        <div className="font-editorial mt-1 text-[1.65rem] font-semibold text-[#F4F1EA] [font-variant-numeric:tabular-nums]">
                           #{inst.metrics.countryRank}
                         </div>
                       </div>
                     </div>
 
                     <div className="rounded-2xl bg-[#1D2F28] p-4">
-                      <div className="mb-2.5 flex items-baseline justify-between text-xs">
+                      <div className="mb-2.5 flex items-baseline justify-between gap-2 text-sm">
                         <span className="font-medium text-[#F4F1EA]">{t.impact.hIndex}</span>
-                        <span className="font-mono text-[11px] text-[#A7C4B8]">
+                        <span className="font-mono text-xs text-[#A7C4B8]">
                           {t.impact.total}{' '}
                           <strong className="text-[#F4F1EA]">{inst.metrics.hIndex.total}</strong> ·{' '}
                           {t.impact.last5}{' '}
@@ -273,7 +273,7 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
               type="button"
               onClick={onDownloadVCard}
               title={t.contact.vcardModal.downloadTooltip}
-              className={`${uiTokens.buttonOutline} inline-flex items-center gap-2 px-5 py-2.5 text-sm`}
+              className={`${uiTokens.buttonOutline} inline-flex items-center gap-2 px-5 py-2.5 text-base`}
             >
               <Download className="h-4 w-4" aria-hidden />
               {t.contact.vcard}
@@ -289,42 +289,42 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
                   className="atlas-card flex flex-col justify-between p-6"
                 >
                   <div className="mb-4 flex items-center justify-between gap-2">
-                    <span className="rounded-full bg-[var(--app-hover)] px-2.5 py-0.5 text-xs font-medium text-[var(--app-muted)]">
+                    <span className="rounded-full bg-[var(--app-hover)] px-3 py-0.5 text-sm font-medium text-[var(--app-muted)]">
                       {label}
                     </span>
                     <button
                       type="button"
                       onClick={() => handleCopy(key, copyValue)}
                       aria-label={`${t.contact.copyAction} ${label}`}
-                      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs text-[var(--app-muted)] transition-colors hover:bg-[var(--app-hover)] hover:text-[var(--app-ink)]"
+                      className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-sm text-[var(--app-muted)] transition-colors hover:bg-[var(--app-hover)] hover:text-[var(--app-ink)]"
                     >
                       {isCopied ? (
                         <>
-                          <Check className="h-3 w-3 text-[var(--app-accent)]" aria-hidden />
+                          <Check className="h-3.5 w-3.5 text-[var(--app-accent)]" aria-hidden />
                           <span className="text-[var(--app-accent)]">{t.contact.copiedAction}</span>
                         </>
                       ) : (
                         <>
-                          <Copy className="h-3 w-3" aria-hidden />
+                          <Copy className="h-3.5 w-3.5" aria-hidden />
                           {t.contact.copyAction}
                         </>
                       )}
                     </button>
                   </div>
 
-                  <div className="flex flex-col gap-1">
+                  <div className="flex flex-col gap-1.5">
                     {values.map((val, i) => {
                       const href = hrefs[i];
                       return href ? (
                         <a
                           key={val}
                           href={href}
-                          className="font-editorial break-words text-lg font-medium text-[var(--app-ink)] transition-colors hover:text-[var(--app-accent)] hover:underline"
+                          className="font-editorial break-words text-xl font-medium text-[var(--app-ink)] transition-colors hover:text-[var(--app-accent)] hover:underline"
                         >
                           {val}
                         </a>
                       ) : (
-                        <p key={val} className="font-editorial text-lg font-medium text-[var(--app-ink)]">
+                        <p key={val} className="font-editorial text-xl font-medium text-[var(--app-ink)]">
                           {val}
                         </p>
                       );
@@ -335,7 +335,7 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
             })}
           </div>
 
-          <footer className="mt-16 border-t border-[var(--app-rule)] pb-12 pt-6 text-sm text-[var(--app-muted)]">
+          <footer className="mt-16 border-t border-[var(--app-rule)] pb-12 pt-6 text-base text-[var(--app-muted)]">
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
               <p>
                 {t.contact.footer.replace(/\{year\}/g, String(new Date().getFullYear()))}
@@ -373,13 +373,13 @@ function BottomSectionsComponent({ t, lang, onDownloadVCard }: BottomSectionsPro
                   >
                     {isDevEmailCopied ? (
                       <>
-                        <Check className="h-3.5 w-3.5 text-[var(--app-accent)]" aria-hidden />
-                        <span className="text-xs text-[var(--app-accent)]">
+                        <Check className="h-4 w-4 text-[var(--app-accent)]" aria-hidden />
+                        <span className="text-sm text-[var(--app-accent)]">
                           {isZh ? '已複製' : 'Copied'}
                         </span>
                       </>
                     ) : (
-                      <Mail className="h-3.5 w-3.5" aria-hidden />
+                      <Mail className="h-4 w-4" aria-hidden />
                     )}
                   </button>
                 </span>

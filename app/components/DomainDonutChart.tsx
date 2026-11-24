@@ -122,27 +122,27 @@ function DomainDonutChartComponent({
           {focused ? (
             <>
               <span
-                className="font-mono text-[10px] font-semibold uppercase tracking-wider"
+                className="font-mono text-xs font-semibold uppercase tracking-wider"
                 style={{ color: focused.domain.color }}
               >
                 {focused.domain.roman} · {focused.sharePct}%
               </span>
-              <span className="font-editorial mt-0.5 text-2xl font-semibold text-[var(--app-ink)] [font-variant-numeric:tabular-nums]">
+              <span className="font-editorial mt-0.5 text-3xl font-semibold text-[var(--app-ink)] [font-variant-numeric:tabular-nums]">
                 {focused.count}
               </span>
-              <span className="mt-0.5 line-clamp-1 max-w-[100px] text-[11px] font-medium text-[var(--app-muted)]">
+              <span className="mt-0.5 line-clamp-1 max-w-[110px] text-xs font-medium text-[var(--app-muted)]">
                 {isZh ? focused.domain.labelZh : focused.domain.labelEn}
               </span>
             </>
           ) : (
             <>
-              <span className="font-mono text-[10px] uppercase tracking-widest text-[var(--app-muted)]">
+              <span className="font-mono text-xs uppercase tracking-wider text-[var(--app-muted)]">
                 {isZh ? '五大領域' : '5 DOMAINS'}
               </span>
-              <span className="font-editorial mt-0.5 text-2xl font-semibold text-[var(--app-ink)] [font-variant-numeric:tabular-nums]">
+              <span className="font-editorial mt-0.5 text-3xl font-semibold text-[var(--app-ink)] [font-variant-numeric:tabular-nums]">
                 {publications.length || totalTagged}
               </span>
-              <span className="text-[11px] text-[var(--app-muted)]">
+              <span className="text-xs text-[var(--app-muted)]">
                 {isZh ? '篇著作' : 'works'}
               </span>
             </>
@@ -150,8 +150,8 @@ function DomainDonutChartComponent({
         </div>
       </div>
 
-      {/* 圓角膠囊式礦物五色圖例（點擊直接篩選論文） */}
-      <div className="mt-4 flex w-full flex-wrap justify-center gap-1.5">
+      {/* 圓角膠囊式礦物五色圖例（放大易讀字級） */}
+      <div className="mt-4 flex w-full flex-wrap justify-center gap-2">
         {segments.map((seg) => {
           const isFocused = focusedId === seg.domain.id;
           return (
@@ -161,21 +161,21 @@ function DomainDonutChartComponent({
               onMouseEnter={() => setHoveredId(seg.domain.id)}
               onMouseLeave={() => setHoveredId(null)}
               onClick={() => onSelectDomain(seg.domain.id)}
-              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] transition-all duration-200 ${
+              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition-all duration-200 ${
                 isFocused
                   ? 'border-[var(--app-ink)] bg-[var(--app-hover)] font-semibold text-[var(--app-ink)]'
                   : 'border-[var(--app-rule)] bg-[var(--app-bg)]/60 text-[var(--app-body)] hover:border-[var(--app-ink)]'
               }`}
             >
               <span
-                className="h-2 w-2 shrink-0 rounded-full"
+                className="h-2.5 w-2.5 shrink-0 rounded-full"
                 style={{ backgroundColor: seg.domain.color }}
                 aria-hidden
               />
               <span className="truncate">
                 {isZh ? seg.domain.labelZh : seg.domain.labelEn.replace(' Materials', '')}
               </span>
-              <span className="font-mono text-[10px] text-[var(--app-muted)] [font-variant-numeric:tabular-nums]">
+              <span className="font-mono text-xs text-[var(--app-muted)] [font-variant-numeric:tabular-nums]">
                 {seg.count}
               </span>
             </button>

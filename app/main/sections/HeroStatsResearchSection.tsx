@@ -162,7 +162,7 @@ function HeroStatsResearchSectionComponent({
                 initial={reduceMotion ? false : { opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: reduceMotion ? 0 : 0.45, ease: EDITORIAL_EASE }}
-                className="inline-flex items-center rounded-full border border-[var(--app-rule)] bg-[var(--app-surface-card)]/90 px-3.5 py-1 text-xs font-medium text-[var(--app-muted)] shadow-xs"
+                className="inline-flex items-center rounded-full border border-[var(--app-rule)] bg-[var(--app-surface-card)]/90 px-4 py-1.5 text-sm font-medium text-[var(--app-muted)] shadow-xs"
               >
                 {institutionLine}
               </motion.span>
@@ -187,7 +187,7 @@ function HeroStatsResearchSectionComponent({
                 initial={reduceMotion ? false : { opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: reduceMotion ? 0 : 0.5, delay: 0.16, ease: EDITORIAL_EASE }}
-                className="mt-3 max-w-2xl text-sm leading-[1.75] text-[var(--app-body)] md:text-[15px]"
+                className="mt-3.5 max-w-2xl text-base leading-[1.85] text-[var(--app-body)] md:text-[1.05rem]"
               >
                 {heroText.desc}
               </motion.p>
@@ -202,7 +202,7 @@ function HeroStatsResearchSectionComponent({
               <a
                 href="#publications"
                 onClick={(e) => scrollToSection(e, 'publications')}
-                className={`${uiTokens.buttonPrimary} inline-flex items-center gap-2 px-5 py-2.5 text-sm`}
+                className={`${uiTokens.buttonPrimary} inline-flex items-center gap-2 px-5 py-2.5 text-base`}
               >
                 {heroText.cta}
                 <ArrowDown className="h-4 w-4" aria-hidden />
@@ -210,7 +210,7 @@ function HeroStatsResearchSectionComponent({
               <a
                 href="#chalkboards"
                 onClick={(e) => scrollToSection(e, 'chalkboards')}
-                className={`${uiTokens.buttonOutline} inline-flex items-center px-5 py-2.5 text-sm`}
+                className={`${uiTokens.buttonOutline} inline-flex items-center px-5 py-2.5 text-base`}
               >
                 {isZh ? '黑板手稿藝廊' : 'Chalkboard Gallery'}
               </a>
@@ -256,7 +256,7 @@ function HeroStatsResearchSectionComponent({
 
                 {/* 頂部柔和圓角徽章與放大鈕 */}
                 <div className="pointer-events-none absolute inset-x-4 top-4 flex items-center justify-between gap-2">
-                  <span className="rounded-full border border-[#F3DF87]/40 bg-[#152820]/85 px-3 py-1 font-mono text-[10.5px] font-medium tracking-wider text-[#F3DF87] backdrop-blur-sm">
+                  <span className="rounded-full border border-[#F3DF87]/40 bg-[#152820]/85 px-3.5 py-1 font-mono text-xs font-medium tracking-wider text-[#F3DF87] backdrop-blur-sm">
                     {isZh ? '講堂實景推導' : 'LIVE LECTURE CHALKBOARD'}
                   </span>
                   {!heroBoardImgFailed ? (
@@ -306,10 +306,10 @@ function HeroStatsResearchSectionComponent({
               </div>
 
               {/* 底部深墨綠圖說籤（手機端自然換行，不裁斷尾端指數 ]⁻¹） */}
-              <div className="border-t border-[#2E5243] bg-[#152820]/95 px-5 py-3.5">
+              <div className="border-t border-[#2E5243] bg-[#152820]/95 px-5 py-4">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <div className="text-xs font-semibold leading-snug text-[#F4F1EA]">
+                    <div className="text-sm font-semibold leading-snug text-[#F4F1EA]">
                       {activeHeroBoard
                         ? isZh
                           ? activeHeroBoard.titleZh
@@ -317,13 +317,13 @@ function HeroStatsResearchSectionComponent({
                         : heroPrimaryName}
                     </div>
                     {activeHeroBoard?.formulaNote ? (
-                      <div className="mt-1 break-words font-mono text-[11px] leading-snug text-[#F3DF87]">
+                      <div className="mt-1 break-words font-mono text-xs leading-snug text-[#F3DF87] sm:text-sm">
                         {activeHeroBoard.formulaNote}
                       </div>
                     ) : null}
                   </div>
                   {heroChalkboards.length > 1 ? (
-                    <span className="shrink-0 rounded-full bg-[#1B3329] px-2.5 py-0.5 font-mono text-[10px] text-[#BFD3C8]">
+                    <span className="shrink-0 rounded-full bg-[#1B3329] px-2.5 py-0.5 font-mono text-xs text-[#BFD3C8]">
                       {safeSlideIdx + 1} / {heroChalkboards.length}
                     </span>
                   ) : null}
@@ -340,10 +340,10 @@ function HeroStatsResearchSectionComponent({
             >
               <div>
                 <div className="mb-3 flex items-center justify-between">
-                  <h2 className="font-editorial text-base font-semibold text-[var(--app-ink)]">
+                  <h2 className="font-editorial text-lg font-semibold text-[var(--app-ink)]">
                     {isZh ? '研究領域產出分佈' : 'Research Domain Atlas'}
                   </h2>
-                  <span className="rounded-full bg-[var(--app-hover)] px-2.5 py-0.5 font-mono text-[10px] text-[var(--app-muted)]">
+                  <span className="rounded-full bg-[var(--app-hover)] px-2.5 py-0.5 font-mono text-xs text-[var(--app-muted)]">
                     1993–2027
                   </span>
                 </div>
@@ -365,14 +365,14 @@ function HeroStatsResearchSectionComponent({
                     { label: statsText.hIndex, value: displayHIndex },
                   ].map((stat, i) => (
                     <div key={stat.label} className="px-1.5">
-                      <div className="font-editorial text-xl font-semibold text-[var(--app-ink)] sm:text-2xl">
+                      <div className="font-editorial text-2xl font-semibold text-[var(--app-ink)] sm:text-[1.6rem]">
                         <RollingNumber
                           value={stat.value}
                           delay={0.25 + i * 0.06}
                           duration={0.85}
                         />
                       </div>
-                      <div className="mt-0.5 text-[11px] text-[var(--app-muted)]">
+                      <div className="mt-0.5 text-xs text-[var(--app-muted)]">
                         {stat.label}
                       </div>
                     </div>
@@ -390,12 +390,12 @@ function HeroStatsResearchSectionComponent({
             >
               {/* 暖琥珀金頂部標誌帶（深墨字 #1A1205 對比度 > 7.5:1） */}
               <div className="flex items-center justify-between bg-[#D99B32] px-5 py-3 text-[#1A1205]">
-                <span className="inline-flex items-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-wider">
-                  <Award className="h-3.5 w-3.5" aria-hidden />
+                <span className="inline-flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-wider">
+                  <Award className="h-4 w-4" aria-hidden />
                   {isZh ? '最高被引巔峰作' : 'LANDMARK WORK'}
                 </span>
                 {landmarkPaper?.year ? (
-                  <span className="rounded-full bg-[#1A1205]/15 px-2 py-0.5 font-mono text-[10px] font-semibold">
+                  <span className="rounded-full bg-[#1A1205]/15 px-2.5 py-0.5 font-mono text-xs font-semibold">
                     {landmarkPaper.year}
                   </span>
                 ) : null}
@@ -413,49 +413,49 @@ function HeroStatsResearchSectionComponent({
                             duration={0.85}
                           />
                         </span>
-                        <span className="font-mono text-xs font-semibold uppercase tracking-wider text-[#A46B15] dark:text-[#F3DF87]">
+                        <span className="font-mono text-sm font-semibold uppercase tracking-wider text-[#A46B15] dark:text-[#F3DF87]">
                           {isZh ? '次引用' : 'CITATIONS'}
                         </span>
                       </div>
 
-                      <h3 className="font-editorial mt-3.5 text-[15.5px] font-semibold leading-[1.45] text-[var(--app-ink)]">
+                      <h3 className="font-editorial mt-3.5 text-base font-semibold leading-[1.45] text-[var(--app-ink)]">
                         {landmarkPaper.title}
                       </h3>
 
-                      <p className="font-journal-italic mt-2.5 text-sm text-[var(--app-accent)]">
+                      <p className="font-journal-italic mt-2.5 text-base text-[var(--app-accent)]">
                         {landmarkPaper.journal}
                       </p>
 
                       {landmarkPaper.authors ? (
-                        <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-[var(--app-muted)]">
+                        <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-[var(--app-muted)]">
                           {landmarkPaper.authors}
                         </p>
                       ) : null}
                     </div>
 
-                    <div className="mt-5 flex flex-col gap-2 border-t border-[var(--app-rule)] pt-4">
+                    <div className="mt-5 flex flex-col gap-2.5 border-t border-[var(--app-rule)] pt-4">
                       {landmarkPaper.doi ? (
                         <a
                           href={landmarkPaper.doi}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center gap-1.5 rounded-full bg-[var(--app-ink)] px-4 py-2 text-xs font-medium text-[var(--app-bg)] transition-colors hover:bg-[#C88A2B] hover:text-white"
+                          className="inline-flex items-center justify-center gap-1.5 rounded-full bg-[var(--app-ink)] px-4 py-2.5 text-sm font-medium text-[var(--app-bg)] transition-colors hover:bg-[#C88A2B] hover:text-white"
                         >
                           {isZh ? '前往原文 DOI' : 'Read Landmark Paper'}
-                          <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+                          <ExternalLink className="h-4 w-4" aria-hidden />
                         </a>
                       ) : null}
                       <a
                         href="#publications"
                         onClick={(e) => scrollToSection(e, 'publications')}
-                        className="inline-flex items-center justify-center gap-1 rounded-full border border-[var(--app-rule)] px-4 py-1.5 text-xs text-[var(--app-muted)] transition-colors hover:border-[var(--app-ink)] hover:text-[var(--app-ink)]"
+                        className="inline-flex items-center justify-center gap-1 rounded-full border border-[var(--app-rule)] px-4 py-2 text-sm text-[var(--app-muted)] transition-colors hover:border-[var(--app-ink)] hover:text-[var(--app-ink)]"
                       >
                         {isZh ? '瀏覽完整 217 篇著作 ↓' : 'Explore full bibliography ↓'}
                       </a>
                     </div>
                   </>
                 ) : (
-                  <div className="flex flex-1 items-center justify-center text-xs text-[var(--app-muted)]">
+                  <div className="flex flex-1 items-center justify-center text-sm text-[var(--app-muted)]">
                     Loading landmark metrics...
                   </div>
                 )}
@@ -487,7 +487,7 @@ function HeroStatsResearchSectionComponent({
           {/* 下半層：五大研究領域粉筆科學藍圖展櫃 */}
           <div id="research" className="scroll-mt-24">
             <div className="mb-8">
-              <span className="inline-flex items-center rounded-full border border-[#E88D84]/40 bg-[#152820] px-3 py-1 font-mono text-[11px] font-medium tracking-wider text-[#E88D84]">
+              <span className="inline-flex items-center rounded-full border border-[#E88D84]/40 bg-[#152820] px-3.5 py-1 font-mono text-xs font-medium tracking-wider text-[#E88D84]">
                 {isZh ? '五大研究藍圖展櫃' : 'FIVE SCIENTIFIC BLUEPRINTS'}
               </span>
               <h2 className="font-editorial mt-3 text-3xl font-semibold tracking-tight text-[#F4F1EA] sm:text-4xl">
@@ -530,21 +530,21 @@ function HeroStatsResearchSectionComponent({
                       {/* 頂部礦物五色圓潤徽章與篇數 */}
                       <div className="flex items-center justify-between gap-2">
                         <span
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-xl font-editorial text-xs font-bold text-white shadow-sm"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-xl font-editorial text-sm font-bold text-white shadow-sm"
                           style={{ backgroundColor: domain.color }}
                         >
                           {domain.roman}
                         </span>
-                        <span className="rounded-full bg-[#1F3A2F] px-2.5 py-0.5 font-mono text-[10.5px] text-[#F3DF87] [font-variant-numeric:tabular-nums]">
+                        <span className="rounded-full bg-[#1F3A2F] px-2.5 py-0.5 font-mono text-xs text-[#F3DF87] [font-variant-numeric:tabular-nums]">
                           {count} {isZh ? '篇' : 'pubs'}
                         </span>
                       </div>
 
-                      {/* 統一高度 180px 粉筆藍圖框，確保五張卡片標題完全水平對齊 */}
+                      {/* 統一高度 188px 粉筆藍圖框，確保五張卡片標題完全水平對齊 */}
                       <button
                         type="button"
                         onClick={() => onFilterByDomain(domain.id)}
-                        className="my-3 flex h-[180px] w-full cursor-pointer flex-col items-center justify-between rounded-xl border border-dashed border-[#34594A] bg-[#12221B]/75 px-2 py-2.5 transition-colors group-hover:border-[#F3DF87]/45"
+                        className="my-3 flex h-[188px] w-full cursor-pointer flex-col items-center justify-between rounded-xl border border-dashed border-[#34594A] bg-[#12221B]/75 px-2 py-2.5 transition-colors group-hover:border-[#F3DF87]/45"
                       >
                         <ResearchPhysicsGlyph
                           index={i}
@@ -553,7 +553,7 @@ function HeroStatsResearchSectionComponent({
                           chalkAccent={domain.chalkColor}
                         />
                         <span
-                          className="flex min-h-[2rem] items-center justify-center text-center font-mono text-[10px] leading-tight tracking-tight"
+                          className="flex min-h-[2.25rem] items-center justify-center text-center font-mono text-[11.5px] leading-tight tracking-tight"
                           style={{ color: domain.chalkColor }}
                         >
                           {domain.formulaTag}
@@ -565,7 +565,7 @@ function HeroStatsResearchSectionComponent({
                         {textItem?.title ?? (isZh ? domain.labelZh : domain.labelEn)}
                       </h3>
                       {textItem?.desc ? (
-                        <p className="mt-1.5 line-clamp-3 text-xs leading-relaxed text-[#A7C4B8]">
+                        <p className="mt-2 line-clamp-4 text-[14px] leading-relaxed text-[#B6D1C6]">
                           {textItem.desc}
                         </p>
                       ) : null}
@@ -573,30 +573,30 @@ function HeroStatsResearchSectionComponent({
 
                     {/* 底部材料關鍵詞圓角膠囊（固定最小高度對齊分隔線）＋ 引用數與篩選鈕 */}
                     <div className="mt-4 space-y-3 border-t border-[#28473A] pt-3">
-                      <div className="flex min-h-[3.25rem] flex-wrap content-start gap-1">
+                      <div className="flex min-h-[3.75rem] flex-wrap content-start gap-1.5">
                         {domain.keywords.slice(0, 3).map((kw) => (
                           <button
                             key={kw.label}
                             type="button"
                             onClick={() => onFilterByKeyword(kw.query)}
-                            className="rounded-full border border-[#34594A] bg-[#1B3329] px-2 py-0.5 font-mono text-[10px] text-[#D7E6DF] transition-colors hover:border-[#F3DF87] hover:text-[#F3DF87]"
+                            className="rounded-full border border-[#34594A] bg-[#1B3329] px-2.5 py-0.5 font-mono text-xs text-[#D7E6DF] transition-colors hover:border-[#F3DF87] hover:text-[#F3DF87]"
                           >
                             {kw.label}
                           </button>
                         ))}
                       </div>
 
-                      <div className="flex items-center justify-between gap-2 text-[11px]">
-                        <span className="font-mono text-[#9FB8AC] [font-variant-numeric:tabular-nums]">
+                      <div className="flex items-center justify-between gap-2 text-xs">
+                        <span className="font-mono text-[#BFD3C8] [font-variant-numeric:tabular-nums]">
                           {citations.toLocaleString('en-US')} {isZh ? '引' : 'cit.'}
                         </span>
                         <button
                           type="button"
                           onClick={() => onFilterByDomain(domain.id)}
-                          className="inline-flex items-center gap-1 rounded-full bg-[#F3DF87]/15 px-2.5 py-1 font-medium text-[#F3DF87] transition-colors hover:bg-[#F3DF87] hover:text-[#152820]"
+                          className="inline-flex items-center gap-1 rounded-full bg-[#F3DF87]/15 px-3 py-1 font-medium text-[#F3DF87] transition-colors hover:bg-[#F3DF87] hover:text-[#152820]"
                         >
                           {isZh ? '篩選' : 'Filter'}
-                          <ArrowDown className="h-3 w-3" aria-hidden />
+                          <ArrowDown className="h-3.5 w-3.5" aria-hidden />
                         </button>
                       </div>
                     </div>

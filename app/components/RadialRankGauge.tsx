@@ -73,9 +73,9 @@ function RadialRankGaugeComponent({
         </text>
         <text
           x="75"
-          y="96"
+          y="98"
           textAnchor="middle"
-          className="fill-[#A7C4B8] font-mono text-[9.5px] uppercase tracking-[0.12em]"
+          className="fill-[#A7C4B8] font-mono text-[11.5px] uppercase tracking-[0.1em]"
         >
           {label}
         </text>

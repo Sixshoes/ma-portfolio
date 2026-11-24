@@ -74,17 +74,17 @@ function TopJournalsChartComponent({
     <div ref={cardRef} className="atlas-card flex h-full flex-col justify-between p-5 sm:p-6">
       <div>
         <div className="mb-4 flex items-center justify-between gap-2">
-          <h3 className="font-editorial text-lg font-semibold text-[var(--app-ink)]">
+          <h3 className="font-editorial text-xl font-semibold text-[var(--app-ink)]">
             {isZh ? 'Top 10 核心國際期刊排行' : 'Top 10 International Journals'}
           </h3>
           {selectedJournal ? (
             <button
               type="button"
               onClick={() => onSelectJournal(null)}
-              className="inline-flex shrink-0 items-center gap-1 rounded-full border border-[var(--app-ink)] bg-[var(--app-ink)] px-2.5 py-1 text-[11px] text-[var(--app-bg)] transition-colors hover:border-[var(--app-accent)] hover:bg-[var(--app-accent)]"
+              className="inline-flex shrink-0 items-center gap-1 rounded-full border border-[var(--app-ink)] bg-[var(--app-ink)] px-3 py-1 text-xs text-[var(--app-bg)] transition-colors hover:border-[var(--app-accent)] hover:bg-[var(--app-accent)]"
             >
               {isZh ? '清除' : 'Clear'}
-              <X className="h-3 w-3" aria-hidden />
+              <X className="h-3.5 w-3.5" aria-hidden />
             </button>
           ) : null}
         </div>
@@ -107,7 +107,7 @@ function TopJournalsChartComponent({
                     : 'hover:bg-[var(--app-hover)]/75'
                 }`}
               >
-                <div className="mb-1 flex items-baseline justify-between gap-2 text-xs">
+                <div className="mb-1 flex items-baseline justify-between gap-2 text-sm">
                   <span
                     className={`truncate ${
                       isSelected
@@ -116,12 +116,12 @@ function TopJournalsChartComponent({
                     }`}
                     title={row.journal}
                   >
-                    <span className="mr-1.5 font-mono text-[10px] text-[var(--app-muted)]">
+                    <span className="mr-1.5 font-mono text-xs text-[var(--app-muted)]">
                       {String(idx + 1).padStart(2, '0')}
                     </span>
                     <span className="font-journal-italic">{row.journal}</span>
                   </span>
-                  <span className="shrink-0 font-mono text-[11px] text-[var(--app-muted)] [font-variant-numeric:tabular-nums]">
+                  <span className="shrink-0 font-mono text-xs text-[var(--app-muted)] [font-variant-numeric:tabular-nums]">
                     <strong className="text-[var(--app-ink)]">{row.count}</strong>
                     {isZh ? ' 篇 · ' : ' · '}
                     {row.citations.toLocaleString('en-US')} {isZh ? '引' : 'cit.'}

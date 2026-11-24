@@ -227,58 +227,58 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
       />
       <div className="flex flex-col gap-5 md:flex-row md:items-start md:gap-7">
         {/* 左欄：年份膠囊、預刊與通訊星號 */}
-        <div className="flex flex-wrap items-center gap-2 md:w-28 md:shrink-0 md:flex-col md:items-start md:gap-2">
+        <div className="flex flex-wrap items-center gap-2 md:w-32 md:shrink-0 md:flex-col md:items-start md:gap-2">
           <div className="flex items-center gap-2">
-            <span className="rounded-full bg-[var(--app-hover)] px-2.5 py-0.5 font-mono text-xs font-semibold text-[var(--app-ink)] [font-variant-numeric:tabular-nums]">
+            <span className="rounded-full bg-[var(--app-hover)] px-3 py-0.5 font-mono text-sm font-semibold text-[var(--app-ink)] [font-variant-numeric:tabular-nums]">
               {pub.year > 0 ? pub.year : '—'}
             </span>
             {isInPress ? (
-              <span className="rounded-full bg-[var(--app-accent)]/15 px-2 py-0.5 text-[10px] font-medium text-[var(--app-accent)]">
+              <span className="rounded-full bg-[var(--app-accent)]/15 px-2.5 py-0.5 text-xs font-medium text-[var(--app-accent)]">
                 {pubsText.inPress}
               </span>
             ) : null}
           </div>
 
           {featuredRank !== undefined ? (
-            <span className="rounded-full bg-[#C88A2B]/15 px-2.5 py-0.5 text-[11px] font-semibold text-[#B4771D] dark:text-[#F3DF87]">
+            <span className="rounded-full bg-[#C88A2B]/15 px-2.5 py-0.5 text-xs font-semibold text-[#B4771D] dark:text-[#F3DF87]">
               {pubsText.featuredSpotlight} {String(featuredRank).padStart(2, '0')}
             </span>
           ) : null}
 
           {pub.is_star === '是' ? (
-            <span className="text-xs font-medium text-[var(--app-accent)]">
+            <span className="text-sm font-medium text-[var(--app-accent)]">
               ★ {pubsText.corresponding}
             </span>
           ) : (
-            <span className="text-xs text-[var(--app-muted)]">{pubsText.coauthor}</span>
+            <span className="text-sm text-[var(--app-muted)]">{pubsText.coauthor}</span>
           )}
         </div>
 
         {/* 中欄：書目主內容 */}
         <div className="flex min-w-0 flex-1 flex-col">
-          <h3 className="font-editorial mb-2 text-lg font-semibold leading-[1.35] text-[var(--app-ink)] transition-colors group-hover:text-[var(--app-accent)] md:text-[1.18rem]">
+          <h3 className="font-editorial mb-2 text-xl font-semibold leading-[1.38] text-[var(--app-ink)] transition-colors group-hover:text-[var(--app-accent)] md:text-[1.28rem]">
             {pub.title}
           </h3>
 
           {pub.authors?.trim() ? (
-            <p className="mb-2.5 text-sm leading-relaxed text-[var(--app-muted)]">
+            <p className="mb-2.5 text-base leading-relaxed text-[var(--app-muted)]">
               {splitAuthorsHighlighted(pub.authors)}
             </p>
           ) : null}
 
           {takeawayLines.length > 0 ? (
-            <ul className="mb-3 space-y-1 rounded-xl border-l-2 border-[var(--app-accent)] bg-[var(--app-bg)]/60 py-2 pl-3.5 pr-3 text-sm leading-relaxed text-[var(--app-body)]">
+            <ul className="mb-3 space-y-1.5 rounded-xl border-l-2 border-[var(--app-accent)] bg-[var(--app-bg)]/60 py-2.5 pl-4 pr-3.5 text-base leading-relaxed text-[var(--app-body)]">
               {takeawayLines.map((line, li) => (
                 <li key={li}>{line}</li>
               ))}
             </ul>
           ) : null}
 
-          <div className="mt-1 flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-sm">
-            <span className="font-journal-italic text-[15px] text-[var(--app-body)]">
+          <div className="mt-1 flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-base">
+            <span className="font-journal-italic text-base text-[var(--app-body)]">
               {pub.journal}
             </span>
-            <span className="rounded-full bg-[var(--app-hover)] px-2.5 py-0.5 font-mono text-[11px] text-[var(--app-ink)] [font-variant-numeric:tabular-nums]">
+            <span className="rounded-full bg-[var(--app-hover)] px-3 py-0.5 font-mono text-xs font-medium text-[var(--app-ink)] [font-variant-numeric:tabular-nums]">
               {pub.citations.toLocaleString(locale)} {pubsText.citations}
             </span>
             {pub.doi ? (
@@ -286,19 +286,19 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
                 href={pub.doi}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 break-all font-mono text-xs text-[var(--app-muted)] underline decoration-[var(--app-rule)] underline-offset-4 transition-colors hover:text-[var(--app-accent)] hover:decoration-[var(--app-accent)]"
+                className="inline-flex items-center gap-1 break-all font-mono text-sm text-[var(--app-muted)] underline decoration-[var(--app-rule)] underline-offset-4 transition-colors hover:text-[var(--app-accent)] hover:decoration-[var(--app-accent)]"
               >
                 {getLinkDisplay(pub.doi, pubsText)}
-                <ExternalLink className="h-3 w-3 shrink-0" aria-hidden />
+                <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden />
               </a>
             ) : null}
           </div>
 
-          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-[var(--app-muted)]">
+          <div className="mt-3.5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-[var(--app-muted)]">
             <button
               type="button"
               onClick={() => onCopyCitation(pubKey, pub, 'apa')}
-              className="inline-flex h-5 items-center overflow-hidden transition-colors hover:text-[var(--app-ink)]"
+              className="inline-flex h-6 items-center overflow-hidden transition-colors hover:text-[var(--app-ink)]"
             >
               <AnimatePresence mode="wait" initial={false}>
                 {isApaCopied ? (
@@ -310,7 +310,7 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
                     transition={{ duration: litePub ? 0 : 0.2, ease: EDITORIAL_EASE }}
                     className="inline-flex items-center gap-1 font-medium text-[var(--app-accent)]"
                   >
-                    <Check className="h-3.5 w-3.5 text-[var(--app-accent)]" aria-hidden />
+                    <Check className="h-4 w-4 text-[var(--app-accent)]" aria-hidden />
                     <span>{isZh ? '已複製書目' : pubsText.copiedCitation}</span>
                   </motion.span>
                 ) : (
@@ -320,9 +320,9 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
                     animate={{ y: 0, opacity: 1 }}
                     exit={litePub ? { opacity: 0 } : { y: -8, opacity: 0 }}
                     transition={{ duration: litePub ? 0 : 0.2, ease: EDITORIAL_EASE }}
-                    className="inline-flex items-center gap-1"
+                    className="inline-flex items-center gap-1.5"
                   >
-                    <Copy className="h-3.5 w-3.5" aria-hidden />
+                    <Copy className="h-4 w-4" aria-hidden />
                     <span>{pubsText.copyCitation}</span>
                   </motion.span>
                 )}
@@ -332,7 +332,7 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
             <button
               type="button"
               onClick={() => onCopyCitation(pubKey, pub, 'bibtex')}
-              className="inline-flex h-5 items-center overflow-hidden font-mono transition-colors hover:text-[var(--app-ink)]"
+              className="inline-flex h-6 items-center overflow-hidden font-mono transition-colors hover:text-[var(--app-ink)]"
             >
               <AnimatePresence mode="wait" initial={false}>
                 {isBibCopied ? (
@@ -344,7 +344,7 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
                     transition={{ duration: litePub ? 0 : 0.2, ease: EDITORIAL_EASE }}
                     className="inline-flex items-center gap-1 font-sans font-medium text-[var(--app-accent)]"
                   >
-                    <Check className="h-3.5 w-3.5 text-[var(--app-accent)]" aria-hidden />
+                    <Check className="h-4 w-4 text-[var(--app-accent)]" aria-hidden />
                     <span>{isZh ? '已複製 BibTeX' : 'BibTeX copied'}</span>
                   </motion.span>
                 ) : (
@@ -354,9 +354,9 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
                     animate={{ y: 0, opacity: 1 }}
                     exit={litePub ? { opacity: 0 } : { y: -8, opacity: 0 }}
                     transition={{ duration: litePub ? 0 : 0.2, ease: EDITORIAL_EASE }}
-                    className="inline-flex items-center gap-1"
+                    className="inline-flex items-center gap-1.5"
                   >
-                    <Code2 className="h-3.5 w-3.5" aria-hidden />
+                    <Code2 className="h-4 w-4" aria-hidden />
                     <span>BibTeX</span>
                   </motion.span>
                 )}
@@ -371,7 +371,7 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
                 className="inline-flex items-center gap-1 transition-colors hover:text-[var(--app-accent)] hover:underline"
               >
                 Altmetric
-                <ExternalLink className="h-3 w-3" aria-hidden />
+                <ExternalLink className="h-3.5 w-3.5" aria-hidden />
               </a>
             ) : null}
 
@@ -384,9 +384,9 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
               >
                 {expanded ? pubsText.collapseAbstract : pubsText.readAbstract}
                 {expanded ? (
-                  <ChevronUp className="h-3.5 w-3.5" aria-hidden />
+                  <ChevronUp className="h-4 w-4" aria-hidden />
                 ) : (
-                  <ChevronDown className="h-3.5 w-3.5" aria-hidden />
+                  <ChevronDown className="h-4 w-4" aria-hidden />
                 )}
               </button>
             ) : null}
@@ -402,7 +402,7 @@ const PublicationJournalRow = memo(function PublicationJournalRow({
                 transition={{ duration: litePub ? 0 : 0.18, ease: EDITORIAL_EASE }}
                 className="overflow-hidden"
               >
-                <p className="mt-4 rounded-xl bg-[var(--app-bg)]/80 p-4 text-sm leading-relaxed text-[var(--app-body)]">
+                <p className="mt-4 rounded-xl bg-[var(--app-bg)]/80 p-4 text-base leading-relaxed text-[var(--app-body)]">
                   {pub.abstract_excerpt}
                 </p>
               </motion.div>
@@ -507,35 +507,35 @@ const PublicationCompactRow = memo(function PublicationCompactRow({
         aria-hidden="true"
         className="pointer-events-none absolute bottom-3 left-0 top-3 hidden w-[3px] origin-top scale-y-0 rounded-full bg-[var(--app-accent)] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-y-100 motion-reduce:transition-none md:block"
       />
-      <div className="flex items-center gap-2 md:w-28 md:shrink-0">
-        <span className="rounded-full bg-[var(--app-hover)] px-2 py-0.5 font-mono text-xs font-medium text-[var(--app-ink)] [font-variant-numeric:tabular-nums]">
+      <div className="flex items-center gap-2 md:w-32 md:shrink-0">
+        <span className="rounded-full bg-[var(--app-hover)] px-2.5 py-0.5 font-mono text-sm font-medium text-[var(--app-ink)] [font-variant-numeric:tabular-nums]">
           {pub.year > 0 ? pub.year : '—'}
         </span>
         {isInPress ? (
-          <span className="rounded-full bg-[var(--app-accent)]/15 px-1.5 py-0.5 text-[10px] text-[var(--app-accent)]">
+          <span className="rounded-full bg-[var(--app-accent)]/15 px-2 py-0.5 text-xs text-[var(--app-accent)]">
             {pubsText.inPress}
           </span>
         ) : null}
         {pub.is_star === '是' ? (
-          <span className="text-xs text-[var(--app-accent)]" aria-label={pubsText.corresponding}>
+          <span className="text-sm text-[var(--app-accent)]" aria-label={pubsText.corresponding}>
             ★
           </span>
         ) : null}
       </div>
 
       <div className="min-w-0 flex-1">
-        <h3 className="font-editorial text-base font-medium leading-snug text-[var(--app-ink)] transition-colors group-hover:text-[var(--app-accent)]">
+        <h3 className="font-editorial text-lg font-medium leading-snug text-[var(--app-ink)] transition-colors group-hover:text-[var(--app-accent)]">
           {pub.title}
         </h3>
-        <div className="mt-1 flex flex-wrap items-baseline gap-x-4 gap-y-0.5 text-xs text-[var(--app-muted)]">
-          <span className="font-journal-italic text-sm text-[var(--app-body)]">{pub.journal}</span>
+        <div className="mt-1 flex flex-wrap items-baseline gap-x-4 gap-y-0.5 text-sm text-[var(--app-muted)]">
+          <span className="font-journal-italic text-base text-[var(--app-body)]">{pub.journal}</span>
           <span className="font-mono text-[var(--app-ink)]">
             {pub.citations.toLocaleString(locale)} {pubsText.citations}
           </span>
         </div>
       </div>
 
-      <div className="flex shrink-0 items-center gap-3 text-xs">
+      <div className="flex shrink-0 items-center gap-3.5 text-sm">
         <button
           type="button"
           onClick={() => onCopyCitation(pubKey, pub, 'apa')}
@@ -722,8 +722,8 @@ function PublicationsSectionComponent({
         <div className="atlas-card mb-6 p-4 sm:p-5">
           <div className="flex flex-col gap-3.5 xl:flex-row xl:items-center xl:justify-between">
             <div className="flex flex-wrap items-center gap-2.5">
-              <div className="flex items-center gap-1.5">
-                <label htmlFor="pub-filter-select" className="text-xs text-[var(--app-muted)]">
+              <div className="flex items-center gap-2">
+                <label htmlFor="pub-filter-select" className="text-sm text-[var(--app-muted)]">
                   {pubsText.filterBy}
                 </label>
                 <div className="relative">
@@ -747,14 +747,14 @@ function PublicationsSectionComponent({
                     </optgroup>
                   </select>
                   <ChevronDown
-                    className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--app-muted)]"
+                    className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--app-muted)]"
                     aria-hidden
                   />
                 </div>
               </div>
 
-              <div className="flex items-center gap-1.5">
-                <label htmlFor="pub-sort-select" className="text-xs text-[var(--app-muted)]">
+              <div className="flex items-center gap-2">
+                <label htmlFor="pub-sort-select" className="text-sm text-[var(--app-muted)]">
                   {pubsText.sortLabel}
                 </label>
                 <div className="relative">
@@ -769,7 +769,7 @@ function PublicationsSectionComponent({
                     <option value="starred">{pubsText.sortStarred}</option>
                   </select>
                   <ChevronDown
-                    className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--app-muted)]"
+                    className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--app-muted)]"
                     aria-hidden
                   />
                 </div>
@@ -779,7 +779,7 @@ function PublicationsSectionComponent({
                 type="button"
                 onClick={onCorrespondingToggle}
                 aria-pressed={correspondingOnly}
-                className={`rounded-full border px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors ${
+                className={`rounded-full border px-3.5 py-2 text-sm font-medium whitespace-nowrap transition-colors ${
                   correspondingOnly
                     ? 'border-[var(--app-accent)] bg-[var(--app-accent)] text-white'
                     : 'border-[var(--app-rule)] bg-[var(--app-bg)] text-[var(--app-muted)] hover:border-[var(--app-ink)] hover:text-[var(--app-ink)]'
@@ -790,7 +790,7 @@ function PublicationsSectionComponent({
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5">
-              <div className="relative basis-full sm:basis-auto sm:w-52">
+              <div className="relative basis-full sm:basis-auto sm:w-56">
                 <Search
                   className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--app-muted)]"
                   aria-hidden
@@ -803,7 +803,7 @@ function PublicationsSectionComponent({
                   onChange={(e) => onSearchChange(e.target.value)}
                   placeholder={pubsText.searchPlaceholder}
                   aria-label={pubsText.searchAriaLabel}
-                  className="w-full rounded-full border border-[var(--app-rule)] bg-[var(--app-bg)] py-1.5 pl-9 pr-8 text-sm text-[var(--app-ink)] placeholder:text-[var(--app-muted)]/75 focus:border-[var(--app-accent)] focus:outline-none"
+                  className="w-full rounded-full border border-[var(--app-rule)] bg-[var(--app-bg)] py-2 pl-9 pr-8 text-sm text-[var(--app-ink)] placeholder:text-[var(--app-muted)]/75 focus:border-[var(--app-accent)] focus:outline-none"
                 />
                 {searchQuery ? (
                   <button
@@ -812,7 +812,7 @@ function PublicationsSectionComponent({
                     aria-label={pubsText.clearSearch}
                     className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-[var(--app-muted)] hover:text-[var(--app-ink)]"
                   >
-                    <X className="h-3.5 w-3.5" aria-hidden />
+                    <X className="h-4 w-4" aria-hidden />
                   </button>
                 ) : null}
               </div>
@@ -820,13 +820,13 @@ function PublicationsSectionComponent({
               <div
                 role="group"
                 aria-label="View mode"
-                className="inline-flex shrink-0 rounded-full border border-[var(--app-rule)] bg-[var(--app-bg)] p-0.5 text-xs"
+                className="inline-flex shrink-0 rounded-full border border-[var(--app-rule)] bg-[var(--app-bg)] p-0.5 text-sm"
               >
                 <button
                   type="button"
                   onClick={() => onViewModeChange('card')}
                   aria-pressed={viewMode === 'card'}
-                  className={`rounded-full px-3 py-1 whitespace-nowrap transition-colors ${
+                  className={`rounded-full px-3.5 py-1.5 whitespace-nowrap transition-colors ${
                     viewMode === 'card'
                       ? 'bg-[var(--app-ink)] font-semibold text-[var(--app-bg)]'
                       : 'text-[var(--app-muted)] hover:text-[var(--app-ink)]'
@@ -838,7 +838,7 @@ function PublicationsSectionComponent({
                   type="button"
                   onClick={() => onViewModeChange('compact')}
                   aria-pressed={viewMode === 'compact'}
-                  className={`rounded-full px-3 py-1 whitespace-nowrap transition-colors ${
+                  className={`rounded-full px-3.5 py-1.5 whitespace-nowrap transition-colors ${
                     viewMode === 'compact'
                       ? 'bg-[var(--app-ink)] font-semibold text-[var(--app-bg)]'
                       : 'text-[var(--app-muted)] hover:text-[var(--app-ink)]'
@@ -850,7 +850,7 @@ function PublicationsSectionComponent({
 
               {!isLoading ? (
                 <span
-                  className="ml-auto shrink-0 rounded-full bg-[var(--app-hover)] px-3 py-1 font-mono text-xs text-[var(--app-muted)] [font-variant-numeric:tabular-nums] sm:ml-0"
+                  className="ml-auto shrink-0 rounded-full bg-[var(--app-hover)] px-3.5 py-1.5 font-mono text-sm text-[var(--app-muted)] [font-variant-numeric:tabular-nums] sm:ml-0"
                   aria-live="polite"
                 >
                   {pubsText.resultCount.replace('{count}', String(filteredCount))}
@@ -861,11 +861,11 @@ function PublicationsSectionComponent({
 
           {/* 領域／期刊即時篩選狀態膠囊 */}
           {activeDomain || selectedJournal ? (
-            <div className="mt-3.5 flex flex-wrap items-center gap-2 border-t border-[var(--app-rule)] pt-3 text-xs">
+            <div className="mt-3.5 flex flex-wrap items-center gap-2 border-t border-[var(--app-rule)] pt-3 text-sm">
               {activeDomain ? (
-                <span className="inline-flex items-center gap-2 rounded-full border border-[var(--app-accent)]/40 bg-[var(--app-accent)]/10 px-3 py-1 text-[var(--app-ink)]">
+                <span className="inline-flex items-center gap-2 rounded-full border border-[var(--app-accent)]/40 bg-[var(--app-accent)]/10 px-3.5 py-1 text-[var(--app-ink)]">
                   <span
-                    className="h-2 w-2 rounded-full"
+                    className="h-2.5 w-2.5 rounded-full"
                     style={{ backgroundColor: activeDomain.color }}
                   />
                   <span>
@@ -878,13 +878,13 @@ function PublicationsSectionComponent({
                     aria-label={isZh ? '清除領域篩選' : 'Clear area filter'}
                     className="rounded-full p-0.5 text-[var(--app-muted)] hover:bg-[var(--app-ink)] hover:text-[var(--app-bg)]"
                   >
-                    <X className="h-3 w-3" aria-hidden />
+                    <X className="h-3.5 w-3.5" aria-hidden />
                   </button>
                 </span>
               ) : null}
 
               {selectedJournal ? (
-                <span className="inline-flex items-center gap-2 rounded-full border border-[var(--app-accent)]/40 bg-[var(--app-accent)]/10 px-3 py-1 text-[var(--app-ink)]">
+                <span className="inline-flex items-center gap-2 rounded-full border border-[var(--app-accent)]/40 bg-[var(--app-accent)]/10 px-3.5 py-1 text-[var(--app-ink)]">
                   <span>
                     {isZh ? '期刊：' : 'Journal: '}
                     <strong className="font-journal-italic">{selectedJournal}</strong>
@@ -895,7 +895,7 @@ function PublicationsSectionComponent({
                     aria-label={isZh ? '清除期刊篩選' : 'Clear journal filter'}
                     className="rounded-full p-0.5 text-[var(--app-muted)] hover:bg-[var(--app-ink)] hover:text-[var(--app-bg)]"
                   >
-                    <X className="h-3 w-3" aria-hidden />
+                    <X className="h-3.5 w-3.5" aria-hidden />
                   </button>
                 </span>
               ) : null}
@@ -903,7 +903,7 @@ function PublicationsSectionComponent({
           ) : null}
 
           {isUsingFallback ? (
-            <p className="mt-3 rounded-xl border-l-2 border-[var(--app-accent)] bg-[var(--app-bg)] px-3 py-2 text-xs text-[var(--app-accent)]">
+            <p className="mt-3 rounded-xl border-l-2 border-[var(--app-accent)] bg-[var(--app-bg)] px-3.5 py-2 text-sm text-[var(--app-accent)]">
               {pubsText.offlineFallbackNote}
             </p>
           ) : null}
@@ -914,7 +914,7 @@ function PublicationsSectionComponent({
           <PublicationsListSkeleton prefersReducedMotion={prefersReducedMotion} pubsText={pubsText} />
         ) : filteredCount === 0 ? (
           <div
-            className="atlas-card py-16 text-center text-sm text-[var(--app-muted)]"
+            className="atlas-card py-16 text-center text-base text-[var(--app-muted)]"
             role="status"
             aria-live="polite"
           >
@@ -950,7 +950,7 @@ function PublicationsSectionComponent({
                 : null}
 
               {listAllInFeatured ? (
-                <p className="py-6 text-center text-sm text-[var(--app-muted)]">
+                <p className="py-6 text-center text-base text-[var(--app-muted)]">
                   {pubsText.allInFeaturedNote}
                 </p>
               ) : null}
@@ -1011,7 +1011,7 @@ function PublicationsSectionComponent({
             <button
               type="button"
               onClick={onLoadMore}
-              className={`${uiTokens.buttonOutline} inline-flex items-center gap-2 px-7 py-2.5 text-sm`}
+              className={`${uiTokens.buttonOutline} inline-flex items-center gap-2 px-8 py-3 text-base`}
             >
               {pubsText.loadMore}
               <ChevronDown className="h-4 w-4" aria-hidden />

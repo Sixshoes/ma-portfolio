@@ -130,7 +130,7 @@ export function Navbar({ navText, lang, onOpenCommandPalette }: NavbarProps) {
           <a
             href="#top"
             onClick={handleScrollTop}
-            className="font-editorial shrink-0 text-lg font-semibold tracking-tight text-[var(--app-ink)] transition-colors hover:text-[var(--app-accent)] md:text-xl"
+            className="font-editorial shrink-0 text-xl font-semibold tracking-tight text-[var(--app-ink)] transition-colors hover:text-[var(--app-accent)] md:text-2xl"
           >
             {brandName}
           </a>
@@ -145,12 +145,12 @@ export function Navbar({ navText, lang, onOpenCommandPalette }: NavbarProps) {
                   animate={{ opacity: 1, y: 0 }}
                   exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -5 }}
                   transition={{ duration: reduceMotion ? 0 : 0.24, ease: EDITORIAL_EASE }}
-                  className="inline-flex items-baseline gap-1.5 truncate text-xs text-[var(--app-muted)]"
+                  className="inline-flex items-baseline gap-1.5 truncate text-sm text-[var(--app-muted)]"
                 >
                   <span aria-hidden="true" className="text-[var(--app-rule)]">
                     ·
                   </span>
-                  <span className="font-mono text-[11px] font-medium text-[var(--app-accent)] [font-variant-numeric:tabular-nums]">
+                  <span className="font-mono text-xs font-medium text-[var(--app-accent)] [font-variant-numeric:tabular-nums]">
                     § {SECTION_NUMBERS[activeSection]}
                   </span>
                   <span className="truncate text-[var(--app-body)]">{navText[activeSection]}</span>
@@ -160,12 +160,12 @@ export function Navbar({ navText, lang, onOpenCommandPalette }: NavbarProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-4 lg:gap-6">
-          <div className="hidden items-center space-x-5 text-sm font-normal text-[var(--app-muted)] lg:flex">
+        <div className="flex items-center gap-3.5 lg:gap-5">
+          <div className="hidden items-center space-x-5 text-[15px] font-normal text-[var(--app-muted)] lg:flex">
             <a
               href="#top"
               onClick={handleScrollTop}
-              className={`border-b-2 py-0.5 transition-colors ${
+              className={`whitespace-nowrap border-b-2 py-0.5 transition-colors ${
                 activeSection === null
                   ? 'border-[var(--app-ink)] font-medium text-[var(--app-ink)]'
                   : 'border-transparent hover:text-[var(--app-ink)]'
@@ -181,7 +181,7 @@ export function Navbar({ navText, lang, onOpenCommandPalette }: NavbarProps) {
                   href={`#${item}`}
                   onClick={(e) => handleAnchorClick(e, item)}
                   aria-current={isActive ? 'location' : undefined}
-                  className={`border-b-2 py-0.5 transition-colors ${
+                  className={`whitespace-nowrap border-b-2 py-0.5 transition-colors ${
                     isActive
                       ? 'border-[var(--app-ink)] font-medium text-[var(--app-ink)]'
                       : 'border-transparent text-[var(--app-muted)] hover:text-[var(--app-ink)]'
@@ -193,17 +193,17 @@ export function Navbar({ navText, lang, onOpenCommandPalette }: NavbarProps) {
             })}
           </div>
 
-          <div className="flex items-center gap-2.5 sm:gap-3.5">
+          <div className="flex items-center gap-2 sm:gap-3">
             {/* ⌘K 快速檢索觸發鈕（柔和膠囊） */}
             <button
               type="button"
               onClick={onOpenCommandPalette}
               aria-label={isZh ? '開啟快速檢索（⌘K）' : 'Open quick search (⌘K)'}
               title={isZh ? '快速檢索論文與指令（⌘K / Ctrl+K）' : 'Quick search (⌘K / Ctrl+K)'}
-              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--app-rule)] bg-[var(--app-surface-card)]/80 px-3 py-1 text-xs text-[var(--app-muted)] transition-colors hover:border-[var(--app-ink)] hover:bg-[var(--app-hover)] hover:text-[var(--app-ink)]"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--app-rule)] bg-[var(--app-surface-card)]/80 px-3 py-1.5 text-sm text-[var(--app-muted)] transition-colors hover:border-[var(--app-ink)] hover:bg-[var(--app-hover)] hover:text-[var(--app-ink)]"
             >
-              <Search className="h-3.5 w-3.5" aria-hidden />
-              <span className="hidden font-mono text-[11px] sm:inline">⌘K</span>
+              <Search className="h-4 w-4" aria-hidden />
+              <span className="hidden font-mono text-xs sm:inline">⌘K</span>
             </button>
 
             {/* 電致變色晝／夜雙版切換鈕（柔和膠囊） */}
@@ -228,14 +228,14 @@ export function Navbar({ navText, lang, onOpenCommandPalette }: NavbarProps) {
                     ? '切換為夜讀典藏黑版'
                     : 'Switch to dark theme'
               }
-              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--app-rule)] bg-[var(--app-surface-card)]/80 px-3 py-1 text-xs text-[var(--app-ink)] transition-colors hover:border-[var(--app-ink)] hover:bg-[var(--app-hover)]"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--app-rule)] bg-[var(--app-surface-card)]/80 px-3 py-1.5 text-sm text-[var(--app-ink)] transition-colors hover:border-[var(--app-ink)] hover:bg-[var(--app-hover)]"
             >
               {isDark ? (
-                <Sun className="h-3.5 w-3.5 text-[var(--app-accent)]" aria-hidden />
+                <Sun className="h-4 w-4 text-[var(--app-accent)]" aria-hidden />
               ) : (
-                <Moon className="h-3.5 w-3.5 text-[var(--app-accent)]" aria-hidden />
+                <Moon className="h-4 w-4 text-[var(--app-accent)]" aria-hidden />
               )}
-              <span className="hidden font-editorial text-xs font-medium sm:inline">
+              <span className="hidden font-editorial text-sm font-medium sm:inline">
                 {isDark ? (isZh ? '晝' : 'Day') : isZh ? '夜' : 'Night'}
               </span>
             </button>
@@ -271,7 +271,7 @@ export function Navbar({ navText, lang, onOpenCommandPalette }: NavbarProps) {
           id="mobile-nav-menu"
           className="border-t border-[var(--app-rule)] bg-[var(--app-bg)] lg:hidden"
         >
-          <div className="mx-auto flex max-w-6xl flex-col divide-y divide-[var(--app-rule)] px-6 py-2 text-sm text-[var(--app-body)]">
+          <div className="mx-auto flex max-w-6xl flex-col divide-y divide-[var(--app-rule)] px-6 py-2 text-base text-[var(--app-body)]">
             <a
               href="#top"
               onClick={handleScrollTop}
