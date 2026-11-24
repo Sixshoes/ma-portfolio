@@ -71,17 +71,10 @@ function TopJournalsChartComponent({
   return (
     <div className="atlas-card flex h-full flex-col justify-between p-5 sm:p-6">
       <div>
-        <div className="mb-4 flex items-start justify-between gap-2">
-          <div>
-            <h3 className="font-editorial text-lg font-semibold text-[var(--app-ink)]">
-              {isZh ? 'Top 10 核心國際期刊排行' : 'Top 10 International Journals'}
-            </h3>
-            <p className="mt-1 text-xs text-[var(--app-muted)]">
-              {isZh
-                ? '點擊期刊長條即時篩選該刊著作'
-                : 'Click any journal bar to filter works'}
-            </p>
-          </div>
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <h3 className="font-editorial text-lg font-semibold text-[var(--app-ink)]">
+            {isZh ? 'Top 10 核心國際期刊排行' : 'Top 10 International Journals'}
+          </h3>
           {selectedJournal ? (
             <button
               type="button"

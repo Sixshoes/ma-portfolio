@@ -380,9 +380,6 @@ function HeroStatsResearchSectionComponent({
                     </div>
                   ))}
                 </div>
-                <p className="mt-2.5 text-center text-[10.5px] text-[var(--app-muted)]">
-                  {statsText.scopusNote}
-                </p>
               </div>
             </motion.div>
 
@@ -491,22 +488,15 @@ function HeroStatsResearchSectionComponent({
 
           {/* 下半層：五大研究領域粉筆科學藍圖展櫃 */}
           <div id="research" className="scroll-mt-24">
-            <div className="mb-8 flex flex-col items-start justify-between gap-3 md:flex-row md:items-end">
-              <div>
-                <span className="inline-flex items-center rounded-full border border-[#E88D84]/40 bg-[#152820] px-3 py-1 font-mono text-[11px] font-medium tracking-wider text-[#E88D84]">
-                  {isZh ? '五大研究藍圖展櫃' : 'FIVE SCIENTIFIC BLUEPRINTS'}
-                </span>
-                <h2 className="font-editorial mt-3 text-3xl font-semibold tracking-tight text-[#F4F1EA] sm:text-4xl">
-                  {researchText.title}
-                  {lang === 'en' ? ' ' : ''}
-                  {researchText.subtitle}
-                </h2>
-              </div>
-              <p className="max-w-md text-sm leading-relaxed text-[#BFD3C8] md:text-right">
-                {isZh
-                  ? '點擊任一座藍圖展櫃或下方材料關鍵詞膠囊，即自動捲動並篩選對應領域論文。'
-                  : 'Click any blueprint showcase or material keyword pill to filter matching works below.'}
-              </p>
+            <div className="mb-8">
+              <span className="inline-flex items-center rounded-full border border-[#E88D84]/40 bg-[#152820] px-3 py-1 font-mono text-[11px] font-medium tracking-wider text-[#E88D84]">
+                {isZh ? '五大研究藍圖展櫃' : 'FIVE SCIENTIFIC BLUEPRINTS'}
+              </span>
+              <h2 className="font-editorial mt-3 text-3xl font-semibold tracking-tight text-[#F4F1EA] sm:text-4xl">
+                {researchText.title}
+                {lang === 'en' ? ' ' : ''}
+                {researchText.subtitle}
+              </h2>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">

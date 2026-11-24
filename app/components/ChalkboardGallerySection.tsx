@@ -30,21 +30,14 @@ function ChalkboardGallerySectionComponent({
 
   return (
     <div className="mb-14">
-      <div className="mb-7 flex flex-col items-start justify-between gap-3 md:flex-row md:items-end">
-        <div>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-[#F3DF87]/35 bg-[#152820] px-3 py-1 font-mono text-[11px] font-medium tracking-wider text-[#F3DF87]">
-            <Sparkles className="h-3 w-3" aria-hidden />
-            {isZh ? '講堂親筆手稿典藏' : 'LECTURE CHALKBOARD ARCHIVE'}
-          </span>
-          <h2 className="font-editorial mt-3 text-3xl font-semibold tracking-tight text-[#F4F1EA] sm:text-4xl">
-            {isZh ? '親筆黑板推導手稿藝廊' : 'Handwritten Chalkboard Derivations'}
-          </h2>
-        </div>
-        <p className="max-w-md text-sm leading-relaxed text-[#BFD3C8] md:text-right">
-          {isZh
-            ? '收錄馬副校長講堂上親手以粉筆推導的量子力學與凝態物理原稿，點擊任一幅即可全螢幕高清放大賞析筆跡與公式。'
-            : 'Authentic chalkboard derivations from Prof. Ma’s lectures in quantum mechanics and condensed matter physics. Click any plate to inspect in high resolution.'}
-        </p>
+      <div className="mb-7">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-[#F3DF87]/35 bg-[#152820] px-3 py-1 font-mono text-[11px] font-medium tracking-wider text-[#F3DF87]">
+          <Sparkles className="h-3 w-3" aria-hidden />
+          {isZh ? '講堂親筆手稿典藏' : 'LECTURE CHALKBOARD ARCHIVE'}
+        </span>
+        <h2 className="font-editorial mt-3 text-3xl font-semibold tracking-tight text-[#F4F1EA] sm:text-4xl">
+          {isZh ? '親筆黑板推導手稿藝廊' : 'Handwritten Chalkboard Derivations'}
+        </h2>
       </div>
 
       {/* 單幅大展板或雙排／橫向手稿畫廊（溫潤圓角 rounded-3xl / rounded-2xl） */}
@@ -166,12 +159,6 @@ function ChalkboardGallerySectionComponent({
                         </div>
                       ) : null}
                     </div>
-
-                    <p className="text-xs leading-relaxed text-[#9FB8AC]">
-                      {isZh
-                        ? '從位能障邊界波函數連續條件出發，以雙曲函數展開推得電子穿隧穿透率，為掃描穿隧顯微術（STM）與低維量子元件物理之基石。'
-                        : 'Derived from wave-function continuity across a rectangular potential barrier—forming the physical foundation of scanning tunneling microscopy (STM) and low-dimensional quantum devices.'}
-                    </p>
                   </div>
                 </div>
               </motion.article>

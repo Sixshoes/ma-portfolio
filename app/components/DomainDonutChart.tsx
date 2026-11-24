@@ -143,7 +143,7 @@ function DomainDonutChartComponent({
                 {publications.length || totalTagged}
               </span>
               <span className="text-[11px] text-[var(--app-muted)]">
-                {isZh ? '點選扇區篩選' : 'Click to filter'}
+                {isZh ? '篇著作' : 'works'}
               </span>
             </>
           )}

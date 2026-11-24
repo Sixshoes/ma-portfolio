@@ -688,16 +688,11 @@ function PublicationsSectionComponent({
     >
       <div className="mx-auto max-w-6xl px-6">
         <div className="pb-4">
-          <div className="flex flex-col items-start justify-between gap-3 md:flex-row md:items-end">
-            <h2 className={uiTokens.sectionTitle}>
-              {pubsText.title}
-              {lang === 'en' ? ' ' : ''}
-              {pubsText.subtitle}
-            </h2>
-            <p className="max-w-md text-sm text-[var(--app-muted)] md:text-right">
-              {pubsText.desc}
-            </p>
-          </div>
+          <h2 className={uiTokens.sectionTitle}>
+            {pubsText.title}
+            {lang === 'en' ? ' ' : ''}
+            {pubsText.subtitle}
+          </h2>
         </div>
         <InkRule thick />
 

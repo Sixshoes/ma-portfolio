@@ -138,25 +138,18 @@ function PublicationTimelineChartComponent({
     <div ref={chartRef} className="atlas-card flex h-full flex-col justify-between p-5 sm:p-6">
       <div>
         {/* 頂部標題與圓角膠囊切換 */}
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <h3 className="font-editorial text-lg font-semibold text-[var(--app-ink)]">
-                {isZh
-                  ? `歷年發表與引用軌跡（${minYear}–${maxYear}）`
-                  : `Publication & Citation Trajectory (${minYear}–${maxYear})`}
-              </h3>
-              {hasInPress ? (
-                <span className="rounded-full border border-[var(--app-accent)]/50 bg-[var(--app-accent)]/10 px-2 py-0.5 text-[10.5px] font-medium text-[var(--app-accent)]">
-                  {isZh ? `含 ${maxYear} 預刊` : `incl. ${maxYear} In Press`}
-                </span>
-              ) : null}
-            </div>
-            <p className="mt-1 text-xs text-[var(--app-muted)]">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="font-editorial text-lg font-semibold text-[var(--app-ink)]">
               {isZh
-                ? '點擊任一年份柱狀即可篩選該年度著作；再次點擊取消'
-                : 'Click any year bar to filter works; click again to clear'}
-            </p>
+                ? `歷年發表與引用軌跡（${minYear}–${maxYear}）`
+                : `Publication & Citation Trajectory (${minYear}–${maxYear})`}
+            </h3>
+            {hasInPress ? (
+              <span className="rounded-full border border-[var(--app-accent)]/50 bg-[var(--app-accent)]/10 px-2 py-0.5 text-[10.5px] font-medium text-[var(--app-accent)]">
+                {isZh ? `含 ${maxYear} 預刊` : `incl. ${maxYear} In Press`}
+              </span>
+            ) : null}
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
