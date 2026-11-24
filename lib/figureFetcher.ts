@@ -247,7 +247,7 @@ function extractCandidateImagesFromHtml(html: string, pageUrl: string): string[]
   return [...prioritized, ...secondary].slice(0, 6);
 }
 
-/** 軌道 1：Elsevier Object API（需伺服器端 ELSEVIER_API_KEY），優先抓取 fx1 Graphical Abstract */
+/** 軌道 1：Elsevier Object Retrieval API（需伺服器端 ELSEVIER_API_KEY），優先抓取 ga1 / fx1 Graphical Abstract */
 async function tryFetchElsevierFigure(
   bareDoi: string,
   apiKey: string,
@@ -263,10 +263,16 @@ async function tryFetchElsevierFigure(
       },
       cache: 'no-store',
     },
-    9000,
+    10000,
   );
   if (!res || !res.ok) return null;
 
+  type ElsevierAttachment = {
+    'prism:url'?: string;
+    ref?: string;
+    type?: string;
+    mimetype?: string;
+  };
   type ElsevierChoice = {
     $?: string;
     '@ref'?: string;
@@ -274,58 +280,109 @@ async function tryFetchElsevierFigure(
     '@mimetype'?: string;
   };
 
-  let choices: ElsevierChoice[] = [];
+  let articleEid = '';
+  const rawItems: Array<{ href: string; ref: string; type: string; mime: string }> = [];
+
   try {
     const json = (await res.json()) as {
+      'attachment-metadata-response'?: {
+        coredata?: { 'article-eid'?: string };
+        attachment?: ElsevierAttachment | ElsevierAttachment[];
+      };
       choices?: { choice?: ElsevierChoice | ElsevierChoice[] };
     };
+
+    const metaResp = json['attachment-metadata-response'];
+    if (metaResp) {
+      articleEid = metaResp.coredata?.['article-eid']?.trim() ?? '';
+      const atts = metaResp.attachment;
+      const list = Array.isArray(atts) ? atts : atts ? [atts] : [];
+      for (const a of list) {
+        const href = a['prism:url']?.trim() ?? '';
+        if (!href) continue;
+        // 若 ref 欄位為空，從 /eid/1-s2.0-...-ga1.jpg 推斷 ref（ga1 / fx1 / gr1）
+        const fileMatch = href.match(/-(ga\d+|fx\d+|gr\d+)(?:_lrg)?\./i);
+        const inferredRef = (a.ref ?? fileMatch?.[1] ?? '').toLowerCase();
+        rawItems.push({
+          href,
+          ref: inferredRef,
+          type: (a.type ?? '').toUpperCase(),
+          mime: (a.mimetype ?? '').toLowerCase(),
+        });
+      }
+    }
+
     const rawChoice = json.choices?.choice;
-    if (Array.isArray(rawChoice)) choices = rawChoice;
-    else if (rawChoice) choices = [rawChoice];
+    const choiceList = Array.isArray(rawChoice) ? rawChoice : rawChoice ? [rawChoice] : [];
+    for (const c of choiceList) {
+      if (!c.$) continue;
+      rawItems.push({
+        href: c.$,
+        ref: (c['@ref'] ?? '').toLowerCase(),
+        type: (c['@type'] ?? '').toUpperCase(),
+        mime: (c['@mimetype'] ?? '').toLowerCase(),
+      });
+    }
   } catch {
     return null;
   }
 
-  if (choices.length === 0) return null;
-
-  // 優先排序：fx1（Graphical Abstract）高解析 > fx1 任一圖 > gr1 高解析 > 其他高解析主圖
-  const scoreChoice = (c: ElsevierChoice): number => {
-    const ref = (c['@ref'] ?? '').toLowerCase();
-    const type = (c['@type'] ?? '').toUpperCase();
-    const mime = (c['@mimetype'] ?? '').toLowerCase();
-    const href = c.$ ?? '';
-    if (!href || (mime && !mime.startsWith('image/'))) return -1;
-    if (type.includes('THUMBNAIL')) return 1;
-
+  // 建立候選清單：優先順序 ga1（正式 Graphical Abstract）> fx1 > gr1（主圖），並同時組出 ars.els-cdn.com 高解析 _lrg 備援網址
+  const scoreItem = (item: { ref: string; type: string; mime: string }): number => {
+    if (item.mime && !item.mime.startsWith('image/')) return -1;
+    if (item.type.includes('THUMBNAIL')) return -1;
     let score = 0;
-    if (ref === 'fx1' || ref.includes('ga1') || ref.includes('abs')) score += 100;
-    else if (ref === 'gr1') score += 50;
-    else if (ref.startsWith('gr') || ref.startsWith('fx')) score += 30;
+    if (item.ref === 'ga1' || item.ref.startsWith('ga')) score += 200;
+    else if (item.ref === 'fx1') score += 120;
+    else if (item.ref === 'gr1') score += 70;
     else return -1;
 
-    if (type === 'IMAGE-HIGH-RES') score += 25;
-    else if (type === 'IMAGE-WEB-STATUS' || type === 'IMAGE-DOWNSAMPLED') score += 15;
+    if (item.type === 'IMAGE-HIGH-RES') score += 30;
+    else if (item.type === 'IMAGE-DOWNSAMPLED' || item.type === 'IMAGE-WEB-STATUS') score += 15;
     return score;
   };
 
-  const ranked = choices
-    .map((c) => ({ c, score: scoreChoice(c) }))
-    .filter((entry) => entry.score > 0 && entry.c.$)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 4);
+  const ranked = rawItems
+    .map((item) => ({ item, score: scoreItem(item) }))
+    .filter((entry) => entry.score > 0)
+    .sort((a, b) => b.score - a.score);
 
-  for (const { c } of ranked) {
-    const targetUrl = c.$!;
-    const validated = await fetchAndValidateImageUrl(
-      targetUrl,
-      { 'X-ELS-APIKey': apiKey },
-      9000,
-    );
+  const candidateUrls: Array<{ url: string; headers: Record<string, string> }> = [];
+  const seen = new Set<string>();
+  const pushCandidate = (url: string, headers: Record<string, string>) => {
+    if (!url || seen.has(url)) return;
+    seen.add(url);
+    candidateUrls.push({ url, headers });
+  };
+
+  for (const { item } of ranked.slice(0, 6)) {
+    // 優先對應至 Elsevier 公開影像 CDN（支援 _lrg 高解析且不受 API binary 401 限制）
+    const eidFileMatch = item.href.match(/\/eid\/([^/?#]+)/i);
+    if (eidFileMatch?.[1]) {
+      const fileName = eidFileMatch[1];
+      const lrgName = fileName.replace(/\.(jpg|jpeg|png|gif)$/i, '_lrg.$1');
+      if (lrgName !== fileName) {
+        pushCandidate(`https://ars.els-cdn.com/content/image/${lrgName}`, {});
+      }
+      pushCandidate(`https://ars.els-cdn.com/content/image/${fileName}`, {});
+    }
+    // 同時保留直接 API 帶 Key 下載（OA 論文或具備 InstToken 時直接命中）
+    pushCandidate(item.href, { 'X-ELS-APIKey': apiKey });
+  }
+
+  // 若 META 有回傳 article-eid 但未列出 ga1，額外探測一次標準 ga1_lrg.jpg / ga1.jpg
+  if (articleEid) {
+    pushCandidate(`https://ars.els-cdn.com/content/image/${articleEid}-ga1_lrg.jpg`, {});
+    pushCandidate(`https://ars.els-cdn.com/content/image/${articleEid}-ga1.jpg`, {});
+  }
+
+  for (const cand of candidateUrls.slice(0, 8)) {
+    const validated = await fetchAndValidateImageUrl(cand.url, cand.headers, 9000);
     if (validated) {
       return {
         ...validated,
         source: 'elsevier-api',
-        sourceUrl: targetUrl,
+        sourceUrl: cand.url,
       };
     }
   }
