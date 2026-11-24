@@ -2,7 +2,6 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  AnimatePresence,
   motion,
   useReducedMotion,
   useScroll,
@@ -169,26 +168,23 @@ export function Navbar({ navText, lang, onOpenCommandPalette }: NavbarProps) {
 
           {/* 捲過首屏後動態淡入之期刊章節小頁眉（例：· § 02 發表著作） */}
           <div className="hidden min-w-0 overflow-hidden sm:flex sm:items-baseline">
-            <AnimatePresence mode="wait" initial={false}>
-              {activeSection ? (
-                <motion.span
-                  key={`${lang}-${activeSection}`}
-                  initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -5 }}
-                  transition={{ duration: reduceMotion ? 0 : 0.24, ease: EDITORIAL_EASE }}
-                  className="inline-flex items-baseline gap-1.5 truncate text-sm text-[var(--app-muted)]"
-                >
-                  <span aria-hidden="true" className="text-[var(--app-rule)]">
-                    ·
-                  </span>
-                  <span className="font-mono text-xs font-medium text-[var(--app-accent)] [font-variant-numeric:tabular-nums]">
-                    § {SECTION_NUMBERS[activeSection]}
-                  </span>
-                  <span className="truncate text-[var(--app-body)]">{navText[activeSection]}</span>
-                </motion.span>
-              ) : null}
-            </AnimatePresence>
+            {activeSection ? (
+              <motion.span
+                key={`${lang}-${activeSection}`}
+                initial={reduceMotion ? false : { opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: reduceMotion ? 0 : 0.2, ease: EDITORIAL_EASE }}
+                className="inline-flex items-baseline gap-1.5 truncate text-sm text-[var(--app-muted)]"
+              >
+                <span aria-hidden="true" className="text-[var(--app-rule)]">
+                  ·
+                </span>
+                <span className="font-mono text-xs font-medium text-[var(--app-accent)] [font-variant-numeric:tabular-nums]">
+                  § {SECTION_NUMBERS[activeSection]}
+                </span>
+                <span className="truncate text-[var(--app-body)]">{navText[activeSection]}</span>
+              </motion.span>
+            ) : null}
           </div>
         </div>
 
