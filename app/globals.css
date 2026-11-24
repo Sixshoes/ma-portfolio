@@ -1,50 +1,42 @@
 @import "tailwindcss";
 
 @theme inline {
-  --font-sans: var(--font-inter), "PingFang TC", "Microsoft JhengHei", ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-outfit), var(--font-inter), "PingFang TC", "Microsoft JhengHei", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-inter), "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 :root {
-  color-scheme: dark;
-  /* 深邃黑曜石建築美學系統 */
-  --app-bg: #080807;
-  --app-surface: #0f0e0d;
-  --app-elevated: #141311;
-  --app-hairline: rgba(255, 255, 255, 0.085);
-  --app-ink: #f5f3ef;
-  --app-body: #b8b3aa;
-  --app-muted: #7d7870;
-  --app-gold: #c8a464;
-  --app-gold-bright: #e5cea0;
+  color-scheme: light;
+  /* 方案 A：冷調實驗室紙張灰白＋深普魯士藍瑞士學術系統 */
+  --app-bg: #F6F7F8;
+  --app-surface: #FFFFFF;
+  --app-elevated: #EEF1F5;
+  --app-hairline: #DCE2E8;
+  --app-hairline-strong: #C5CFD8;
+  --app-ink: #11161C;
+  --app-body: #2B3642;
+  --app-muted: #5A6775;
+  --app-accent: #0F4C81;
+  --app-accent-hover: #0B3A63;
+  --app-accent-soft: #EBF2F8;
   background-color: var(--app-bg);
   color: var(--app-ink);
 }
 
-@layer utilities {
-  .font-heading-serif {
-    font-family: var(--font-playfair), var(--font-noto-serif-tc), "Songti TC", "STSong", "Noto Serif TC",
-      ui-serif, Georgia, "Times New Roman", serif;
-  }
-
-  /* 金屬香檳金微光文字 */
-  .text-gold-sheen {
-    background: linear-gradient(120deg, #ecd8b0 0%, #c8a464 52%, #a68041 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
-/* 極細微底片微粒質感，消除純黑數位平面感 */
-.editorial-grain {
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 :focus-visible {
-  outline: 1.5px solid rgba(200, 164, 100, 0.85);
-  outline-offset: 3px;
+  outline: 2px solid #0F4C81;
+  outline-offset: 2px;
 }
 
 :focus:not(:focus-visible) {

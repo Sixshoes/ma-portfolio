@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import type { Publication } from '@/lib/publications';
 
-/** 通訊／第一作者優先，再以引用排序，取前 N 篇作為置頂精選 */
+/** 通訊／第一作者優先，再以引用排序，取前 N 篇作為置頂代表作 */
 export function computeFeaturedPublications(list: Publication[], n = 3): Publication[] {
   if (list.length === 0) return [];
   const sorted = [...list].sort((a, b) => {
@@ -30,18 +30,18 @@ export function splitAuthorsHighlighted(authors: string): ReactNode[] {
     const node = isLead ? (
       <strong
         key={i}
-        className="font-semibold text-[#f5f3ef] underline decoration-[#c8a464]/70 underline-offset-4"
+        className="font-semibold text-[#11161C] underline decoration-[#0F4C81]/60 underline-offset-4"
       >
         {segment}
       </strong>
     ) : (
-      <span key={i} className="text-[#9b958c]">
+      <span key={i} className="text-[#5A6775]">
         {segment}
       </span>
     );
     return (
       <span key={`wrap-${i}`}>
-        {i > 0 ? <span className="text-[#5e5a53]">, </span> : null}
+        {i > 0 ? <span className="text-[#94A3B8]">, </span> : null}
         {node}
       </span>
     );

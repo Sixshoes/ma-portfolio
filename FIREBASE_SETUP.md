@@ -51,7 +51,7 @@ ELSEVIER_API_KEY=""
 2. 前往 `https://你的網域/admin`（或 `http://localhost:3000/admin`）以管理者 Google 帳號登入。
 3. 點擊畫面中的 **「一鍵從 B 站匯入現有論文」**（或上傳本機 `papers.json`）。
 4. 匯入完成後，系統會自動把全部 218 篇論文寫入 Firestore 單一彙總文件 `siteData/publications`（官網每小時 ISR 僅耗 **1 次** Firestore 讀取），並立即刷新正式官網快取。
-5. 開啟 `/main` 確認論文清單顯示正常後，即可安心取消 Notion 訂閱，並停用 B 站 `Ma-Research-Portal` 的 GitHub Actions 排程！
+5. 開啟首頁 `/` 確認論文清單顯示正常後，即可安心取消 Notion 訂閱，並停用 B 站 `Ma-Research-Portal` 的 GitHub Actions 排程！
 
 ---
 

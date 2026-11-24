@@ -1,63 +1,52 @@
 'use client';
 
 import React, { useState } from 'react';
-import Image, { type ImageProps } from 'next/image';
-import { PublicationFigurePlaceholder } from './PublicationFigurePlaceholder';
 
-type PublicationLazyImageProps = Omit<ImageProps, 'src'> & {
+type PublicationLazyImageProps = {
   src: string;
-  /** 主圖載入失敗時的二次備援（例如期刊封面 file_img） */
-  fallbackSrc?: string | null;
-  eager: boolean;
+  alt: string;
+  eager?: boolean;
+  className?: string;
+  /** 圖片載入失敗或為 1x1 追蹤圖時通知父元件收合整個圖片欄 */
+  onUnavailable?: () => void;
 };
 
+/**
+ * 零破圖論文摘要圖元件：
+ * - 一律帶 referrerPolicy="no-referrer"
+ * - 失敗或 naturalWidth / naturalHeight <= 16（攔截 1x1 像素或空回應）立即回傳 null 並通知父元件收合圖片欄
+ */
 export function PublicationLazyImage({
-  eager,
   src,
-  fallbackSrc,
   alt,
-  fill,
-  className,
-  sizes,
-  priority,
-  ...rest
+  eager = false,
+  className = 'h-full w-full object-contain',
+  onUnavailable,
 }: PublicationLazyImageProps) {
-  const [stage, setStage] = useState<'primary' | 'fallback' | 'error'>('primary');
+  const [failed, setFailed] = useState(false);
 
-  const hasFallback = Boolean(fallbackSrc && fallbackSrc !== src);
-  const activeSrc =
-    stage === 'primary' ? src : stage === 'fallback' && hasFallback ? fallbackSrc! : '';
+  if (!src || failed) return null;
 
-  if (stage === 'error' || !activeSrc) {
-    return <PublicationFigurePlaceholder />;
-  }
-
-  const isExternal = activeSrc.startsWith('http');
-
-  const handleError = () => {
-    if (stage === 'primary' && hasFallback) {
-      setStage('fallback');
-    } else {
-      setStage('error');
-    }
+  const markFailed = () => {
+    setFailed(true);
+    onUnavailable?.();
   };
 
   return (
-    <div className={fill ? 'absolute inset-0' : 'relative size-full min-h-0'}>
-      <Image
-        key={activeSrc}
-        src={activeSrc}
-        alt={alt}
-        fill={fill}
-        className={className}
-        sizes={sizes}
-        priority={eager || priority}
-        loading={eager || priority ? 'eager' : 'lazy'}
-        decoding="async"
-        unoptimized={isExternal}
-        onError={handleError}
-        {...rest}
-      />
-    </div>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt={alt}
+      loading={eager ? 'eager' : 'lazy'}
+      decoding="async"
+      referrerPolicy="no-referrer"
+      onError={markFailed}
+      onLoad={(e) => {
+        if (e.currentTarget.naturalWidth <= 16 || e.currentTarget.naturalHeight <= 16) {
+          markFailed();
+        }
+      }}
+      className={className}
+    />
   );
 }

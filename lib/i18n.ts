@@ -97,6 +97,7 @@ export type PublicationsText = {
   copiedCitation: string;
   zoomFigure: string;
   closeLightbox: string;
+  inPress: string;
 };
 
 export type AboutText = {
@@ -157,6 +158,7 @@ export type ContactText = {
   };
   footer: string;
   developer: string;
+  backToTop: string;
 };
 
 export type I18nDict = {
@@ -236,7 +238,7 @@ export const dict: Record<Lang, I18nDict> = {
       loadingPublications: 'Loading publications',
       emptyPublications:
         'No publications match these filters. Try another year, switch to "All publications", or clear "Selected / highlighted".',
-      featuredSpotlight: 'Featured spotlight',
+      featuredSpotlight: 'Representative work',
       takeawayLabel: 'Research highlights',
       readAbstract: 'Read summary',
       collapseAbstract: 'Collapse',
@@ -260,6 +262,7 @@ export const dict: Record<Lang, I18nDict> = {
       copiedCitation: 'Copied',
       zoomFigure: 'Enlarge figure',
       closeLightbox: 'Close preview',
+      inPress: 'In Press',
     },
     about: {
       title: 'Academic',
@@ -368,6 +371,7 @@ export const dict: Record<Lang, I18nDict> = {
       },
       footer: '\u00A9 {year} Yuan-Ron Ma. All Rights Reserved.',
       developer: 'Designed & Developed by Yiting Chen',
+      backToTop: 'Back to top',
     }
   },
   zh: {
@@ -435,7 +439,7 @@ export const dict: Record<Lang, I18nDict> = {
       loadingPublications: '載入著作中…',
       emptyPublications:
         '目前沒有符合此篩選條件的著作。請改選其他年份、改為「全部著作」，或關閉「精選／高引用」。',
-      featuredSpotlight: '精選代表作',
+      featuredSpotlight: '代表著作',
       takeawayLabel: '研究亮點',
       readAbstract: '閱讀摘要',
       collapseAbstract: '收合',
@@ -457,6 +461,7 @@ export const dict: Record<Lang, I18nDict> = {
       copiedCitation: '已複製',
       zoomFigure: '放大檢視圖片',
       closeLightbox: '關閉預覽',
+      inPress: '預刊',
     },
     about: {
       title: '學術',
@@ -565,6 +570,7 @@ export const dict: Record<Lang, I18nDict> = {
       },
       footer: '\u00A9 {year} 馬遠榮。版權所有。',
       developer: '網頁設計與開發：陳奕廷',
+      backToTop: '回到頂部',
     }
   }
 };

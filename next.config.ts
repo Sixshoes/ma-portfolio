@@ -28,6 +28,15 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: '/main',
+        destination: '/',
+        permanent: true,
+      },
+    ];
+  },
   transpilePackages: ['motion'],
 };
 

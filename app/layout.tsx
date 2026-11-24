@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
-import { Inter, JetBrains_Mono, Noto_Serif_TC, Outfit, Playfair_Display } from 'next/font/google';
+import { Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { LanguageProvider } from './LanguageContext';
-import SmoothScroll from './SmoothScroll';
 import ScrollToTop from './ScrollToTop';
 import { getSiteUrl } from '@/lib/site-url';
 
@@ -14,28 +13,9 @@ const inter = Inter({
   display: 'swap',
 });
 
-const outfit = Outfit({
-  subsets: ['latin'],
-  variable: '--font-outfit',
-  display: 'swap',
-});
-
 const mono = JetBrains_Mono({
   subsets: ['latin'],
   variable: '--font-jetbrains-mono',
-  display: 'swap',
-});
-
-const playfair = Playfair_Display({
-  subsets: ['latin'],
-  variable: '--font-playfair',
-  display: 'swap',
-});
-
-const notoSerifTc = Noto_Serif_TC({
-  weight: ['400', '600'],
-  subsets: ['latin'],
-  variable: '--font-noto-serif-tc',
   display: 'swap',
 });
 
@@ -101,25 +81,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${outfit.variable} ${mono.variable} ${playfair.variable} ${notoSerifTc.variable}`}
+      className={`${inter.variable} ${mono.variable}`}
     >
       <head>
-        <link rel="dns-prefetch" href="https://sixshoes.github.io" />
-        <link rel="preconnect" href="https://sixshoes.github.io" crossOrigin="anonymous" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
         />
       </head>
-      <body className="bg-[var(--app-bg)] font-sans text-[#b8b3aa] antialiased selection:bg-[#c8a464]/25 selection:text-[#f5f3ef]">
-        <SmoothScroll>
-          <LanguageProvider>
-            <>
-              {children}
-              <ScrollToTop />
-            </>
-          </LanguageProvider>
-        </SmoothScroll>
+      <body className="bg-[var(--app-bg)] font-sans text-[var(--app-body)] antialiased selection:bg-[#0F4C81]/15 selection:text-[#11161C]">
+        <LanguageProvider>
+          <>
+            {children}
+            <ScrollToTop />
+          </>
+        </LanguageProvider>
       </body>
     </html>
   );

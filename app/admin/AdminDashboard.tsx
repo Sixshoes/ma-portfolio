@@ -401,7 +401,7 @@ export function AdminDashboard() {
             <li>ELSEVIER_API_KEY（選填，伺服器端自動抓摘要圖）</li>
           </ul>
           <Link
-            href="/main"
+            href="/"
             className="inline-flex items-center gap-2 rounded-full border border-stone-700 bg-stone-900 px-5 py-2.5 text-sm text-stone-200 transition-colors hover:border-[#c4a77d] hover:text-[#e8dcc4]"
           >
             返回正式官網
@@ -451,7 +451,7 @@ export function AdminDashboard() {
             使用 Google 帳號登入
           </button>
           <Link
-            href="/main"
+            href="/"
             className="mt-4 inline-block text-xs text-stone-400 transition-colors hover:text-stone-200"
           >
             ← 返回正式官網
@@ -539,7 +539,7 @@ export function AdminDashboard() {
 
         <div className="flex flex-wrap items-center gap-2.5">
           <Link
-            href="/main"
+            href="/"
             target="_blank"
             className="inline-flex items-center gap-1.5 rounded-full border border-stone-700 bg-stone-900 px-4 py-2 text-xs font-medium text-stone-200 transition-colors hover:border-[#c4a77d] hover:text-[#e8dcc4]"
           >

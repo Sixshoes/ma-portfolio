@@ -18,7 +18,7 @@ const PublicationsSection = dynamic(
   () => import('./sections/PublicationsSection').then((mod) => mod.PublicationsSection),
   {
     loading: () => (
-      <section className="mx-auto max-w-7xl px-6 py-16 text-sm text-[#8f8980]">
+      <section className="mx-auto max-w-7xl px-6 py-16 text-sm text-[#5A6775]">
         Loading publications...
       </section>
     ),
@@ -81,20 +81,10 @@ export function MainClient({ initialPublications = null }: MainClientProps) {
   }, []);
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden bg-[#080807] font-sans text-[#b8b3aa]">
-      {/* 極細底片微粒與極克制頂部暗棚微光（移除廉價大光球） */}
-      <div
-        aria-hidden
-        className="editorial-grain pointer-events-none fixed inset-0 z-0 opacity-[0.028]"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-x-0 top-0 z-0 h-[520px] bg-[radial-gradient(ellipse_70%_55%_at_50%_-10%,rgba(200,164,100,0.08),transparent_70%)]"
-      />
+    <main className="relative min-h-screen overflow-x-hidden bg-[#F6F7F8] font-sans text-[#2B3642]">
+      <Navbar navText={t.nav} />
 
-      <Navbar navText={t.nav} isMobile={isMobile} />
-
-      <div className="relative z-10">
+      <div>
         <HeroStatsResearchSection
           heroText={t.hero}
           statsText={t.stats}
@@ -103,8 +93,6 @@ export function MainClient({ initialPublications = null }: MainClientProps) {
           totalPubs={totalPubs}
           totalCitations={totalCitations}
           hIndexValue={hIndexValue}
-          isMobile={isMobile}
-          prefersReducedMotion={mainLite}
         />
 
         <ErrorBoundary>
@@ -142,7 +130,7 @@ export function MainClient({ initialPublications = null }: MainClientProps) {
 
         <AboutSection aboutText={t.about} lang={lang} />
 
-        <BottomSections t={t} lang={lang} isMobile={isMobile} onDownloadVCard={handleDownloadVCard} />
+        <BottomSections t={t} lang={lang} onDownloadVCard={handleDownloadVCard} />
       </div>
     </main>
   );

@@ -11,7 +11,6 @@ import {
   FolderOpen,
   LayoutGrid,
   List,
-  Quote,
   Search,
   Star,
   X,
@@ -23,7 +22,6 @@ import type { PubSort, PubViewMode } from '@/hooks/usePublications';
 import { parseTakeawayLines, splitAuthorsHighlighted } from '@/lib/publicationDisplay';
 import { useRenderProfiler } from './useRenderProfiler';
 import { uiTokens } from './uiTokens';
-import { PublicationFigurePlaceholder } from './PublicationFigurePlaceholder';
 import { PublicationLazyImage } from './PublicationLazyImage';
 import { PublicationTimelineChart } from './PublicationTimelineChart';
 
@@ -85,140 +83,22 @@ function getLinkDisplay(url: string, pubsText: PublicationsText): string {
   }
 }
 
-function getHighlightText(citations: number, pubsText: PublicationsText): string {
-  if (citations >= 100) return pubsText.benchmark;
-  if (citations >= 50) return pubsText.keyFocus;
-  return pubsText.general;
-}
-
-function getHighlightBadgeClass(highlight: string, pubsText: PublicationsText): string {
-  if (highlight === pubsText.benchmark) {
-    return 'border-[#c8a464]/45 bg-[#c8a464]/12 text-[#e5cea0]';
+/**
+ * 判斷此論文是否具備「單篇專屬圖解摘要」：
+ * - 僅讀取 cover_url，不拿期刊封面 file_img 填塞列表
+ * - 排除歷史資料中與 file_img 完全相同的重複通用期刊封面圖
+ */
+function resolveGraphicalAbstractUrl(pub: Publication): string {
+  const cover = pub.cover_url?.trim() ?? '';
+  if (!cover) return '';
+  const journalCover = pub.file_img?.trim() ?? '';
+  if (journalCover && cover === journalCover) {
+    // 常見通用期刊封面網址特徵（與 file_img 重複時視為期刊封面而非單篇摘要圖）
+    if (/(?:cov\d+h|largecover|CoverIssue|\/X\d{7,8}\.(?:jpg|gif|png)|cover\.gif)/i.test(cover)) {
+      return '';
+    }
   }
-  if (highlight === pubsText.keyFocus) {
-    return 'border-white/[0.16] bg-white/[0.06] text-[#e8e4dc]';
-  }
-  return 'border-white/[0.08] bg-transparent text-[#8f8980]';
-}
-
-function resolvePublicationMedia(pub: Publication, pubsText: PublicationsText) {
-  const abstractImg = pub.cover_url;
-  const journalImg = pub.file_img;
-  const hasAbstract = !!abstractImg;
-  const hasJournal = !!journalImg;
-  const isSameImg = abstractImg === journalImg;
-  let mainImg: string | undefined = abstractImg || undefined;
-  let mainLabel = pubsText.abstract;
-  const fallbackImg = !isSameImg && hasAbstract && hasJournal ? journalImg : undefined;
-  const secondaryImg = !isSameImg && hasJournal ? journalImg : null;
-
-  if (!hasAbstract && hasJournal) {
-    mainImg = journalImg || undefined;
-    mainLabel = pubsText.cover;
-  } else if (!hasAbstract && !hasJournal) {
-    mainImg = undefined;
-    mainLabel = pubsText.quantum;
-  }
-
-  const showFigurePlaceholder = !mainImg;
-  return { mainImg, fallbackImg, mainLabel, secondaryImg, showFigurePlaceholder };
-}
-
-/** 美術館裝裱圖版框：有圖時以深色外斜角＋溫潤象牙紙襯框托出科學圖；無圖時呈現深色建築製圖佔位 */
-function PublicationFigurePlate({
-  pub,
-  pubsText,
-  eagerMain,
-  priority,
-  isMobile,
-  compactSize,
-  onOpenLightbox,
-}: {
-  pub: Publication;
-  pubsText: PublicationsText;
-  eagerMain: boolean;
-  priority: boolean;
-  isMobile: boolean;
-  compactSize?: boolean;
-  onOpenLightbox: (payload: NonNullable<LightboxState>) => void;
-}) {
-  const { mainImg, fallbackImg, mainLabel, secondaryImg, showFigurePlaceholder } =
-    resolvePublicationMedia(pub, pubsText);
-
-  return (
-    <div className="flex flex-col gap-2.5">
-      <div className={uiTokens.pubPlateOuter}>
-        <div
-          className={`group/img relative flex aspect-[16/10] w-full items-center justify-center overflow-hidden ${
-            showFigurePlaceholder ? 'rounded-[5px] bg-[#12110f]' : uiTokens.pubFigureSurface
-          }`}
-        >
-          {showFigurePlaceholder ? (
-            <PublicationFigurePlaceholder />
-          ) : mainImg ? (
-            <>
-              <PublicationLazyImage
-                key={`main-${mainImg}-${fallbackImg ?? ''}`}
-                eager={eagerMain}
-                src={mainImg}
-                fallbackSrc={fallbackImg}
-                alt={mainLabel || 'Publication Image'}
-                fill
-                priority={priority}
-                sizes={
-                  isMobile
-                    ? '100vw'
-                    : compactSize
-                      ? '320px'
-                      : '(max-width: 1024px) 44vw, 38vw'
-                }
-                className="object-contain p-2.5 transition-transform duration-500 group-hover/img:scale-[1.02]"
-                referrerPolicy="no-referrer"
-                fetchPriority={priority ? 'high' : eagerMain ? 'auto' : 'low'}
-              />
-              <button
-                type="button"
-                onClick={() =>
-                  onOpenLightbox({
-                    src: mainImg,
-                    alt: mainLabel,
-                    title: pub.title,
-                    journal: pub.journal,
-                  })
-                }
-                aria-label={pubsText.zoomFigure}
-                title={pubsText.zoomFigure}
-                className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-md border border-black/15 bg-[#141311]/85 text-[#f5f3ef] opacity-85 transition-all hover:bg-[#c8a464] hover:text-[#080807] group-hover/img:opacity-100 md:opacity-0"
-              >
-                <ZoomIn className="h-3.5 w-3.5" aria-hidden />
-              </button>
-            </>
-          ) : null}
-        </div>
-        <div className="mt-2 flex items-center justify-between px-1">
-          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#8f8980]">
-            {mainLabel}
-          </span>
-          {secondaryImg && compactSize ? (
-            <button
-              type="button"
-              onClick={() =>
-                onOpenLightbox({
-                  src: secondaryImg,
-                  alt: pubsText.cover,
-                  title: pub.title,
-                  journal: pub.journal,
-                })
-              }
-              className="font-mono text-[10px] uppercase tracking-[0.14em] text-[#c8a464] underline-offset-4 hover:underline"
-            >
-              + {pubsText.cover}
-            </button>
-          ) : null}
-        </div>
-      </div>
-    </div>
-  );
+  return cover;
 }
 
 type PublicationItemProps = {
@@ -230,6 +110,7 @@ type PublicationItemProps = {
   variant: 'landmark' | 'featured-sub' | 'list';
   index: number;
   locale: string;
+  currentYear: number;
   expandedKey: string | null;
   copiedKey: string | null;
   onToggleAbstract: (key: string) => void;
@@ -246,17 +127,22 @@ const PublicationEditorialItem = memo(function PublicationEditorialItem({
   variant,
   index,
   locale,
+  currentYear,
   expandedKey,
   copiedKey,
   onToggleAbstract,
   onCopyCitation,
   onOpenLightbox,
 }: PublicationItemProps) {
-  const highlightLabel = getHighlightText(pub.citations, pubsText);
+  const figureUrl = resolveGraphicalAbstractUrl(pub);
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const showFigure = Boolean(figureUrl) && failedUrl !== figureUrl;
+
   const takeawayLines = parseTakeawayLines(pub.takeaway);
   const expanded = expandedKey === pubKey;
   const isCopied = copiedKey === pubKey;
   const hasAbstractBody = !!pub.abstract_excerpt?.trim();
+  const isInPress = pub.year > currentYear;
   const altmetricHref = pub.altmetric_id
     ? `https://www.altmetric.com/details.php?doi=${encodeURIComponent(pub.altmetric_id)}`
     : null;
@@ -265,69 +151,106 @@ const PublicationEditorialItem = memo(function PublicationEditorialItem({
   const isSubFeatured = variant === 'featured-sub';
   const eagerMain = index < (isMobile ? 1 : 2);
 
-  // 1. 領銜代表作：全寬不對稱跨頁（左圖版 5 欄 + 右編排 7 欄）
+  const handleUnavailable = useCallback(() => {
+    setFailedUrl(figureUrl);
+  }, [figureUrl]);
+
+  const figureBlock = showFigure ? (
+    <div className="flex flex-col gap-1.5">
+      <div className="group/img relative flex aspect-[16/10] w-full items-center justify-center overflow-hidden rounded-md border border-[#E2E8F0] bg-white p-2">
+        <PublicationLazyImage
+          key={figureUrl}
+          src={figureUrl}
+          alt={`${pub.title} — ${pubsText.abstract}`}
+          eager={eagerMain}
+          onUnavailable={handleUnavailable}
+          className="h-full w-full object-contain transition-transform duration-200 group-hover/img:scale-[1.02]"
+        />
+        <button
+          type="button"
+          onClick={() =>
+            onOpenLightbox({
+              src: figureUrl,
+              alt: pubsText.abstract,
+              title: pub.title,
+              journal: pub.journal,
+            })
+          }
+          aria-label={pubsText.zoomFigure}
+          title={pubsText.zoomFigure}
+          className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded border border-[#DCE2E8] bg-white/95 text-[#2B3642] opacity-85 shadow-sm transition-all hover:border-[#0F4C81] hover:bg-[#0F4C81] hover:text-white group-hover/img:opacity-100 md:opacity-0"
+        >
+          <ZoomIn className="h-3.5 w-3.5" aria-hidden />
+        </button>
+      </div>
+      <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-[#64748B]">
+        {pubsText.abstract}
+      </span>
+    </div>
+  ) : null;
+
+  // 1. 領銜代表作：有圖時 5/7 分欄；無圖或壞圖自動收合為全寬緊湊排版
   if (isLandmark) {
     return (
-      <article className="group grid grid-cols-1 gap-8 rounded-xl border border-[#c8a464]/30 bg-gradient-to-br from-[#131210] via-[#0f0e0d] to-[#0b0a09] p-6 shadow-[inset_0_1px_0_rgba(229,206,160,0.12),0_24px_60px_rgba(0,0,0,0.5)] md:p-9 lg:grid-cols-12 lg:items-center lg:gap-10">
-        <div className="lg:col-span-5">
-          <PublicationFigurePlate
-            pub={pub}
-            pubsText={pubsText}
-            eagerMain
-            priority
-            isMobile={isMobile}
-            onOpenLightbox={onOpenLightbox}
-          />
-        </div>
+      <article
+        className={`group rounded-lg border border-[#DCE2E8] border-l-[3px] border-l-[#0F4C81] bg-white p-6 md:p-8 ${
+          showFigure ? 'grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-center' : 'flex flex-col'
+        }`}
+      >
+        {showFigure ? <div className="lg:col-span-5">{figureBlock}</div> : null}
 
-        <div className="flex min-w-0 flex-col lg:col-span-7">
-          <div className="mb-4 flex flex-wrap items-center gap-3">
-            <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-[#e2c992]">
-              ★ {pubsText.featuredSpotlight} · #1
-            </span>
-            <span className="h-3 w-px bg-white/[0.12]" aria-hidden />
-            <span
-              className={`rounded-sm border px-2.5 py-0.5 font-mono text-[11px] ${getHighlightBadgeClass(highlightLabel, pubsText)}`}
-            >
-              {highlightLabel}
-            </span>
-            <span className="ml-auto font-mono text-xs text-[#9b958c]">
+        <div className={`flex min-w-0 flex-col ${showFigure ? 'lg:col-span-7' : 'w-full'}`}>
+          <div className="mb-3 flex flex-wrap items-center gap-2.5 text-xs">
+            <span className="font-mono font-semibold text-[#0F4C81] [font-variant-numeric:tabular-nums]">
               {pub.year > 0 ? pub.year : '-'}
             </span>
+            {isInPress ? (
+              <span className="rounded border border-[#0F4C81]/30 bg-[#EBF2F8] px-1.5 py-0.5 font-mono text-[10px] font-medium text-[#0F4C81]">
+                {pubsText.inPress}
+              </span>
+            ) : null}
+            <span className="h-3 w-px bg-[#DCE2E8]" aria-hidden />
+            <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-[#5A6775]">
+              {pubsText.featuredSpotlight} · 01
+            </span>
+            {pub.is_star === '是' ? (
+              <>
+                <span className="h-3 w-px bg-[#DCE2E8]" aria-hidden />
+                <span className="inline-flex items-center gap-1 font-medium text-[#0F4C81]">
+                  <Star className="h-3 w-3 fill-[#0F4C81] text-[#0F4C81]" aria-hidden />
+                  {pubsText.corresponding}
+                </span>
+              </>
+            ) : null}
           </div>
 
-          <h3 className="font-heading-serif mb-4 text-2xl font-semibold leading-[1.2] tracking-tight text-[#f5f3ef] transition-colors group-hover:text-[#e5cea0] md:text-3xl">
+          <h3 className="mb-3 text-xl font-semibold leading-[1.3] tracking-[-0.015em] text-[#11161C] transition-colors group-hover:text-[#0F4C81] md:text-2xl">
             {pub.title}
           </h3>
 
           {pub.authors?.trim() ? (
-            <p className="mb-4 text-sm leading-relaxed text-[#a39e95]">
+            <p className="mb-3.5 text-sm leading-relaxed text-[#5A6775]">
               {splitAuthorsHighlighted(pub.authors)}
             </p>
           ) : null}
 
           {takeawayLines.length > 0 ? (
-            <ul className="mb-5 space-y-1.5 border-l border-[#c8a464]/45 pl-4 text-sm leading-relaxed text-[#c8c3ba]">
+            <ul className="mb-4 space-y-1 border-l-2 border-[#0F4C81]/35 pl-3.5 text-sm leading-relaxed text-[#2B3642]">
               {takeawayLines.map((line, li) => (
                 <li key={li}>{line}</li>
               ))}
             </ul>
           ) : null}
 
-          <div className="mt-2 flex flex-wrap items-end justify-between gap-6 border-t border-white/[0.08] pt-5">
+          <div className="mt-2 flex flex-wrap items-end justify-between gap-4 border-t border-[#DCE2E8] pt-4">
             <div className="min-w-0">
-              <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#7d7870]">
-                {pubsText.journal}
-              </div>
-              <div className="mt-1 font-heading-serif text-lg italic text-[#e8e4dc]">
-                {pub.journal}
-              </div>
+              <div className="text-base font-medium text-[#11161C]">{pub.journal}</div>
               {pub.doi ? (
                 <a
                   href={pub.doi}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-1.5 inline-flex items-center gap-1.5 break-all font-mono text-xs text-[#9b958c] transition-colors hover:text-[#e5cea0]"
+                  className="mt-1 inline-flex items-center gap-1.5 break-all font-mono text-xs text-[#0F4C81] hover:underline"
                 >
                   {getLinkDisplay(pub.doi, pubsText)}
                   <ExternalLink className="h-3 w-3 shrink-0" aria-hidden />
@@ -336,24 +259,24 @@ const PublicationEditorialItem = memo(function PublicationEditorialItem({
             </div>
 
             <div className="shrink-0 text-left sm:text-right">
-              <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#c8a464]">
+              <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-[#5A6775]">
                 {pubsText.citations}
               </div>
-              <div className="text-gold-sheen font-heading-serif text-5xl font-semibold leading-none tracking-tight [font-variant-numeric:lining-nums]">
+              <div className="font-mono text-3xl font-semibold leading-none tracking-tight text-[#0F4C81] [font-variant-numeric:tabular-nums]">
                 {pub.citations.toLocaleString(locale)}
               </div>
             </div>
           </div>
 
-          <div className="mt-5 flex flex-wrap items-center gap-3">
+          <div className="mt-4 flex flex-wrap items-center gap-3">
             <button
               type="button"
               onClick={() => onCopyCitation(pubKey, pub)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.12] bg-white/[0.03] px-3.5 py-1.5 font-mono text-xs text-[#d6d1c9] transition-colors hover:border-[#c8a464]/60 hover:text-[#e5cea0]"
+              className="inline-flex items-center gap-1.5 rounded-md border border-[#DCE2E8] bg-[#F6F7F8] px-3 py-1.5 font-mono text-xs text-[#2B3642] transition-colors hover:border-[#0F4C81] hover:text-[#0F4C81]"
             >
               {isCopied ? (
                 <>
-                  <Check className="h-3.5 w-3.5 text-[#c8a464]" aria-hidden />
+                  <Check className="h-3.5 w-3.5 text-[#0F4C81]" aria-hidden />
                   {pubsText.copiedCitation}
                 </>
               ) : (
@@ -368,7 +291,7 @@ const PublicationEditorialItem = memo(function PublicationEditorialItem({
                 href={altmetricHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-lg border border-[#c8a464]/30 bg-[#c8a464]/10 px-3.5 py-1.5 font-mono text-xs text-[#e5cea0] transition-colors hover:bg-[#c8a464]/20"
+                className="inline-flex items-center gap-1.5 rounded-md border border-[#0F4C81]/25 bg-[#EBF2F8] px-3 py-1.5 font-mono text-xs text-[#0F4C81] transition-colors hover:bg-[#0F4C81] hover:text-white"
               >
                 {pubsText.altmetricLink}
                 <ExternalLink className="h-3 w-3" aria-hidden />
@@ -379,7 +302,7 @@ const PublicationEditorialItem = memo(function PublicationEditorialItem({
                 type="button"
                 onClick={() => onToggleAbstract(pubKey)}
                 aria-expanded={expanded}
-                className="ml-auto inline-flex items-center gap-1.5 font-mono text-xs text-[#b8b3aa] transition-colors hover:text-[#e5cea0]"
+                className="ml-auto inline-flex items-center gap-1 font-mono text-xs font-medium text-[#0F4C81] hover:underline"
               >
                 {expanded ? pubsText.collapseAbstract : pubsText.readAbstract}
                 {expanded ? (
@@ -398,10 +321,10 @@ const PublicationEditorialItem = memo(function PublicationEditorialItem({
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: litePub ? 0 : 0.25 }}
+                transition={{ duration: litePub ? 0 : 0.15 }}
                 className="overflow-hidden"
               >
-                <p className="mt-4 border-t border-white/[0.08] pt-4 text-sm leading-relaxed text-[#b3ada4]">
+                <p className="mt-4 border-t border-[#DCE2E8] pt-3.5 text-sm leading-relaxed text-[#475569]">
                   {pub.abstract_excerpt}
                 </p>
               </motion.div>
@@ -412,134 +335,122 @@ const PublicationEditorialItem = memo(function PublicationEditorialItem({
     );
   }
 
-  // 2. 次代表作（#2 & #3，無縫 2 欄細線網格）或一般列表列（無縫橫式建築書目列）
+  // 2. 次代表作（#2 & #3）或一般清單列：無圖時完全收合為全寬緊湊純文字學術書目
   const containerCls = isSubFeatured
-    ? 'group flex h-full flex-col gap-5 bg-[#0e0d0c] p-6 transition-colors duration-300 hover:bg-[#12110f] md:p-7'
-    : 'group flex flex-col gap-6 bg-[#0b0a09] p-6 transition-colors duration-300 hover:bg-[#100f0d] md:flex-row md:items-start md:gap-8 md:p-7';
+    ? 'group flex h-full flex-col gap-4 bg-white p-6 transition-colors duration-150 hover:bg-[#FAFBFC]'
+    : showFigure
+      ? 'group flex flex-col gap-5 bg-white p-5 transition-colors duration-150 hover:bg-[#FAFBFC] md:flex-row md:items-start md:gap-7 md:p-6'
+      : 'group flex flex-col bg-white px-5 py-4.5 transition-colors duration-150 hover:bg-[#FAFBFC] md:px-6 md:py-5';
 
   return (
     <article
       style={
         variant === 'list'
-          ? { contentVisibility: 'auto', containIntrinsicSize: isMobile ? '340px' : '270px' }
+          ? { contentVisibility: 'auto', containIntrinsicSize: showFigure ? '240px' : '148px' }
           : undefined
       }
       className={containerCls}
     >
-      <div className={isSubFeatured ? 'w-full' : 'w-full shrink-0 md:w-[260px] lg:w-[300px]'}>
-        <PublicationFigurePlate
-          pub={pub}
-          pubsText={pubsText}
-          eagerMain={eagerMain}
-          priority={false}
-          isMobile={isMobile}
-          compactSize={!isSubFeatured}
-          onOpenLightbox={onOpenLightbox}
-        />
-      </div>
+      {showFigure ? (
+        <div className={isSubFeatured ? 'w-full' : 'w-full shrink-0 md:w-[240px] lg:w-[268px]'}>
+          {figureBlock}
+        </div>
+      ) : null}
 
-      {/* 使用 min-w-0 flex-1，永遠不會因為 gap 與寬度百分比疊加造成右側標題裁切 */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-          <span className="font-mono text-xs font-semibold text-[#e2c992] [font-variant-numeric:tabular-nums]">
+        <div className="mb-2 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs">
+          <span className="font-mono font-semibold text-[#0F4C81] [font-variant-numeric:tabular-nums]">
             {pub.year > 0 ? pub.year : '-'}
           </span>
-          <span className="h-3 w-px bg-white/[0.12]" aria-hidden />
-          <span
-            className={`rounded-sm border px-2 py-0.5 font-mono text-[11px] ${getHighlightBadgeClass(highlightLabel, pubsText)}`}
-          >
-            {highlightLabel}
-          </span>
+          {isInPress ? (
+            <span className="rounded border border-[#0F4C81]/30 bg-[#EBF2F8] px-1.5 py-0.5 font-mono text-[10px] font-medium text-[#0F4C81]">
+              {pubsText.inPress}
+            </span>
+          ) : null}
+          <span className="h-3 w-px bg-[#DCE2E8]" aria-hidden />
           {pub.is_star === '是' ? (
-            <span className="inline-flex items-center gap-1 text-xs text-[#e2c992]">
-              <Star className="h-3 w-3 fill-[#c8a464] text-[#c8a464]" aria-hidden />
+            <span className="inline-flex items-center gap-1 font-medium text-[#0F4C81]">
+              <Star className="h-3 w-3 fill-[#0F4C81] text-[#0F4C81]" aria-hidden />
               {pubsText.corresponding}
             </span>
           ) : (
-            <span className="text-xs text-[#7d7870]">{pubsText.coauthor}</span>
+            <span className="text-[#64748B]">{pubsText.coauthor}</span>
           )}
+          <span className="ml-auto font-mono text-xs font-semibold text-[#11161C] [font-variant-numeric:tabular-nums]">
+            {pub.citations.toLocaleString(locale)}{' '}
+            <span className="font-normal text-[#64748B]">{pubsText.citations}</span>
+          </span>
         </div>
 
-        <h3 className="font-heading-serif mb-3 text-xl font-medium leading-snug text-[#f5f3ef] transition-colors group-hover:text-[#e5cea0] md:text-[1.35rem]">
+        <h3 className="mb-2 text-[1.0625rem] font-semibold leading-snug tracking-[-0.01em] text-[#11161C] transition-colors group-hover:text-[#0F4C81] md:text-lg">
           {pub.title}
         </h3>
 
         {pub.authors?.trim() ? (
-          <p className="mb-3 text-xs leading-relaxed text-[#9b958c] md:text-sm">
+          <p className="mb-2.5 text-xs leading-relaxed text-[#5A6775] md:text-sm">
             {splitAuthorsHighlighted(pub.authors)}
           </p>
         ) : null}
 
         {takeawayLines.length > 0 ? (
-          <ul className="mb-3.5 space-y-1 border-l border-[#c8a464]/35 pl-3.5 text-xs leading-relaxed text-[#b8b3aa] md:text-sm">
+          <ul className="mb-3 space-y-1 border-l-2 border-[#0F4C81]/30 pl-3 text-xs leading-relaxed text-[#2B3642] md:text-sm">
             {takeawayLines.map((line, li) => (
               <li key={li}>{line}</li>
             ))}
           </ul>
         ) : null}
 
-        <div className="mt-auto flex flex-col gap-3 border-t border-white/[0.07] pt-4">
-          <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-            <div className="min-w-0">
-              <span className="font-heading-serif text-base italic text-[#d6d1c9]">{pub.journal}</span>
-              {pub.doi ? (
-                <a
-                  href={pub.doi}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-1 flex items-center gap-1.5 break-all font-mono text-xs text-[#8f8980] transition-colors hover:text-[#e5cea0]"
-                >
-                  {getLinkDisplay(pub.doi, pubsText)}
-                  <ExternalLink className="h-3 w-3 shrink-0" aria-hidden />
-                </a>
-              ) : null}
-            </div>
-
-            <div className="flex shrink-0 items-center gap-1.5 font-mono text-sm font-semibold text-[#f5f3ef] [font-variant-numeric:tabular-nums]">
-              <Quote className="h-3.5 w-3.5 text-[#c8a464]" aria-hidden />
-              <span>{pub.citations.toLocaleString(locale)}</span>
-              <span className="text-[11px] font-normal text-[#7d7870]">{pubsText.citations}</span>
-            </div>
+        <div className="mt-auto flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-[#EEF1F5] pt-3">
+          <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span className="text-sm font-medium text-[#2B3642]">{pub.journal}</span>
+            {pub.doi ? (
+              <a
+                href={pub.doi}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 break-all font-mono text-xs text-[#0F4C81] hover:underline"
+              >
+                {getLinkDisplay(pub.doi, pubsText)}
+                <ExternalLink className="h-3 w-3 shrink-0" aria-hidden />
+              </a>
+            ) : null}
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                onClick={() => onCopyCitation(pubKey, pub)}
-                className="inline-flex items-center gap-1.5 font-mono text-xs text-[#9b958c] transition-colors hover:text-[#e5cea0]"
+          <div className="flex shrink-0 flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => onCopyCitation(pubKey, pub)}
+              className="inline-flex items-center gap-1 font-mono text-xs text-[#5A6775] transition-colors hover:text-[#0F4C81]"
+            >
+              {isCopied ? (
+                <>
+                  <Check className="h-3.5 w-3.5 text-[#0F4C81]" aria-hidden />
+                  {pubsText.copiedCitation}
+                </>
+              ) : (
+                <>
+                  <Copy className="h-3.5 w-3.5" aria-hidden />
+                  {pubsText.copyCitation}
+                </>
+              )}
+            </button>
+            {altmetricHref ? (
+              <a
+                href={altmetricHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 font-mono text-xs text-[#0F4C81] hover:underline"
               >
-                {isCopied ? (
-                  <>
-                    <Check className="h-3.5 w-3.5 text-[#c8a464]" aria-hidden />
-                    {pubsText.copiedCitation}
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-3.5 w-3.5" aria-hidden />
-                    {pubsText.copyCitation}
-                  </>
-                )}
-              </button>
-              {altmetricHref ? (
-                <a
-                  href={altmetricHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 font-mono text-xs text-[#c8a464] transition-colors hover:text-[#e5cea0]"
-                >
-                  {pubsText.altmetricLink}
-                  <ExternalLink className="h-3 w-3" aria-hidden />
-                </a>
-              ) : null}
-            </div>
-
+                Altmetric
+                <ExternalLink className="h-3 w-3" aria-hidden />
+              </a>
+            ) : null}
             {hasAbstractBody ? (
               <button
                 type="button"
                 onClick={() => onToggleAbstract(pubKey)}
                 aria-expanded={expanded}
-                className="inline-flex items-center gap-1 font-mono text-xs text-[#b8b3aa] transition-colors hover:text-[#e5cea0]"
+                className="inline-flex items-center gap-1 font-mono text-xs font-medium text-[#0F4C81] hover:underline"
               >
                 {expanded ? pubsText.collapseAbstract : pubsText.readAbstract}
                 {expanded ? (
@@ -559,10 +470,10 @@ const PublicationEditorialItem = memo(function PublicationEditorialItem({
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: litePub ? 0 : 0.25 }}
+              transition={{ duration: litePub ? 0 : 0.15 }}
               className="overflow-hidden"
             >
-              <p className="mt-4 border-t border-white/[0.07] pt-4 text-sm leading-relaxed text-[#a39e95]">
+              <p className="mt-3 border-t border-[#EEF1F5] pt-3 text-sm leading-relaxed text-[#475569]">
                 {pub.abstract_excerpt}
               </p>
             </motion.div>
@@ -592,6 +503,7 @@ const PublicationEditorialItem = memo(function PublicationEditorialItem({
     prev.isMobile === next.isMobile &&
     prev.litePub === next.litePub &&
     prev.locale === next.locale &&
+    prev.currentYear === next.currentYear &&
     prev.onToggleAbstract === next.onToggleAbstract &&
     prev.onCopyCitation === next.onCopyCitation &&
     prev.onOpenLightbox === next.onOpenLightbox &&
@@ -605,6 +517,7 @@ const PublicationCompactRow = memo(function PublicationCompactRow({
   pubKey,
   pubsText,
   locale,
+  currentYear,
   copiedKey,
   onCopyCitation,
 }: {
@@ -612,35 +525,42 @@ const PublicationCompactRow = memo(function PublicationCompactRow({
   pubKey: string;
   pubsText: PublicationsText;
   locale: string;
+  currentYear: number;
   copiedKey: string | null;
   onCopyCitation: (key: string, pub: Publication) => void;
 }) {
   const isCopied = copiedKey === pubKey;
+  const isInPress = pub.year > currentYear;
   const altmetricHref = pub.altmetric_id
     ? `https://www.altmetric.com/details.php?doi=${encodeURIComponent(pub.altmetric_id)}`
     : null;
 
   return (
-    <article className="group flex flex-col gap-3 bg-[#0b0a09] px-5 py-4 transition-colors hover:bg-[#11100e] md:flex-row md:items-center md:gap-6">
-      <div className="flex items-center gap-3 md:w-20 md:shrink-0">
-        <span className="font-mono text-sm font-semibold text-[#e2c992] [font-variant-numeric:tabular-nums]">
+    <article className="group flex flex-col gap-2.5 bg-white px-5 py-3.5 transition-colors hover:bg-[#FAFBFC] md:flex-row md:items-center md:gap-5">
+      <div className="flex items-center gap-2 md:w-28 md:shrink-0">
+        <span className="font-mono text-sm font-semibold text-[#0F4C81] [font-variant-numeric:tabular-nums]">
           {pub.year > 0 ? pub.year : '-'}
         </span>
+        {isInPress ? (
+          <span className="rounded border border-[#0F4C81]/30 bg-[#EBF2F8] px-1 py-0.5 font-mono text-[9px] font-medium text-[#0F4C81]">
+            {pubsText.inPress}
+          </span>
+        ) : null}
         {pub.is_star === '是' ? (
           <Star
-            className="h-3.5 w-3.5 shrink-0 fill-[#c8a464] text-[#c8a464]"
+            className="h-3.5 w-3.5 shrink-0 fill-[#0F4C81] text-[#0F4C81]"
             aria-label={pubsText.corresponding}
           />
         ) : null}
       </div>
 
       <div className="min-w-0 flex-1">
-        <h3 className="font-heading-serif text-base font-medium leading-snug text-[#f5f3ef] transition-colors group-hover:text-[#e5cea0] md:text-lg">
+        <h3 className="text-[15px] font-medium leading-snug text-[#11161C] transition-colors group-hover:text-[#0F4C81]">
           {pub.title}
         </h3>
-        <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#9b958c]">
-          <span className="italic text-[#c8c3ba]">{pub.journal}</span>
-          <span className="font-mono text-[#e2c992]">
+        <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-0.5 text-xs text-[#5A6775]">
+          <span className="text-[#2B3642]">{pub.journal}</span>
+          <span className="font-mono font-medium text-[#0F4C81]">
             {pub.citations.toLocaleString(locale)} {pubsText.citations}
           </span>
         </div>
@@ -650,11 +570,11 @@ const PublicationCompactRow = memo(function PublicationCompactRow({
         <button
           type="button"
           onClick={() => onCopyCitation(pubKey, pub)}
-          className="inline-flex items-center gap-1 rounded-md border border-white/[0.1] bg-white/[0.02] px-2.5 py-1 font-mono text-[11px] text-[#c8c3ba] transition-colors hover:border-[#c8a464]/60 hover:text-[#e5cea0]"
+          className="inline-flex items-center gap-1 rounded border border-[#DCE2E8] bg-[#F6F7F8] px-2.5 py-1 font-mono text-[11px] text-[#2B3642] transition-colors hover:border-[#0F4C81] hover:text-[#0F4C81]"
         >
           {isCopied ? (
             <>
-              <Check className="h-3 w-3 text-[#c8a464]" aria-hidden />
+              <Check className="h-3 w-3 text-[#0F4C81]" aria-hidden />
               {pubsText.copiedCitation}
             </>
           ) : (
@@ -670,7 +590,7 @@ const PublicationCompactRow = memo(function PublicationCompactRow({
             href={altmetricHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 rounded-md border border-[#c8a464]/30 px-2.5 py-1 font-mono text-[11px] text-[#e2c992] transition-colors hover:bg-[#c8a464]/15"
+            className="inline-flex items-center gap-1 rounded border border-[#0F4C81]/25 bg-[#EBF2F8] px-2.5 py-1 font-mono text-[11px] text-[#0F4C81] transition-colors hover:bg-[#0F4C81] hover:text-white"
           >
             Altmetric
             <ExternalLink className="h-3 w-3" aria-hidden />
@@ -682,7 +602,7 @@ const PublicationCompactRow = memo(function PublicationCompactRow({
             href={pub.doi}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 rounded-md border border-white/[0.14] bg-[#f5f3ef] px-2.5 py-1 font-mono text-[11px] font-semibold text-[#080807] transition-colors hover:bg-[#e5cea0]"
+            className="inline-flex items-center gap-1 rounded border border-[#0F4C81] bg-[#0F4C81] px-2.5 py-1 font-mono text-[11px] font-semibold text-white transition-colors hover:bg-[#0B3A63]"
           >
             DOI
             <ExternalLink className="h-3 w-3" aria-hidden />
@@ -703,20 +623,17 @@ function PublicationsListSkeleton({
   const pulse = prefersReducedMotion ? '' : 'animate-pulse';
   return (
     <div
-      className="divide-y divide-white/[0.07] overflow-hidden rounded-xl border border-white/[0.09] bg-[#0d0c0b]"
+      className="divide-y divide-[#DCE2E8] overflow-hidden rounded-lg border border-[#DCE2E8] bg-white"
       role="status"
       aria-live="polite"
       aria-busy="true"
       aria-label={pubsText.loadingPublications}
     >
       {[0, 1, 2].map((i) => (
-        <div key={i} className={`flex flex-col gap-6 p-7 md:flex-row ${pulse}`}>
-          <div className="aspect-[16/10] w-full rounded-lg bg-white/[0.05] md:w-[280px]" />
-          <div className="flex flex-1 flex-col gap-3">
-            <div className="h-4 w-32 rounded bg-white/[0.06]" />
-            <div className="h-6 w-[85%] rounded bg-white/[0.07]" />
-            <div className="h-4 w-[60%] rounded bg-white/[0.05]" />
-          </div>
+        <div key={i} className={`flex flex-col gap-3 p-6 ${pulse}`}>
+          <div className="h-3.5 w-28 rounded bg-[#EEF1F5]" />
+          <div className="h-5 w-[80%] rounded bg-[#E2E8F0]" />
+          <div className="h-4 w-[50%] rounded bg-[#EEF1F5]" />
         </div>
       ))}
     </div>
@@ -750,12 +667,13 @@ function PublicationsSectionComponent({
   onLoadMore,
 }: PublicationsSectionProps) {
   useRenderProfiler('PublicationsSection');
-  const litePub = prefersReducedMotion || isMobile;
+  const litePub = Boolean(prefersReducedMotion) || isMobile;
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [lightbox, setLightbox] = useState<LightboxState>(null);
   const locale = lang === 'zh' ? 'zh-TW' : 'en-US';
-  const sectionKicker = lang === 'zh' ? '學術著作檔案' : 'SCHOLARLY ARCHIVE';
+  const currentYear = new Date().getFullYear();
+  const sectionKicker = lang === 'zh' ? '學術著作檔案' : 'PUBLICATION ARCHIVE';
 
   const onToggleAbstract = useCallback((key: string) => {
     setExpandedKey((prev) => (prev === key ? null : key));
@@ -804,26 +722,27 @@ function PublicationsSectionComponent({
   return (
     <section
       id="publications"
-      className="relative scroll-mt-24 border-t border-white/[0.08] bg-[#0a0a09] py-24 md:py-32"
+      className="scroll-mt-20 border-t border-[#DCE2E8] bg-[#F6F7F8] py-20 md:py-24"
     >
-      <div className="relative z-10 mx-auto max-w-7xl px-6">
-        <div className="mb-12 flex flex-col items-start justify-between gap-4 md:mb-14 md:flex-row md:items-end">
+      <div className="mx-auto max-w-7xl px-6">
+        <div className="mb-10 flex flex-col items-start justify-between gap-4 md:mb-12 md:flex-row md:items-end">
           <div>
-            <div className="mb-3 flex items-center gap-3">
-              <span className="h-px w-6 bg-[#c8a464]" aria-hidden />
+            <div className="mb-2.5 flex items-center gap-2.5">
+              <span className="h-[2px] w-5 bg-[#0F4C81]" aria-hidden />
               <span className={uiTokens.sectionKicker}>{sectionKicker}</span>
             </div>
             <h2 className={uiTokens.sectionTitle}>
-              <span className={uiTokens.titleLight}>{pubsText.title}</span>{' '}
-              <span className={uiTokens.titleBold}>{pubsText.subtitle}</span>
+              {pubsText.title}
+              {lang === 'en' ? ' ' : ''}
+              {pubsText.subtitle}
             </h2>
           </div>
-          <p className="max-w-md text-sm font-light leading-relaxed text-[#9e988f] md:text-right">
+          <p className="max-w-md text-sm leading-relaxed text-[#5A6775] md:text-right">
             {pubsText.desc}
           </p>
         </div>
 
-        {/* 1993–2027 黑底精品互動發表與引用長條圖 */}
+        {/* 互動發表與引用長條圖 */}
         {!isLoading && allPublications.length > 0 ? (
           <PublicationTimelineChart
             publications={allPublications}
@@ -833,10 +752,10 @@ function PublicationsSectionComponent({
           />
         ) : null}
 
-        {/* 精簡建築工具列（篩選、排序、搜尋、僅通訊作者、檢視模式） */}
-        <div className="mb-10 border-y border-white/[0.08] py-5">
+        {/* 檢索與篩選工具列 */}
+        <div className="mb-8 rounded-lg border border-[#DCE2E8] bg-white p-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2.5">
               <div className="flex items-center gap-2">
                 <label htmlFor="pub-filter-select" className={uiTokens.metaMono}>
                   {pubsText.filterBy}
@@ -851,15 +770,18 @@ function PublicationsSectionComponent({
                     <option value="All">{pubsText.filterAll}</option>
                     <option value="Selected">{pubsText.filterSelected}</option>
                     <optgroup label={pubsText.filterYearGroup}>
-                      {uniqueYears.map((year) => (
-                        <option key={year} value={year}>
-                          {year}
-                        </option>
-                      ))}
+                      {uniqueYears.map((year) => {
+                        const isFuture = Number(year) > currentYear;
+                        return (
+                          <option key={year} value={year}>
+                            {isFuture ? `${year} (${pubsText.inPress})` : year}
+                          </option>
+                        );
+                      })}
                     </optgroup>
                   </select>
                   <ChevronDown
-                    className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#8f8980]"
+                    className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#64748B]"
                     aria-hidden
                   />
                 </div>
@@ -881,7 +803,7 @@ function PublicationsSectionComponent({
                     <option value="starred">{pubsText.sortStarred}</option>
                   </select>
                   <ChevronDown
-                    className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#8f8980]"
+                    className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#64748B]"
                     aria-hidden
                   />
                 </div>
@@ -891,15 +813,15 @@ function PublicationsSectionComponent({
                 type="button"
                 onClick={onCorrespondingToggle}
                 aria-pressed={correspondingOnly}
-                className={`inline-flex items-center gap-1.5 rounded-lg border px-3.5 py-2 font-mono text-xs transition-colors ${
+                className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-2 font-mono text-xs transition-colors ${
                   correspondingOnly
-                    ? 'border-[#c8a464]/70 bg-[#c8a464]/15 text-[#e5cea0]'
-                    : 'border-white/[0.12] bg-[#0d0c0b] text-[#b8b3aa] hover:border-white/[0.25] hover:text-[#f5f3ef]'
+                    ? 'border-[#0F4C81] bg-[#EBF2F8] font-medium text-[#0F4C81]'
+                    : 'border-[#DCE2E8] bg-white text-[#2B3642] hover:border-[#9AA8B8]'
                 }`}
               >
                 <Star
                   className={`h-3.5 w-3.5 ${
-                    correspondingOnly ? 'fill-[#c8a464] text-[#c8a464]' : 'text-[#8f8980]'
+                    correspondingOnly ? 'fill-[#0F4C81] text-[#0F4C81]' : 'text-[#64748B]'
                   }`}
                   aria-hidden
                 />
@@ -907,10 +829,10 @@ function PublicationsSectionComponent({
               </button>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2.5">
               <div className="relative min-w-0 flex-1 sm:w-64 lg:w-72">
                 <Search
-                  className="pointer-events-none absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#7d7870]"
+                  className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#64748B]"
                   aria-hidden
                 />
                 <input
@@ -919,14 +841,14 @@ function PublicationsSectionComponent({
                   onChange={(e) => onSearchChange(e.target.value)}
                   placeholder={pubsText.searchPlaceholder}
                   aria-label={pubsText.searchAriaLabel}
-                  className="w-full rounded-lg border border-white/[0.12] bg-[#0d0c0b] py-2 pl-9 pr-8 text-xs text-[#f5f3ef] placeholder:text-[#7d7870] transition-colors focus:border-[#c8a464]/70 focus:outline-none"
+                  className="w-full rounded-md border border-[#DCE2E8] bg-[#F6F7F8] py-2 pl-8 pr-7 text-xs text-[#11161C] placeholder:text-[#64748B] transition-colors focus:border-[#0F4C81] focus:bg-white focus:outline-none"
                 />
                 {searchQuery ? (
                   <button
                     type="button"
                     onClick={() => onSearchChange('')}
                     aria-label={pubsText.clearSearch}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-[#8f8980] hover:text-[#f5f3ef]"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-[#64748B] hover:text-[#11161C]"
                   >
                     <X className="h-3.5 w-3.5" aria-hidden />
                   </button>
@@ -936,16 +858,16 @@ function PublicationsSectionComponent({
               <div
                 role="group"
                 aria-label="View mode"
-                className="inline-flex rounded-lg border border-white/[0.12] bg-[#0d0c0b] p-0.5"
+                className="inline-flex rounded-md border border-[#DCE2E8] bg-[#F6F7F8] p-0.5"
               >
                 <button
                   type="button"
                   onClick={() => onViewModeChange('card')}
                   aria-pressed={viewMode === 'card'}
-                  className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 font-mono text-xs transition-colors ${
+                  className={`inline-flex items-center gap-1.5 rounded-[5px] px-2.5 py-1.5 font-mono text-xs transition-colors ${
                     viewMode === 'card'
-                      ? 'bg-[#f5f3ef] font-semibold text-[#080807]'
-                      : 'text-[#8f8980] hover:text-[#f5f3ef]'
+                      ? 'bg-[#0F4C81] font-semibold text-white'
+                      : 'text-[#5A6775] hover:text-[#11161C]'
                   }`}
                 >
                   <LayoutGrid className="h-3.5 w-3.5" aria-hidden />
@@ -955,10 +877,10 @@ function PublicationsSectionComponent({
                   type="button"
                   onClick={() => onViewModeChange('compact')}
                   aria-pressed={viewMode === 'compact'}
-                  className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 font-mono text-xs transition-colors ${
+                  className={`inline-flex items-center gap-1.5 rounded-[5px] px-2.5 py-1.5 font-mono text-xs transition-colors ${
                     viewMode === 'compact'
-                      ? 'bg-[#f5f3ef] font-semibold text-[#080807]'
-                      : 'text-[#8f8980] hover:text-[#f5f3ef]'
+                      ? 'bg-[#0F4C81] font-semibold text-white'
+                      : 'text-[#5A6775] hover:text-[#11161C]'
                   }`}
                 >
                   <List className="h-3.5 w-3.5" aria-hidden />
@@ -968,7 +890,7 @@ function PublicationsSectionComponent({
 
               {!isLoading ? (
                 <span
-                  className="font-mono text-xs text-[#9b958c] [font-variant-numeric:tabular-nums]"
+                  className="font-mono text-xs text-[#5A6775] [font-variant-numeric:tabular-nums]"
                   aria-live="polite"
                 >
                   {pubsText.resultCount.replace('{count}', String(filteredCount))}
@@ -978,122 +900,53 @@ function PublicationsSectionComponent({
           </div>
 
           {isUsingFallback ? (
-            <p className="mt-4 rounded-lg border border-[#c8a464]/30 bg-[#c8a464]/10 px-4 py-2.5 text-xs text-[#e5cea0]">
+            <p className="mt-3 rounded-md border border-[#0F4C81]/25 bg-[#EBF2F8] px-3.5 py-2 text-xs text-[#0F4C81]">
               {pubsText.offlineFallbackNote}
             </p>
           ) : null}
         </div>
 
-        <AnimatePresence mode="wait">
-          {isLoading ? (
-            <motion.div
-              key="loader"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <PublicationsListSkeleton prefersReducedMotion={prefersReducedMotion} pubsText={pubsText} />
-            </motion.div>
-          ) : filteredCount === 0 ? (
-            <motion.div
-              key="empty"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="flex flex-col items-center justify-center rounded-xl border border-white/[0.08] bg-[#0e0d0c] px-6 py-16 text-center"
-              role="status"
-              aria-live="polite"
-            >
-              <FolderOpen className="mb-4 h-10 w-10 text-[#6d6860]" aria-hidden />
-              <p className="max-w-md text-sm leading-relaxed text-[#9b958c]">
-                {pubsText.emptyPublications}
-              </p>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="content"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
-              className="flex flex-col gap-10"
-            >
-              {/* 不對稱代表作雜誌跨頁 Bento：#1 領銜全寬跨頁 + #2/#3 無縫細線雙欄 */}
-              {showFeaturedStrip && landmarkPub ? (
-                <div className="space-y-5">
-                  <PublicationEditorialItem
-                    key={getPublicationKey(landmarkPub, 0)}
-                    pubKey={getPublicationKey(landmarkPub, 0)}
-                    pub={landmarkPub}
-                    pubsText={pubsText}
-                    isMobile={isMobile}
-                    litePub={litePub}
-                    variant="landmark"
-                    index={0}
-                    locale={locale}
-                    expandedKey={expandedKey}
-                    copiedKey={copiedKey}
-                    onToggleAbstract={onToggleAbstract}
-                    onCopyCitation={onCopyCitation}
-                    onOpenLightbox={onOpenLightbox}
-                  />
+        {isLoading ? (
+          <PublicationsListSkeleton prefersReducedMotion={prefersReducedMotion} pubsText={pubsText} />
+        ) : filteredCount === 0 ? (
+          <div
+            className="flex flex-col items-center justify-center rounded-lg border border-[#DCE2E8] bg-white px-6 py-16 text-center"
+            role="status"
+            aria-live="polite"
+          >
+            <FolderOpen className="mb-3 h-9 w-9 text-[#94A3B8]" aria-hidden />
+            <p className="max-w-md text-sm leading-relaxed text-[#5A6775]">
+              {pubsText.emptyPublications}
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-6">
+            {/* 代表性著作（無圖自動收合，絕不留空白欄） */}
+            {showFeaturedStrip && landmarkPub ? (
+              <div className="space-y-4">
+                <PublicationEditorialItem
+                  key={getPublicationKey(landmarkPub, 0)}
+                  pubKey={getPublicationKey(landmarkPub, 0)}
+                  pub={landmarkPub}
+                  pubsText={pubsText}
+                  isMobile={isMobile}
+                  litePub={litePub}
+                  variant="landmark"
+                  index={0}
+                  locale={locale}
+                  currentYear={currentYear}
+                  expandedKey={expandedKey}
+                  copiedKey={copiedKey}
+                  onToggleAbstract={onToggleAbstract}
+                  onCopyCitation={onCopyCitation}
+                  onOpenLightbox={onOpenLightbox}
+                />
 
-                  {subFeaturedPubs.length > 0 ? (
-                    <div className="overflow-hidden rounded-xl border border-white/[0.09] bg-white/[0.08]">
-                      <div className="grid grid-cols-1 gap-px lg:grid-cols-2">
-                        {subFeaturedPubs.map((pub, si) => {
-                          const key = getPublicationKey(pub, si + 1);
-                          return (
-                            <PublicationEditorialItem
-                              key={key}
-                              pubKey={key}
-                              pub={pub}
-                              pubsText={pubsText}
-                              isMobile={isMobile}
-                              litePub={litePub}
-                              variant="featured-sub"
-                              index={si + 1}
-                              locale={locale}
-                              expandedKey={expandedKey}
-                              copiedKey={copiedKey}
-                              onToggleAbstract={onToggleAbstract}
-                              onCopyCitation={onCopyCitation}
-                              onOpenLightbox={onOpenLightbox}
-                            />
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-              ) : null}
-
-              {listAllInFeatured ? (
-                <p className="rounded-xl border border-white/[0.08] bg-[#0e0d0c] px-5 py-6 text-center text-sm text-[#9b958c]">
-                  {pubsText.allInFeaturedNote}
-                </p>
-              ) : null}
-
-              {/* 主列表：建築細線分隔清單（不再疊 10 個獨立厚圓角盒子） */}
-              {visiblePublications.length > 0 ? (
-                <div className="overflow-hidden rounded-xl border border-white/[0.09] bg-[#0b0a09] divide-y divide-white/[0.07]">
-                  {viewMode === 'compact'
-                    ? visiblePublications.map((pub, i) => {
-                        const key = getPublicationKey(pub, i);
-                        return (
-                          <PublicationCompactRow
-                            key={key}
-                            pubKey={key}
-                            pub={pub}
-                            pubsText={pubsText}
-                            locale={locale}
-                            copiedKey={copiedKey}
-                            onCopyCitation={onCopyCitation}
-                          />
-                        );
-                      })
-                    : visiblePublications.map((pub, i) => {
-                        const key = getPublicationKey(pub, i);
+                {subFeaturedPubs.length > 0 ? (
+                  <div className="overflow-hidden rounded-lg border border-[#DCE2E8] bg-[#DCE2E8]">
+                    <div className="grid grid-cols-1 gap-px lg:grid-cols-2">
+                      {subFeaturedPubs.map((pub, si) => {
+                        const key = getPublicationKey(pub, si + 1);
                         return (
                           <PublicationEditorialItem
                             key={key}
@@ -1102,9 +955,10 @@ function PublicationsSectionComponent({
                             pubsText={pubsText}
                             isMobile={isMobile}
                             litePub={litePub}
-                            variant="list"
-                            index={i + featuredPublications.length}
+                            variant="featured-sub"
+                            index={si + 1}
                             locale={locale}
+                            currentYear={currentYear}
                             expandedKey={expandedKey}
                             copiedKey={copiedKey}
                             onToggleAbstract={onToggleAbstract}
@@ -1113,18 +967,70 @@ function PublicationsSectionComponent({
                           />
                         );
                       })}
-                </div>
-              ) : null}
-            </motion.div>
-          )}
-        </AnimatePresence>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
+            {listAllInFeatured ? (
+              <p className="rounded-lg border border-[#DCE2E8] bg-white px-5 py-6 text-center text-sm text-[#5A6775]">
+                {pubsText.allInFeaturedNote}
+              </p>
+            ) : null}
+
+            {/* 主書目清單 */}
+            {visiblePublications.length > 0 ? (
+              <div className="divide-y divide-[#DCE2E8] overflow-hidden rounded-lg border border-[#DCE2E8] bg-white">
+                {viewMode === 'compact'
+                  ? visiblePublications.map((pub, i) => {
+                      const key = getPublicationKey(pub, i);
+                      return (
+                        <PublicationCompactRow
+                          key={key}
+                          pubKey={key}
+                          pub={pub}
+                          pubsText={pubsText}
+                          locale={locale}
+                          currentYear={currentYear}
+                          copiedKey={copiedKey}
+                          onCopyCitation={onCopyCitation}
+                        />
+                      );
+                    })
+                  : visiblePublications.map((pub, i) => {
+                      const key = getPublicationKey(pub, i);
+                      return (
+                        <PublicationEditorialItem
+                          key={key}
+                          pubKey={key}
+                          pub={pub}
+                          pubsText={pubsText}
+                          isMobile={isMobile}
+                          litePub={litePub}
+                          variant="list"
+                          index={i + featuredPublications.length}
+                          locale={locale}
+                          currentYear={currentYear}
+                          expandedKey={expandedKey}
+                          copiedKey={copiedKey}
+                          onToggleAbstract={onToggleAbstract}
+                          onCopyCitation={onCopyCitation}
+                          onOpenLightbox={onOpenLightbox}
+                        />
+                      );
+                    })}
+              </div>
+            ) : null}
+          </div>
+        )}
 
         {!isLoading && filteredCount > 0 && visiblePublications.length < listRowCount && (
-          <div className="mt-12 flex justify-center">
+          <div className="mt-10 flex justify-center">
             <button
               type="button"
               onClick={onLoadMore}
-              className={`${uiTokens.buttonGhost} inline-flex items-center gap-2 rounded-lg px-8 py-3 font-mono text-xs uppercase tracking-[0.18em]`}
+              className={`${uiTokens.buttonGhost} inline-flex items-center gap-2 rounded-md px-7 py-2.5 font-mono text-xs font-medium uppercase tracking-[0.14em]`}
             >
               {pubsText.loadMore}
               <ChevronDown className="h-4 w-4" aria-hidden />
@@ -1133,7 +1039,7 @@ function PublicationsSectionComponent({
         )}
       </div>
 
-      {/* 暗房燈箱預覽：科學圖版在象牙白畫面上清晰展開 */}
+      {/* 科學圖解摘要燈箱預覽 */}
       <AnimatePresence>
         {lightbox ? (
           <motion.div
@@ -1144,23 +1050,24 @@ function PublicationsSectionComponent({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
             onClick={() => setLightbox(null)}
-            className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/88 p-4 backdrop-blur-md md:p-8"
+            className="fixed inset-0 z-[100000] flex items-center justify-center bg-[#11161C]/75 p-4 backdrop-blur-sm md:p-8"
           >
             <motion.div
-              initial={{ scale: 0.96, opacity: 0 }}
+              initial={{ scale: 0.98, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.96, opacity: 0 }}
-              transition={{ duration: 0.2 }}
+              exit={{ scale: 0.98, opacity: 0 }}
+              transition={{ duration: 0.15 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-white/[0.12] bg-[#12110f] shadow-2xl"
+              className="relative flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-lg border border-[#DCE2E8] bg-white shadow-2xl"
             >
-              <div className="flex items-start justify-between gap-4 border-b border-white/[0.08] px-6 py-4">
+              <div className="flex items-start justify-between gap-4 border-b border-[#DCE2E8] px-5 py-4">
                 <div className="min-w-0">
-                  <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#c8a464]">
+                  <div className="font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-[#0F4C81]">
                     {lightbox.journal}
                   </div>
-                  <h4 className="mt-1 line-clamp-2 font-heading-serif text-base font-medium text-[#f5f3ef] md:text-lg">
+                  <h4 className="mt-1 line-clamp-2 text-base font-semibold text-[#11161C]">
                     {lightbox.title}
                   </h4>
                 </div>
@@ -1168,19 +1075,19 @@ function PublicationsSectionComponent({
                   type="button"
                   onClick={() => setLightbox(null)}
                   aria-label={pubsText.closeLightbox}
-                  className="shrink-0 rounded-lg border border-white/[0.12] p-2 text-[#b8b3aa] transition-colors hover:border-[#c8a464]/60 hover:text-[#f5f3ef]"
+                  className="shrink-0 rounded-md border border-[#DCE2E8] p-1.5 text-[#5A6775] transition-colors hover:border-[#0F4C81] hover:text-[#11161C]"
                 >
                   <X className="h-4 w-4" aria-hidden />
                 </button>
               </div>
-              <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-[#0b0a09] p-5 md:p-8">
-                <div className="rounded-lg bg-[#f7f5f0] p-3 shadow-2xl">
+              <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-[#F6F7F8] p-5 md:p-8">
+                <div className="rounded-md border border-[#DCE2E8] bg-white p-3">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={lightbox.src}
                     alt={lightbox.alt}
                     referrerPolicy="no-referrer"
-                    className="max-h-[66vh] max-w-full rounded object-contain"
+                    className="max-h-[66vh] max-w-full object-contain"
                   />
                 </div>
               </div>
