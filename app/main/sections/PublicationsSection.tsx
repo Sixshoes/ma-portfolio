@@ -65,6 +65,7 @@ type PublicationsSectionProps = {
   onCorrespondingToggle: () => void;
   onClearDomainFilter: () => void;
   onSelectJournal: (journal: string | null) => void;
+  onSelectTimelineYear: (yearOrAll: string) => void;
   onResetAllFilters: () => void;
   onJumpToList: () => void;
   onJumpToCharts: () => void;
@@ -653,6 +654,7 @@ function PublicationsSectionComponent({
   onCorrespondingToggle,
   onClearDomainFilter,
   onSelectJournal,
+  onSelectTimelineYear,
   onResetAllFilters,
   onJumpToList,
   onJumpToCharts,
@@ -681,12 +683,12 @@ function PublicationsSectionComponent({
 
   const handleChartYearSelect = useCallback(
     (yearOrAll: string) => {
-      onFilterChange(yearOrAll);
+      onSelectTimelineYear(yearOrAll);
       if (yearOrAll !== 'All') {
         onJumpToList();
       }
     },
-    [onFilterChange, onJumpToList],
+    [onSelectTimelineYear, onJumpToList],
   );
 
   const handleChartJournalSelect = useCallback(

@@ -320,6 +320,24 @@ export function usePublications(
       setSelectedJournal(journal);
       if (journal !== null) {
         setActiveDomainId(null);
+        setPubFilter('All');
+        setCorrespondingOnly(false);
+        setSearchQuery('');
+      }
+      setVisibleCount(pageSize);
+    },
+    [pageSize],
+  );
+
+  /** 由歷年長條圖點擊指定年份時，清除其他殘留篩選，確保跳轉後的篇數與長條圖顯示數字完全一致 */
+  const handleTimelineYearSelect = useCallback(
+    (yearOrAll: string) => {
+      setPubFilter(yearOrAll as PubFilter);
+      if (yearOrAll !== 'All') {
+        setActiveDomainId(null);
+        setSelectedJournal(null);
+        setCorrespondingOnly(false);
+        setSearchQuery('');
       }
       setVisibleCount(pageSize);
     },
@@ -375,6 +393,7 @@ export function usePublications(
     handleCorrespondingToggle,
     handleDomainFilterChange,
     handleJournalFilterChange,
+    handleTimelineYearSelect,
     handleKeywordQuickFilter,
     handleResetAllFilters,
     handleViewModeChange,

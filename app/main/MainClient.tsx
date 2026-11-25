@@ -83,6 +83,7 @@ export function MainClient({
     handleCorrespondingToggle,
     handleDomainFilterChange,
     handleJournalFilterChange,
+    handleTimelineYearSelect,
     handleKeywordQuickFilter,
     handleResetAllFilters,
     handleViewModeChange,
@@ -253,6 +254,7 @@ export function MainClient({
             onCorrespondingToggle={handleCorrespondingToggle}
             onClearDomainFilter={handleClearDomainFilter}
             onSelectJournal={handleJournalFilterChange}
+            onSelectTimelineYear={handleTimelineYearSelect}
             onResetAllFilters={handleResetAllFilters}
             onJumpToList={scrollToPublicationsList}
             onJumpToCharts={scrollToPublicationsCharts}
