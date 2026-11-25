@@ -53,6 +53,7 @@ export function MainClient({
   const t = dict[lang];
 
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
+  const [filterJumpSeq, setFilterJumpSeq] = useState(0);
   const chalkboards =
     initialChalkboards && initialChalkboards.length > 0
       ? initialChalkboards
@@ -83,6 +84,7 @@ export function MainClient({
     handleDomainFilterChange,
     handleJournalFilterChange,
     handleKeywordQuickFilter,
+    handleResetAllFilters,
     handleViewModeChange,
     handleSearchChange,
     handleLoadMore,
@@ -104,32 +106,52 @@ export function MainClient({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
-  const scrollToElement = useCallback((id: string) => {
-    // 以雙重 rAF 等候彈窗解除 body 捲動鎖定與篩選重排後再捲動（確保 Safari / iOS 正常定位）
+  const scrollToElement = useCallback((id: string, hashOverride?: string) => {
+    const performScroll = () => {
+      const target = document.getElementById(id);
+      if (!target) return false;
+      target.scrollIntoView({ behavior: getPreferredScrollBehavior(), block: 'start' });
+      const nextHash = hashOverride ?? id;
+      if (nextHash) {
+        window.history.replaceState(null, '', `#${nextHash}`);
+      }
+      return true;
+    };
+
+    // 以雙重 rAF 等候彈窗解除 body 捲動鎖定與篩選重排後再捲動；若動態區塊尚未掛載則於 140ms 後補試一次
     window.requestAnimationFrame(() => {
       window.requestAnimationFrame(() => {
-        const target = document.getElementById(id);
-        if (!target) return;
-        target.scrollIntoView({ behavior: getPreferredScrollBehavior(), block: 'start' });
-        window.history.replaceState(null, '', `#${id}`);
+        if (!performScroll()) {
+          window.setTimeout(performScroll, 140);
+        }
       });
     });
   }, []);
 
+  /** 所有由外部圖表／領域／關鍵字／⌘K 觸發的篩選跳轉，直接定位至「論文篩選結果清單」而非上方長條圖 */
+  const scrollToPublicationsList = useCallback(() => {
+    setFilterJumpSeq((seq) => seq + 1);
+    scrollToElement('publications-list', 'publications');
+  }, [scrollToElement]);
+
+  const scrollToPublicationsCharts = useCallback(() => {
+    scrollToElement('publications', 'publications');
+  }, [scrollToElement]);
+
   const handleResearchDomainSelect = useCallback(
     (domainId: string) => {
       handleDomainFilterChange(domainId);
-      scrollToElement('publications');
+      scrollToPublicationsList();
     },
-    [handleDomainFilterChange, scrollToElement],
+    [handleDomainFilterChange, scrollToPublicationsList],
   );
 
   const handleResearchKeywordSelect = useCallback(
     (keyword: string) => {
       handleKeywordQuickFilter(keyword);
-      scrollToElement('publications');
+      scrollToPublicationsList();
     },
-    [handleKeywordQuickFilter, scrollToElement],
+    [handleKeywordQuickFilter, scrollToPublicationsList],
   );
 
   const handleClearDomainFilter = useCallback(() => {
@@ -139,9 +161,9 @@ export function MainClient({
   const handlePaletteSelectPublication = useCallback(
     (pub: Publication) => {
       handleKeywordQuickFilter(pub.title.slice(0, 60));
-      scrollToElement('publications');
+      scrollToPublicationsList();
     },
-    [handleKeywordQuickFilter, scrollToElement],
+    [handleKeywordQuickFilter, scrollToPublicationsList],
   );
 
   const handleOpenCommandPalette = useCallback(() => {
@@ -225,11 +247,15 @@ export function MainClient({
             }
             isMobile={isMobile}
             prefersReducedMotion={mainLite}
+            filterJumpSeq={filterJumpSeq}
             onFilterChange={handlePubFilterChange}
             onSortChange={handlePubSortChange}
             onCorrespondingToggle={handleCorrespondingToggle}
             onClearDomainFilter={handleClearDomainFilter}
             onSelectJournal={handleJournalFilterChange}
+            onResetAllFilters={handleResetAllFilters}
+            onJumpToList={scrollToPublicationsList}
+            onJumpToCharts={scrollToPublicationsCharts}
             onViewModeChange={handleViewModeChange}
             onSearchChange={handleSearchChange}
             onLoadMore={handleLoadMore}

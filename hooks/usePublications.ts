@@ -303,16 +303,13 @@ export function usePublications(
 
   const handleDomainFilterChange = useCallback(
     (domainId: string | null) => {
-      setActiveDomainId((prev) => {
-        const next = domainId !== null && prev === domainId ? null : domainId;
-        if (next !== null) {
-          setPubFilter('All');
-          setSelectedJournal(null);
-          setCorrespondingOnly(false);
-          setSearchQuery('');
-        }
-        return next;
-      });
+      setActiveDomainId(domainId);
+      if (domainId !== null) {
+        setPubFilter('All');
+        setSelectedJournal(null);
+        setCorrespondingOnly(false);
+        setSearchQuery('');
+      }
       setVisibleCount(pageSize);
     },
     [pageSize],
@@ -340,6 +337,15 @@ export function usePublications(
     },
     [pageSize],
   );
+
+  const handleResetAllFilters = useCallback(() => {
+    setPubFilter('All');
+    setCorrespondingOnly(false);
+    setActiveDomainId(null);
+    setSelectedJournal(null);
+    setSearchQuery('');
+    setVisibleCount(pageSize);
+  }, [pageSize]);
 
   const handleLoadMore = useCallback(() => {
     setVisibleCount((prev) => prev + pageSize);
@@ -370,6 +376,7 @@ export function usePublications(
     handleDomainFilterChange,
     handleJournalFilterChange,
     handleKeywordQuickFilter,
+    handleResetAllFilters,
     handleViewModeChange,
     handleSearchChange,
     handleLoadMore,

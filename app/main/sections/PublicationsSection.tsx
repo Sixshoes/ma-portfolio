@@ -3,12 +3,14 @@
 import React, { memo, useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence, LayoutGroup } from 'motion/react';
 import {
+  ArrowUp,
   Check,
   ChevronDown,
   ChevronUp,
   Code2,
   Copy,
   ExternalLink,
+  Filter,
   Search,
   X,
   ZoomIn,
@@ -57,11 +59,15 @@ type PublicationsSectionProps = {
   listAllInFeatured: boolean;
   isMobile: boolean;
   prefersReducedMotion: boolean | null;
+  filterJumpSeq: number;
   onFilterChange: (value: string) => void;
   onSortChange: (value: PubSort) => void;
   onCorrespondingToggle: () => void;
   onClearDomainFilter: () => void;
   onSelectJournal: (journal: string | null) => void;
+  onResetAllFilters: () => void;
+  onJumpToList: () => void;
+  onJumpToCharts: () => void;
   onViewModeChange: (mode: PubViewMode) => void;
   onSearchChange: (value: string) => void;
   onLoadMore: () => void;
@@ -641,11 +647,15 @@ function PublicationsSectionComponent({
   listAllInFeatured,
   isMobile,
   prefersReducedMotion,
+  filterJumpSeq,
   onFilterChange,
   onSortChange,
   onCorrespondingToggle,
   onClearDomainFilter,
   onSelectJournal,
+  onResetAllFilters,
+  onJumpToList,
+  onJumpToCharts,
   onViewModeChange,
   onSearchChange,
   onLoadMore,
@@ -655,10 +665,48 @@ function PublicationsSectionComponent({
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const [copiedState, setCopiedState] = useState<CopiedState>(null);
   const [lightbox, setLightbox] = useState<LightboxState>(null);
+  const [isJumpHighlighted, setIsJumpHighlighted] = useState(false);
   const locale = lang === 'zh' ? 'zh-TW' : 'en-US';
   const currentYear = serverYear;
   const activeDomain = getResearchDomainById(activeDomainId);
   const isZh = lang === 'zh';
+
+  // 透過圖表／領域／關鍵字／⌘K 跳轉至此時，短暫亮起溫潤外框提示焦點已落於篩選結果
+  useEffect(() => {
+    if (filterJumpSeq <= 0) return;
+    setIsJumpHighlighted(true);
+    const timer = window.setTimeout(() => setIsJumpHighlighted(false), 1800);
+    return () => window.clearTimeout(timer);
+  }, [filterJumpSeq]);
+
+  const handleChartYearSelect = useCallback(
+    (yearOrAll: string) => {
+      onFilterChange(yearOrAll);
+      if (yearOrAll !== 'All') {
+        onJumpToList();
+      }
+    },
+    [onFilterChange, onJumpToList],
+  );
+
+  const handleChartJournalSelect = useCallback(
+    (journal: string | null) => {
+      onSelectJournal(journal);
+      if (journal !== null) {
+        onJumpToList();
+      }
+    },
+    [onSelectJournal, onJumpToList],
+  );
+
+  const trimmedSearch = searchQuery.trim();
+  const hasAnyActiveFilter = Boolean(
+    activeDomain ||
+      selectedJournal ||
+      pubFilter !== 'All' ||
+      correspondingOnly ||
+      trimmedSearch !== '',
+  );
 
   const onToggleAbstract = useCallback((key: string) => {
     setExpandedKey((prev) => (prev === key ? null : key));
@@ -714,7 +762,7 @@ function PublicationsSectionComponent({
                 selectedFilter={pubFilter}
                 lang={lang}
                 serverYear={currentYear}
-                onSelectYear={onFilterChange}
+                onSelectYear={handleChartYearSelect}
               />
             </div>
             <div className="lg:col-span-5">
@@ -722,14 +770,21 @@ function PublicationsSectionComponent({
                 publications={allPublications}
                 selectedJournal={selectedJournal}
                 lang={lang}
-                onSelectJournal={onSelectJournal}
+                onSelectJournal={handleChartJournalSelect}
               />
             </div>
           </div>
         ) : null}
 
-        {/* 溫潤圓角檢索工具列（桌機單行緊湊對齊；手機端搜尋框獨立全寬不擠壓） */}
-        <div className="atlas-card mb-6 p-4 sm:p-5">
+        {/* 篩選跳轉精準錨點：所有領域／關鍵字／年份長條／期刊長條／⌘K 點選皆直接捲動至此並高亮 */}
+        <div
+          id="publications-list"
+          className={`atlas-card mb-6 scroll-mt-24 p-4 transition-all duration-500 sm:p-5 ${
+            isJumpHighlighted
+              ? 'ring-2 ring-[var(--app-accent)] shadow-[0_14px_36px_-18px_var(--app-accent)]'
+              : ''
+          }`}
+        >
           <div className="flex flex-col gap-3.5 xl:flex-row xl:items-center xl:justify-between">
             <div className="flex flex-wrap items-center gap-2.5">
               <div className="flex items-center gap-2">
@@ -869,46 +924,141 @@ function PublicationsSectionComponent({
             </div>
           </div>
 
-          {/* 領域／期刊即時篩選狀態膠囊 */}
-          {activeDomain || selectedJournal ? (
-            <div className="mt-3.5 flex flex-wrap items-center gap-2 border-t border-[var(--app-rule)] pt-3 text-sm">
-              {activeDomain ? (
-                <span className="inline-flex items-center gap-2 rounded-full border border-[var(--app-accent)]/40 bg-[var(--app-accent)]/10 px-3.5 py-1 text-[var(--app-ink)]">
-                  <span
-                    className="h-2.5 w-2.5 rounded-full"
-                    style={{ backgroundColor: activeDomain.color }}
-                  />
+          {/* 完整即時篩選狀態橫幅（顯示所有套用條件、符合篇數、回到圖表與一鍵清除） */}
+          {hasAnyActiveFilter ? (
+            <div
+              role="region"
+              aria-label={isZh ? '目前套用之篩選條件' : 'Active publication filters'}
+              className="mt-4 flex flex-col gap-3 rounded-2xl border border-[var(--app-accent)]/35 bg-[var(--app-accent)]/[0.07] px-4 py-3 text-sm sm:flex-row sm:flex-wrap sm:items-center sm:justify-between"
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 font-semibold text-[var(--app-accent)]">
+                  <Filter className="h-4 w-4 shrink-0" aria-hidden />
                   <span>
-                    {isZh ? '領域：' : 'Area: '}
-                    <strong>{isZh ? activeDomain.labelZh : activeDomain.labelEn}</strong>
+                    {isZh ? '目前篩選' : 'Filtered'}
                   </span>
-                  <button
-                    type="button"
-                    onClick={onClearDomainFilter}
-                    aria-label={isZh ? '清除領域篩選' : 'Clear area filter'}
-                    className="rounded-full p-0.5 text-[var(--app-muted)] hover:bg-[var(--app-ink)] hover:text-[var(--app-bg)]"
-                  >
-                    <X className="h-3.5 w-3.5" aria-hidden />
-                  </button>
+                  <span className="rounded-full bg-[var(--app-accent)] px-2.5 py-0.5 font-mono text-xs font-semibold text-[var(--app-bg)] [font-variant-numeric:tabular-nums]">
+                    {isZh
+                      ? `${filteredCount} 篇`
+                      : `${filteredCount} ${filteredCount === 1 ? 'paper' : 'papers'}`}
+                  </span>
                 </span>
-              ) : null}
 
-              {selectedJournal ? (
-                <span className="inline-flex items-center gap-2 rounded-full border border-[var(--app-accent)]/40 bg-[var(--app-accent)]/10 px-3.5 py-1 text-[var(--app-ink)]">
-                  <span>
-                    {isZh ? '期刊：' : 'Journal: '}
-                    <strong className="font-journal-italic">{selectedJournal}</strong>
+                {activeDomain ? (
+                  <span className="inline-flex items-center gap-2 rounded-full border border-[var(--app-accent)]/40 bg-[var(--app-surface-card)] px-3.5 py-1 text-[var(--app-ink)] shadow-2xs">
+                    <span
+                      className="h-2.5 w-2.5 rounded-full"
+                      style={{ backgroundColor: activeDomain.color }}
+                    />
+                    <span>
+                      {isZh ? '研究領域：' : 'Area: '}
+                      <strong>{isZh ? activeDomain.labelZh : activeDomain.labelEn}</strong>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={onClearDomainFilter}
+                      aria-label={isZh ? '清除領域篩選' : 'Clear area filter'}
+                      className="rounded-full p-0.5 text-[var(--app-muted)] hover:bg-[var(--app-ink)] hover:text-[var(--app-bg)]"
+                    >
+                      <X className="h-3.5 w-3.5" aria-hidden />
+                    </button>
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => onSelectJournal(null)}
-                    aria-label={isZh ? '清除期刊篩選' : 'Clear journal filter'}
-                    className="rounded-full p-0.5 text-[var(--app-muted)] hover:bg-[var(--app-ink)] hover:text-[var(--app-bg)]"
-                  >
-                    <X className="h-3.5 w-3.5" aria-hidden />
-                  </button>
-                </span>
-              ) : null}
+                ) : null}
+
+                {selectedJournal ? (
+                  <span className="inline-flex items-center gap-2 rounded-full border border-[var(--app-accent)]/40 bg-[var(--app-surface-card)] px-3.5 py-1 text-[var(--app-ink)] shadow-2xs">
+                    <span>
+                      {isZh ? '期刊：' : 'Journal: '}
+                      <strong className="font-journal-italic">{selectedJournal}</strong>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => onSelectJournal(null)}
+                      aria-label={isZh ? '清除期刊篩選' : 'Clear journal filter'}
+                      className="rounded-full p-0.5 text-[var(--app-muted)] hover:bg-[var(--app-ink)] hover:text-[var(--app-bg)]"
+                    >
+                      <X className="h-3.5 w-3.5" aria-hidden />
+                    </button>
+                  </span>
+                ) : null}
+
+                {pubFilter !== 'All' ? (
+                  <span className="inline-flex items-center gap-2 rounded-full border border-[var(--app-accent)]/40 bg-[var(--app-surface-card)] px-3.5 py-1 text-[var(--app-ink)] shadow-2xs">
+                    <span>
+                      {pubFilter === 'Selected' ? (
+                        <strong>{pubsText.filterSelected}</strong>
+                      ) : (
+                        <>
+                          {isZh ? '年份：' : 'Year: '}
+                          <strong className="font-mono">
+                            {isZh
+                              ? `${pubFilter} 年${Number(pubFilter) > currentYear ? '（預刊）' : ''}`
+                              : `${pubFilter}${Number(pubFilter) > currentYear ? ' (In Press)' : ''}`}
+                          </strong>
+                        </>
+                      )}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => onFilterChange('All')}
+                      aria-label={isZh ? '清除年份篩選' : 'Clear year filter'}
+                      className="rounded-full p-0.5 text-[var(--app-muted)] hover:bg-[var(--app-ink)] hover:text-[var(--app-bg)]"
+                    >
+                      <X className="h-3.5 w-3.5" aria-hidden />
+                    </button>
+                  </span>
+                ) : null}
+
+                {correspondingOnly ? (
+                  <span className="inline-flex items-center gap-2 rounded-full border border-[var(--app-accent)]/40 bg-[var(--app-surface-card)] px-3.5 py-1 text-[var(--app-ink)] shadow-2xs">
+                    <strong>★ {pubsText.correspondingOnly}</strong>
+                    <button
+                      type="button"
+                      onClick={onCorrespondingToggle}
+                      aria-label={isZh ? '取消僅看通訊作者' : 'Clear corresponding filter'}
+                      className="rounded-full p-0.5 text-[var(--app-muted)] hover:bg-[var(--app-ink)] hover:text-[var(--app-bg)]"
+                    >
+                      <X className="h-3.5 w-3.5" aria-hidden />
+                    </button>
+                  </span>
+                ) : null}
+
+                {trimmedSearch ? (
+                  <span className="inline-flex max-w-full items-center gap-2 rounded-full border border-[var(--app-accent)]/40 bg-[var(--app-surface-card)] px-3.5 py-1 text-[var(--app-ink)] shadow-2xs">
+                    <span className="truncate max-w-[260px] sm:max-w-[360px]">
+                      {isZh ? '關鍵字：' : 'Query: '}
+                      <strong>「{trimmedSearch}」</strong>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => onSearchChange('')}
+                      aria-label={pubsText.clearSearch}
+                      className="shrink-0 rounded-full p-0.5 text-[var(--app-muted)] hover:bg-[var(--app-ink)] hover:text-[var(--app-bg)]"
+                    >
+                      <X className="h-3.5 w-3.5" aria-hidden />
+                    </button>
+                  </span>
+                ) : null}
+              </div>
+
+              <div className="flex shrink-0 flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={onJumpToCharts}
+                  className="inline-flex items-center gap-1 rounded-full border border-[var(--app-rule)] bg-[var(--app-surface-card)] px-3 py-1 text-xs font-medium text-[var(--app-muted)] transition-colors hover:border-[var(--app-ink)] hover:text-[var(--app-ink)]"
+                >
+                  <ArrowUp className="h-3.5 w-3.5" aria-hidden />
+                  {isZh ? '回到統計圖表' : 'Back to charts'}
+                </button>
+                <button
+                  type="button"
+                  onClick={onResetAllFilters}
+                  className="inline-flex items-center gap-1 rounded-full bg-[var(--app-ink)] px-3.5 py-1 text-xs font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-accent)]"
+                >
+                  <X className="h-3.5 w-3.5" aria-hidden />
+                  {isZh ? '清除全部篩選' : 'Reset all'}
+                </button>
+              </div>
             </div>
           ) : null}
 
@@ -924,11 +1074,21 @@ function PublicationsSectionComponent({
           <PublicationsListSkeleton prefersReducedMotion={prefersReducedMotion} pubsText={pubsText} />
         ) : filteredCount === 0 ? (
           <div
-            className="atlas-card py-16 text-center text-base text-[var(--app-muted)]"
+            className="atlas-card flex flex-col items-center gap-4 px-6 py-16 text-center text-base text-[var(--app-muted)]"
             role="status"
             aria-live="polite"
           >
-            {pubsText.emptyPublications}
+            <p>{pubsText.emptyPublications}</p>
+            {hasAnyActiveFilter ? (
+              <button
+                type="button"
+                onClick={onResetAllFilters}
+                className="inline-flex items-center gap-1.5 rounded-full bg-[var(--app-ink)] px-5 py-2 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-accent)]"
+              >
+                <X className="h-4 w-4" aria-hidden />
+                {isZh ? '清除全部篩選，顯示完整著作' : 'Reset all filters'}
+              </button>
+            ) : null}
           </div>
         ) : (
           <LayoutGroup id="publications-figures">
